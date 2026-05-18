@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "DEV — Memory (sin credenciales)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_development.dart"
+    },
+    {
+      "name": "DEV — Memory Web",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_development.dart",
+      "args": ["-d", "chrome", "--web-port", "8040"]
+    },
+    {
+      "name": "PROD — Supabase",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_production.dart",
+      "args": ["--dart-define-from-file=envs/sentinel.phase1.json"]
+    },
+    {
+      "name": "PROD — Supabase Web",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_production.dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--web-port",
+        "8040",
+        "--dart-define-from-file=envs/sentinel.phase1.json"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+name: cuy_sentinel
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_fonts: ^6.3.2
+  go_router: ^14.0.0
+  flutter_bloc: ^9.1.1
+  supabase_flutter: ^2.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logos/
+    - assets/badges/
+    - assets/illustrations/
+    - assets/splash/
+    - assets/icons/
+    - assets/team/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/logos/logo_mark_shield.png
+  web:
+    generate: true
+    image_path: assets/logos/logo_mark_shield.png
+    background_color: "#0F172A"
+    theme_color: "#22C55E"
+  macos:
+    generate: true
+    image_path: assets/logos/logo_mark_shield.png
+  windows:
+    generate: true
+    image_path: assets/logos/logo_mark_shield.png
+
+flutter_native_splash:
+  color: "#020507"
+  image: assets/splash/splash_logo.png
+  android: true
+  ios: true
+  web: true
+  android_12:
+    color: "#020507"
+    image: assets/splash/splash_logo.png

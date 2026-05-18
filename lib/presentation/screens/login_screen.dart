@@ -1,14 +1,17 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/assets/app_assets.dart';
 import '../../core/navigation/app_router.dart';
 import '../../core/responsive/app_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/app_toast.dart';
+import '../../feature/auth/domain/auth_exception.dart';
+import '../auth/bloc/auth_bloc.dart';
 import '../widgets/app_card.dart';
-import '../widgets/brand_asset_icon.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,112 +22,90 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
-  static const _validUser = 'admin@cuysentinel.local';
-  static const _validPassword = 'CuySentinel123';
-  static const _matrixDensity = 0.8; // 0.15 (sparse) to 1.0 (dense)
-  static const _warningBackgroundStartOpacity = 0.01;
-  static const _warningBackgroundEndOpacity = 0.08;
   static const _matrixAlertPrimary = Color(0xFFFF5A36);
   static const _matrixAlertAccent = Color(0xFFFF2D2D);
+  static const _warningBgStart = 0.01;
+  static const _warningBgEnd = 0.08;
 
   final _formKey = GlobalKey<FormState>();
-  final _userController = TextEditingController(text: _validUser);
-  final _passwordController = TextEditingController(text: _validPassword);
-  late final AnimationController _backgroundController;
+  final _userController = TextEditingController();
+  final _passwordController = TextEditingController();
+  late final AnimationController _bgController;
 
   bool _obscurePassword = true;
-  bool _rememberSession = true;
-  bool _isSubmitting = false;
   bool _hasLoginError = false;
 
   @override
   void initState() {
     super.initState();
-    _backgroundController = AnimationController(
+    _bgController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 18),
     )..repeat();
-    _userController.addListener(_clearLoginErrorState);
-    _passwordController.addListener(_clearLoginErrorState);
+    _userController.addListener(_clearError);
+    _passwordController.addListener(_clearError);
   }
 
-  void _clearLoginErrorState() {
-    if (_hasLoginError && mounted) {
-      setState(() => _hasLoginError = false);
-    }
+  void _clearError() {
+    if (_hasLoginError && mounted) setState(() => _hasLoginError = false);
   }
 
   @override
   void dispose() {
-    _backgroundController.dispose();
+    _bgController.dispose();
     _userController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _submit(BuildContext context) {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isSubmitting = true);
-
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-
-    final isValidCredentials =
-        _userController.text.trim() == _validUser &&
-        _passwordController.text == _validPassword;
-
-    if (!isValidCredentials) {
-      setState(() {
-        _isSubmitting = false;
-        _hasLoginError = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Credenciales incorrectas. Intenta nuevamente.'),
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isSubmitting = false;
-      _hasLoginError = false;
-    });
-    context.go(AppRoutes.dashboard);
+    context.read<AuthBloc>().add(AuthLoginRequested(
+          email: _userController.text,
+          password: _passwordController.text,
+        ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final isDesktop = AppBreakpoints.isDesktop(width);
-          final padding = AppBreakpoints.horizontalPadding(width);
-          final backgroundStart = Color.lerp(
-            AppColors.background,
-            AppColors.warning,
-            _hasLoginError ? _warningBackgroundStartOpacity : 0,
-          )!;
-          final backgroundEnd = Color.lerp(
-            AppColors.panel,
-            AppColors.critical,
-            _hasLoginError ? _warningBackgroundEndOpacity : 0,
-          )!;
-          final matrixTone = _hasLoginError
-              ? _matrixAlertPrimary
-              : AppColors.primary;
-          final matrixAccentTone = _hasLoginError
-              ? _matrixAlertAccent
-              : AppColors.primaryBright;
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          context.go(AppRoutes.dashboard);
+        } else if (state is AuthError) {
+          setState(() => _hasLoginError = true);
+          final msg = switch (state.exception) {
+            InvalidCredentialsException() => 'Credenciales incorrectas.',
+            ServerAuthException(:final message) =>
+              'Error del servidor: $message',
+          };
+          AppToast.error(context, msg);
+        }
+      },
+      builder: (context, state) {
+        final isSubmitting = state is AuthLoading;
+        final matrixTone =
+            _hasLoginError ? _matrixAlertPrimary : AppColors.primary;
+        final matrixAccent =
+            _hasLoginError ? _matrixAlertAccent : AppColors.primaryBright;
+        final bgStart = Color.lerp(
+          AppColors.background,
+          AppColors.warning,
+          _hasLoginError ? _warningBgStart : 0,
+        )!;
+        final bgEnd = Color.lerp(
+          AppColors.panel,
+          AppColors.critical,
+          _hasLoginError ? _warningBgEnd : 0,
+        )!;
 
-          return AnimatedContainer(
+        return Scaffold(
+          body: AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeOut,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [backgroundStart, backgroundEnd],
+                colors: [bgStart, bgEnd],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -134,107 +115,181 @@ class _LoginScreenState extends State<LoginScreen>
                 Positioned.fill(
                   child: IgnorePointer(
                     child: AnimatedBuilder(
-                      animation: _backgroundController,
-                      builder: (context, child) {
-                        return CustomPaint(
-                          painter: _MatrixBackgroundPainter(
-                            progress: _backgroundController.value,
-                            density: _matrixDensity,
-                            toneColor: matrixTone,
-                            accentToneColor: matrixAccentTone,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                SafeArea(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1420),
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.all(padding),
-                        child: isDesktop
-                            ? Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Expanded(
-                                    flex: 5,
-                                    child: _LoginBrandPanel(),
-                                  ),
-                                  const SizedBox(width: 32),
-                                  Expanded(
-                                    flex: 6,
-                                    child: _LoginFormPanel(
-                                      formKey: _formKey,
-                                      userController: _userController,
-                                      passwordController: _passwordController,
-                                      obscurePassword: _obscurePassword,
-                                      rememberSession: _rememberSession,
-                                      isSubmitting: _isSubmitting,
-                                      onTogglePassword: () {
-                                        setState(() {
-                                          _obscurePassword = !_obscurePassword;
-                                        });
-                                      },
-                                      onRememberChanged: (value) {
-                                        setState(() {
-                                          _rememberSession = value ?? false;
-                                        });
-                                      },
-                                      onSubmit: _submit,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  _LoginFormPanel(
-                                    formKey: _formKey,
-                                    userController: _userController,
-                                    passwordController: _passwordController,
-                                    obscurePassword: _obscurePassword,
-                                    rememberSession: _rememberSession,
-                                    isSubmitting: _isSubmitting,
-                                    onTogglePassword: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                    onRememberChanged: (value) {
-                                      setState(() {
-                                        _rememberSession = value ?? false;
-                                      });
-                                    },
-                                    onSubmit: _submit,
-                                  ),
-                                  const SizedBox(height: 20),
-                                  const _LoginBrandPanel(compact: true),
-                                ],
-                              ),
+                      animation: _bgController,
+                      builder: (_, _) => CustomPaint(
+                        painter: _MatrixBackgroundPainter(
+                          progress: _bgController.value,
+                          density: 0.8,
+                          toneColor: matrixTone,
+                          accentToneColor: matrixAccent,
+                        ),
                       ),
                     ),
                   ),
                 ),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 20,
+                    ),
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () => context.go(AppRoutes.welcome),
+                        child: Image.asset(
+                          AppAssets.logoHorizontalPrimary,
+                          height: 34,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isDesktop =
+                          AppBreakpoints.isDesktop(constraints.maxWidth);
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1100),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppBreakpoints.horizontalPadding(
+                                constraints.maxWidth,
+                              ),
+                              vertical: 80,
+                            ),
+                            child: isDesktop
+                                ? Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Expanded(
+                                        flex: 5,
+                                        child: _IllustrationPanel(
+                                          hasError: _hasLoginError,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 56),
+                                      Expanded(
+                                        flex: 4,
+                                        child: _LoginForm(
+                                          formKey: _formKey,
+                                          userController: _userController,
+                                          passwordController:
+                                              _passwordController,
+                                          obscurePassword: _obscurePassword,
+                                          isSubmitting: isSubmitting,
+                                          onTogglePassword: () => setState(() {
+                                            _obscurePassword =
+                                                !_obscurePassword;
+                                          }),
+                                          onSubmit: () => _submit(context),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : _LoginForm(
+                                    formKey: _formKey,
+                                    userController: _userController,
+                                    passwordController: _passwordController,
+                                    obscurePassword: _obscurePassword,
+                                    isSubmitting: isSubmitting,
+                                    onTogglePassword: () => setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    }),
+                                    onSubmit: () => _submit(context),
+                                  ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
-class _LoginFormPanel extends StatelessWidget {
-  const _LoginFormPanel({
+// ─── Illustration panel (desktop left side) ──────────────────────────────────
+
+class _IllustrationPanel extends StatelessWidget {
+  const _IllustrationPanel({required this.hasError});
+
+  final bool hasError;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 420),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.92, end: 1.0).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+                ),
+                child: child,
+              ),
+            ),
+            child: Image.asset(
+              hasError
+                  ? AppAssets.illustrationIntrusoDetected
+                  : AppAssets.illustrationLoginGuard,
+              key: ValueKey(hasError),
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Text(
+            hasError
+                ? 'Acceso denegado.\nVerifica tus credenciales.'
+                : 'Monitoreo de infraestructura\ndocker en tiempo real.',
+            key: ValueKey(hasError),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              height: 1.35,
+              color: hasError ? AppColors.danger : AppColors.primaryWhiteMint,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Passbolt · ChkMonitor · SNMP v2c/v3',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Login form panel ─────────────────────────────────────────────────────────
+
+class _LoginForm extends StatelessWidget {
+  const _LoginForm({
     required this.formKey,
     required this.userController,
     required this.passwordController,
     required this.obscurePassword,
-    required this.rememberSession,
     required this.isSubmitting,
     required this.onTogglePassword,
-    required this.onRememberChanged,
     required this.onSubmit,
   });
 
@@ -242,459 +297,146 @@ class _LoginFormPanel extends StatelessWidget {
   final TextEditingController userController;
   final TextEditingController passwordController;
   final bool obscurePassword;
-  final bool rememberSession;
   final bool isSubmitting;
   final VoidCallback onTogglePassword;
-  final ValueChanged<bool?> onRememberChanged;
   final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: Alignment.topCenter,
+      alignment: Alignment.center,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 18, left: 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Image.asset(
-                  AppAssets.logoHorizontalPrimary,
-                  height: 80,
-                  fit: BoxFit.contain,
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: AppCard(
+          padding: const EdgeInsets.all(32),
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Iniciar sesión',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-            ),
-            AppCard(
-              padding: const EdgeInsets.all(28),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(top: 2),
-                          child: Icon(
-                            Icons.lock_person_outlined,
-                            color: AppColors.primary,
-                            size: 30,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Acceso seguro',
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(fontWeight: FontWeight.w800),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Ingresa al panel de monitoreo.',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                      height: 1.5,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    TextFormField(
-                      controller: userController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Usuario o correo',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Ingresa tu usuario';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                    TextFormField(
-                      controller: passwordController,
-                      obscureText: obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Contraseña',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          onPressed: onTogglePassword,
-                          icon: Icon(
-                            obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.length < 8) {
-                          return 'La contraseña debe tener al menos 8 caracteres';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 18),
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      value: rememberSession,
-                      onChanged: onRememberChanged,
-                      title: const Text('Mantener sesión activa'),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Recuperación simulada. Implementación visual lista.',
-                              ),
-                            ),
-                          );
-                        },
-                        child: const Text('¿Olvidaste tu contraseña?'),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 360),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.18,
-                                ),
-                                blurRadius: 22,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                            gradient: isSubmitting
-                                ? null
-                                : const LinearGradient(
-                                    colors: [
-                                      AppColors.primary,
-                                      AppColors.primaryBright,
-                                    ],
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                  ),
-                          ),
-                          child: FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(56),
-                              backgroundColor: isSubmitting
-                                  ? AppColors.primary
-                                  : Colors.transparent,
-                              foregroundColor: AppColors.background,
-                              disabledBackgroundColor: AppColors.primary,
-                              disabledForegroundColor: AppColors.background,
-                              shadowColor: Colors.transparent,
-                              surfaceTintColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  color: AppColors.primaryBright.withValues(
-                                    alpha: 0.28,
-                                  ),
-                                ),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 16,
-                              ),
-                            ),
-                            onPressed: isSubmitting ? null : onSubmit,
-                            icon: isSubmitting
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppColors.background,
-                                      ),
-                                    ),
-                                  )
-                                : const Icon(Icons.login_rounded, size: 20),
-                            label: Text(
-                              isSubmitting
-                                  ? 'Validando acceso...'
-                                  : 'Entrar al panel',
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.background,
-                                    letterSpacing: 0.1,
-                                  ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceSoft,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.stroke),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(top: 2),
-                            child: Icon(
-                              Icons.info_outline,
-                              color: AppColors.primaryBright,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              'Demo activa: usuario valido y contrasena de 8+ caracteres.',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: AppColors.textSecondary,
-                                    height: 1.5,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 6),
+                Text(
+                  'Panel de monitoreo Cuy Sentinel',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 32),
+                TextFormField(
+                  controller: userController,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Correo electrónico',
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Campo requerido' : null,
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => onSubmit(),
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      onPressed: onTogglePassword,
+                      icon: Icon(
+                        obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Campo requerido' : null,
+                ),
+                const SizedBox(height: 28),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.22),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                    gradient: isSubmitting
+                        ? null
+                        : const LinearGradient(
+                            colors: [AppColors.primary, AppColors.primaryBright],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                  ),
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 56),
+                      backgroundColor:
+                          isSubmitting ? AppColors.primary : Colors.transparent,
+                      foregroundColor: AppColors.background,
+                      disabledBackgroundColor: AppColors.primary,
+                      disabledForegroundColor: AppColors.background,
+                      shadowColor: Colors.transparent,
+                      surfaceTintColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        side: BorderSide(
+                          color: AppColors.primaryBright.withValues(alpha: 0.28),
+                        ),
+                      ),
+                    ),
+                    onPressed: isSubmitting ? null : onSubmit,
+                    icon: isSubmitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.background,
+                              ),
+                            ),
+                          )
+                        : const Icon(Icons.login_rounded, size: 20),
+                    label: Text(
+                      isSubmitting ? 'Validando...' : 'Entrar al panel',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.background,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _LoginBrandPanel extends StatelessWidget {
-  const _LoginBrandPanel({this.compact = false});
+// ─── Matrix background painter (private copy for login) ──────────────────────
 
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: EdgeInsets.all(compact ? 20 : 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _LoginStatusPill(
-            icon: Icons.shield_outlined,
-            label: 'Proteccion activa',
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Monitoreo en tiempo real',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Acceso directo a alertas, nodos y servicios.',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.55,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(compact ? 16 : 20),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceSoft,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.stroke),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: const [
-                    _LoginMetricPill(label: 'Servicios', value: '24'),
-                    _LoginMetricPill(label: 'Criticos', value: '03'),
-                    _LoginMetricPill(label: 'Nodos', value: '128'),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Image.asset(
-                    AppAssets.illustrationLoginGuard,
-                    height: compact ? 220 : 360,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (!compact) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: const [
-                Expanded(
-                  child: _LoginFeatureCard(
-                    iconPath: AppAssets.iconDashboardMonitor,
-                    label: 'Vista ejecutiva',
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _LoginFeatureCard(
-                    iconPath: AppAssets.iconGlobalNetwork,
-                    label: 'Cobertura total',
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _LoginStatusPill extends StatelessWidget {
-  const _LoginStatusPill({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSoft,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.stroke),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.primaryBright),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoginMetricPill extends StatelessWidget {
-  const _LoginMetricPill({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.panel,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.stroke),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: AppColors.primaryBright,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoginFeatureCard extends StatelessWidget {
-  const _LoginFeatureCard({required this.iconPath, required this.label});
-
-  final String iconPath;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceSoft,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.stroke),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          BrandAssetIcon(
-            assetPath: iconPath,
-            size: 68,
-            padding: const EdgeInsets.all(6),
-            backgroundColor: AppColors.panel,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                height: 1.3,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+const _glyphs = [
+  '0', '1', '0', '1', '0', '1', // binary weighted
+  '/', r'\', '|', '+', '*', '#',
+  '!', '?', '~', ':', '=', '^',
+  'A', 'F', 'E', '3', '7', 'B',
+];
 
 class _MatrixBackgroundPainter extends CustomPainter {
   _MatrixBackgroundPainter({
@@ -717,49 +459,75 @@ class _MatrixBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final densityFactor = density.clamp(0.15, 1.0);
-    final spacing = 132 - (densityFactor * 62);
+    final spacing = 145 - (densityFactor * 50);
     final columnCount = math.max(8, (size.width / spacing).floor());
     const baseStyle = TextStyle(
-      fontSize: 12,
+      fontSize: 14,
       fontWeight: FontWeight.w600,
-      letterSpacing: 0.4,
+      letterSpacing: 0.6,
     );
+    final isAlert = toneColor.r > toneColor.g;
 
     for (var index = 0; index < columnCount; index++) {
       final seed = index + 1;
       final baseX = (index + 0.5) * size.width / columnCount;
-      final drift = math.sin((progress * math.pi * 2) + index * 0.7) * 10;
+      final drift =
+          math.sin((progress * math.pi * 2) + index * 0.7) * 8;
       final x = baseX + drift;
-      final streamLength = 4 + (index % 3);
-      final travel = (progress + (index * 0.073)) % 1.0;
-      final headY = travel * (size.height + 220) - 220;
+      // Each column falls at its own speed (0.75x–1.9x) with its own phase.
+      final speed = 0.75 + _noise(seed * 17) * 1.15;
+      final phase = _noise(seed * 31);
+      final travel = (progress * speed + phase) % 1.0;
+      final streamLength = 10 + (_noise(seed * 53) * 9).floor(); // 10–19 chars
+      final headY = travel * (size.height + 240) - 240;
 
       for (var segment = 0; segment < streamLength; segment++) {
-        final y = headY - (segment * 26);
+        final y = headY - (segment * 24);
         if (y < -20 || y > size.height + 20) continue;
 
-        final baseOpacity =
-            (0.2 + (_noise(seed * 43) * 0.08) - (segment * 0.028)).clamp(
-              0.035,
-              0.24,
-            );
-        final binaryChar =
-            ((index + segment + (progress * 10).floor()) % 2 == 0) ? '0' : '1';
+        final tailFade = math.pow(
+          1.0 - segment / streamLength,
+          1.6,
+        ).toDouble();
+        // Each segment flips at its own rate (4x–24x per cycle) — no sync.
+        final segFlipSpeed = 4.0 + _noise((seed * 83) + segment * 19) * 20.0;
+        final segTick = (progress * segFlipSpeed).floor();
+        final charIdx =
+            (_noise((seed * 97) + segment * 11 + segTick * 7) * _glyphs.length)
+                .floor()
+                .clamp(0, _glyphs.length - 1);
+        final glyph = _glyphs[charIdx];
         final blendFactor =
-            ((segment / streamLength) * 0.45) +
-            (_noise((seed * 59) + segment) * 0.35);
-        final isAlertPalette = toneColor.r > toneColor.g;
-        final glyphColor = Color.lerp(
-          toneColor,
-          accentToneColor,
-          blendFactor.clamp(0.0, 1.0),
-        )!;
-        final opacity = isAlertPalette
-            ? 1.0
-            : (baseOpacity * 1.15).clamp(0.04, 0.28);
+            ((segment / streamLength) * 0.5) +
+            (_noise((seed * 59) + segment) * 0.3);
+
+        final Color glyphColor;
+        final double opacity;
+
+        if (isAlert) {
+          // Head chars flash toward white; tail fades to pure alert red.
+          final headFraction = (1.0 - segment / streamLength).clamp(0.0, 1.0);
+          glyphColor = Color.lerp(
+            toneColor,                       // red at tail
+            const Color(0xFFFFE0E0),         // warm white at head
+            math.pow(headFraction, 2.2).toDouble(),
+          )!;
+          opacity = (math.pow(headFraction, 1.4) * 0.92 + 0.06)
+              .toDouble()
+              .clamp(0.06, 0.92);
+        } else {
+          glyphColor = Color.lerp(
+            toneColor,
+            accentToneColor,
+            blendFactor.clamp(0.0, 1.0),
+          )!;
+          opacity = (tailFade * 0.62 + _noise(seed * 43) * 0.08)
+              .clamp(0.04, 0.65);
+        }
+
         final textPainter = TextPainter(
           text: TextSpan(
-            text: binaryChar,
+            text: glyph,
             style: baseStyle.copyWith(
               color: glyphColor.withValues(alpha: opacity),
             ),
@@ -769,17 +537,19 @@ class _MatrixBackgroundPainter extends CustomPainter {
         textPainter.layout();
         textPainter.paint(
           canvas,
-          Offset(x - (textPainter.width / 2), y - (textPainter.height / 2)),
+          Offset(
+            x - (textPainter.width / 2),
+            y - (textPainter.height / 2),
+          ),
         );
       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant _MatrixBackgroundPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.density != density ||
-        oldDelegate.toneColor != toneColor ||
-        oldDelegate.accentToneColor != accentToneColor;
-  }
+  bool shouldRepaint(covariant _MatrixBackgroundPainter old) =>
+      old.progress != progress ||
+      old.density != density ||
+      old.toneColor != toneColor ||
+      old.accentToneColor != accentToneColor;
 }

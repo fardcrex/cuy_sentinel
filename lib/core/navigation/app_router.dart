@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,6 +10,7 @@ import '../../presentation/screens/dashboard_screen.dart';
 import '../../presentation/screens/metrics_screen.dart';
 import '../../presentation/screens/not_found_screen.dart';
 import '../../presentation/screens/services_screen.dart';
+import '../../presentation/screens/users_screen.dart';
 import '../../presentation/welcome/welcome_screen.dart';
 import '../../presentation/widgets/responsive_shell.dart';
 
@@ -21,6 +21,7 @@ abstract final class AppRoutes {
   static const services = '/services';
   static const metrics = '/metrics';
   static const alerts = '/alerts';
+  static const users = '/users';
 }
 
 const _publicRoutes = {AppRoutes.welcome, AppRoutes.login};
@@ -73,6 +74,11 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
           pageBuilder: (context, state) =>
               _buildPage(state, const AlertsScreen()),
         ),
+        GoRoute(
+          path: AppRoutes.users,
+          pageBuilder: (context, state) =>
+              _buildPage(state, const UsersScreen()),
+        ),
       ],
     ),
   ],
@@ -81,16 +87,14 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
 );
 
 Page<void> _buildPage(GoRouterState state, Widget child) {
-  if (kIsWeb) {
-    return CustomTransitionPage<void>(
-      key: state.pageKey,
-      child: child,
-      transitionDuration: const Duration(milliseconds: 180),
-      transitionsBuilder: (context, animation, _, child) =>
-          FadeTransition(opacity: animation, child: child),
-    );
-  }
-  return MaterialPage<void>(key: state.pageKey, child: child);
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 180),
+    transitionsBuilder: (context, animation, _, child) =>
+        FadeTransition(opacity: animation, child: child),
+  );
+  //return MaterialPage<void>(key: state.pageKey, child: child);
 }
 
 class _GoRouterRefreshStream extends ChangeNotifier {

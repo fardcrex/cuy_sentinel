@@ -1,45 +1,77 @@
+import '../../../monitoring/domain/entities/service_status.dart';
+
 class Metric {
   const Metric({
     required this.id,
     required this.serviceId,
+    this.cpuUsagePercent,
     this.ramUsageMb,
+    this.ramTotalMb,
     this.diskUsagePercent,
     this.bandwidthInMb,
     this.bandwidthOutMb,
+    this.uptimeSeconds,
     required this.serviceStatus,
+    this.snmpLatencyMs,
     required this.collectedAt,
   });
 
-  final int id;
-  final int serviceId;
-  final double? ramUsageMb;
+  final String id;
+  final String serviceId;
+
+  // Resources
+  final double? cpuUsagePercent;
+  final int? ramUsageMb;
+  final int? ramTotalMb;
   final double? diskUsagePercent;
+
+  // Network
   final double? bandwidthInMb;
   final double? bandwidthOutMb;
-  final bool serviceStatus;
+
+  // Availability
+  final int? uptimeSeconds;
+  final ServiceStatus serviceStatus;
+
+  // SNMP metadata
+  final int? snmpLatencyMs;
+
   final DateTime collectedAt;
 
-  factory Metric.fromJson(Map<String, dynamic> json) {
-    return Metric(
-      id: json['id'] as int,
-      serviceId: json['service_id'] as int,
-      ramUsageMb: (json['ram_usage_mb'] as num?)?.toDouble(),
-      diskUsagePercent: (json['disk_usage_percent'] as num?)?.toDouble(),
-      bandwidthInMb: (json['bandwidth_in_mb'] as num?)?.toDouble(),
-      bandwidthOutMb: (json['bandwidth_out_mb'] as num?)?.toDouble(),
-      serviceStatus: json['service_status'] as bool,
-      collectedAt: DateTime.parse(json['collected_at'] as String),
-    );
+  double? get ramUsagePercent {
+    if (ramUsageMb == null || ramTotalMb == null || ramTotalMb == 0) return null;
+    return ramUsageMb! / ramTotalMb! * 100;
   }
+
+  factory Metric.fromJson(Map<String, dynamic> json) => Metric(
+    id: json['id'] as String,
+    serviceId: json['service_id'] as String,
+    cpuUsagePercent: (json['cpu_usage_percent'] as num?)?.toDouble(),
+    ramUsageMb: json['ram_usage_mb'] as int?,
+    ramTotalMb: json['ram_total_mb'] as int?,
+    diskUsagePercent: (json['disk_usage_percent'] as num?)?.toDouble(),
+    bandwidthInMb: (json['bandwidth_in_mb'] as num?)?.toDouble(),
+    bandwidthOutMb: (json['bandwidth_out_mb'] as num?)?.toDouble(),
+    uptimeSeconds: json['uptime_seconds'] as int?,
+    serviceStatus: ServiceStatus.fromString(
+      json['service_status'] as String? ?? 'offline',
+    ),
+    snmpLatencyMs: json['snmp_latency_ms'] as int?,
+    collectedAt: DateTime.parse(json['collected_at'] as String),
+  );
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'service_id': serviceId,
+    'cpu_usage_percent': cpuUsagePercent,
     'ram_usage_mb': ramUsageMb,
+    'ram_total_mb': ramTotalMb,
     'disk_usage_percent': diskUsagePercent,
     'bandwidth_in_mb': bandwidthInMb,
     'bandwidth_out_mb': bandwidthOutMb,
-    'service_status': serviceStatus,
+    'uptime_seconds': uptimeSeconds,
+    'service_status': serviceStatus.toJson(),
+    'snmp_latency_ms': snmpLatencyMs,
     'collected_at': collectedAt.toIso8601String(),
   };
 }

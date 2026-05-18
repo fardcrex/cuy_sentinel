@@ -75,13 +75,13 @@ Projects/
 
 | Constante             | Path         | Shell |
 | --------------------- | ------------ | ----- |
-| `AppRoutes.splash`    | `/splash`    | No    |
-| `AppRoutes.login`     | `/`          | No    |
-| `AppRoutes.welcome`   | `/welcome`   | No    |
+| `AppRoutes.login`     | `/login`     | No    |
+| `AppRoutes.welcome`   | `/`          | No    |
 | `AppRoutes.dashboard` | `/dashboard` | Sí    |
 | `AppRoutes.services`  | `/services`  | Sí    |
 | `AppRoutes.metrics`   | `/metrics`   | Sí    |
 | `AppRoutes.alerts`    | `/alerts`    | Sí    |
+| `AppRoutes.users`     | `/users`     | Sí    |
 
 Navegar: `context.go(AppRoutes.dashboard)` — nunca usar `Navigator` directamente.
 
@@ -90,12 +90,14 @@ Navegar: `context.go(AppRoutes.dashboard)` — nunca usar `Navigator` directamen
 ## Base de datos
 
 ```sql
-users              -- autenticación propia (Fase 2) / perfil (Fase 1 con Supabase Auth)
+users              -- auth (Supabase Fase 1 / propia Fase 2) + session_expires_at
 monitored_services -- Passbolt y ChkMonitor registrados
-metrics            -- métricas recolectadas cada 5-10 min vía SNMP
+metrics            -- CPU%, RAM, disco%, BW, uptime, status, latencia SNMP · cada 5 min
+service_events     -- historial de caídas, recuperaciones y degradaciones
+collector_runs     -- automonitoreo del agente Go (éxito/fallo, duración, versión)
 ```
 
-Ver `database/schema.sql` para DDL completo con índices.
+Ver `cuy_sentinel_go/database/schema.sql` para DDL completo con índices.
 
 ---
 

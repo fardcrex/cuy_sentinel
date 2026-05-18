@@ -1,17 +1,19 @@
 import '../domain/entities/metric.dart';
 import '../domain/interfaces/i_metrics_repository.dart';
 
-// Phase 1: implementar con Supabase
+// Fase 1: implementar con Supabase Realtime channel (postgres_changes INSERT)
 class SupabaseMetricsRepository implements IMetricsRepository {
   @override
-  Future<List<Metric>> getLatest({
-    required int serviceId,
+  Stream<List<Metric>> watchLatest({
+    required String serviceId,
     int limit = 50,
-  }) => throw UnimplementedError('SupabaseMetricsRepository.getLatest');
+  }) => Stream.error(
+    UnimplementedError('SupabaseMetricsRepository.watchLatest'),
+  );
 
   @override
   Future<List<Metric>> getByRange({
-    required int serviceId,
+    required String serviceId,
     required DateTime from,
     required DateTime to,
   }) => throw UnimplementedError('SupabaseMetricsRepository.getByRange');

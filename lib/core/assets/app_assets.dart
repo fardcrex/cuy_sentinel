@@ -9,24 +9,24 @@ class AppAssets {
   static const logoStackPrimary = 'assets/logos/logo_stack_primary.png';
   static const logoPrimaryTagline = logoHorizontalPrimary;
 
-  static const badgeAlertWarning = 'assets/badges/badge_alert_warning.png';
-  static const badgeBdSuccess = 'assets/badges/badge_bd_success.png';
+  static const badgeAlertWarning = 'assets/badges/badge_alert_warning.webp';
+  static const badgeBdSuccess = 'assets/badges/badge_bd_success.webp';
   static const badgePassboltSuccess =
-      'assets/badges/badge_passbolt_success.png';
-  static const badgeServerSuccess = 'assets/badges/badge_servidor_success.png';
-  static const badgeSnmpSuccess = 'assets/badges/badge_snmp_success.png';
+      'assets/badges/badge_passbolt_success.webp';
+  static const badgeServerSuccess = 'assets/badges/badge_servidor_success.webp';
+  static const badgeSnmpSuccess = 'assets/badges/badge_snmp_success.webp';
   static const badgeAuthSuccess = badgeServerSuccess;
 
   static const illustrationAnomalyDetected =
-      'assets/illustrations/illustration_anomaly_detected.png';
+      'assets/illustrations/illustration_anomaly_detected.webp';
   static const illustrationGuardianShield =
-      'assets/illustrations/illustration_guardian_shield.png';
+      'assets/illustrations/illustration_guardian_shield.webp';
   static const illustrationIntrusoDetected =
-      'assets/illustrations/illustration_intruso_detected.png';
+      'assets/illustrations/illustration_intruso_detected.webp';
   static const illustrationLoginGuard =
-      'assets/illustrations/illustration_login_guard.png';
+      'assets/illustrations/illustration_login_guard.webp';
   static const illustrationMonitoringGuard =
-      'assets/illustrations/illustration_monitoring_guard.png';
+      'assets/illustrations/illustration_monitoring_guard.webp';
 
   static const splashLogo = 'assets/splash/splash_logo.png';
   static const splashCoreSecurity = splashLogo;
@@ -40,6 +40,8 @@ class AppAssets {
   static const iconSystemSettings = 'assets/icons/icon_system_settings.png';
   static const iconUptimeInspectionShield =
       'assets/icons/icon_uptime_inspection_shield.png';
+  static const miniCheck = 'assets/icons/mini_check.webp';
+  static const miniPass = 'assets/icons/mini_pass.webp';
 
   // Team profile photos
   static const teamJair = 'assets/team/team_jair.png';

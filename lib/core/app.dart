@@ -7,6 +7,12 @@ import '../feature/auth/application/sign_out_use_case.dart';
 import '../feature/auth/application/watch_session_use_case.dart';
 import '../presentation/auth/bloc/auth_bloc.dart';
 import 'injection/app_dependencies.dart';
+import 'injection/modules/alerts_module.dart';
+import 'injection/modules/auth_module.dart';
+import 'injection/modules/databases_module.dart';
+import 'injection/modules/metrics_module.dart';
+import 'injection/modules/monitoring_module.dart';
+import 'injection/modules/users_module.dart';
 import 'navigation/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -44,13 +50,24 @@ class _CuySentinelAppState extends State<CuySentinelApp> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _authBloc,
-      child: MaterialApp.router(
-        title: 'Cuy Sentinel',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark(),
-        routerConfig: _router,
+    final deps = widget.dependencies;
+    return MultiRepositoryProvider(
+      providers: [
+        ...AuthModule.repositoryProviders(deps.authRepository),
+        ...MonitoringModule.repositoryProviders(deps.monitoringRepository),
+        ...MetricsModule.repositoryProviders(deps.metricsRepository),
+        ...AlertsModule.repositoryProviders(deps.alertsRepository),
+        ...UsersModule.repositoryProviders(deps.usersRepository),
+        ...DatabasesModule.repositoryProviders(deps.databasesRepository),
+      ],
+      child: BlocProvider.value(
+        value: _authBloc,
+        child: MaterialApp.router(
+          title: 'Cuy Sentinel',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.dark(),
+          routerConfig: _router,
+        ),
       ),
     );
   }

@@ -4,8 +4,14 @@ import '../../core/assets/app_assets.dart';
 import '../../core/responsive/app_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/app_card.dart';
-import '../widgets/brand_asset_icon.dart';
-import '../widgets/metric_chart_placeholder.dart';
+import 'widgets/bandwidth_chart_card.dart';
+import 'widgets/collector_health_card.dart';
+import 'widgets/recent_events_card.dart';
+import 'widgets/resource_chart_card.dart';
+import 'widgets/screen_header.dart';
+import 'widgets/services_status_card.dart';
+import 'widgets/sparkline.dart';
+import 'widgets/stat_overview_card.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -24,7 +30,48 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _DashboardHeader(),
+              ScreenHeader(
+                title: 'Dashboard',
+                subtitle: 'Resumen general de la infraestructura monitoreada',
+                trailing: Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.stroke),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Últimas 24h',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                      label: const Text('Actualizar'),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
               GridView.count(
                 shrinkWrap: true,
@@ -32,35 +79,47 @@ class DashboardScreen extends StatelessWidget {
                 crossAxisCount: statsColumns,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: width >= 900 ? 1.55 : 1.3,
+                childAspectRatio: width >= 900 ? 1.6 : 1.35,
                 children: const [
-                  _StatCard(
-                    'Servicios activos',
-                    '2 / 2',
-                    '100%',
-                    AppAssets.iconSystemSettings,
-                    AppColors.primary,
+                  StatOverviewCard(
+                    title: 'Servicios activos',
+                    value: '2 / 2',
+                    caption: 'Passbolt · ChkMonitor',
+                    icon: Icons.cloud_done_rounded,
+                    color: AppColors.primary,
+                    sparkPoints: [
+                      1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                    ],
                   ),
-                  _StatCard(
-                    'Uptime promedio',
-                    '99.8%',
-                    'Últimas 24 horas',
-                    AppAssets.iconUptimeInspectionShield,
-                    AppColors.primaryBright,
+                  StatOverviewCard(
+                    title: 'Uptime promedio',
+                    value: '99.9%',
+                    caption: 'Últimas 72 horas',
+                    icon: Icons.shield_outlined,
+                    color: AppColors.primaryBright,
+                    sparkPoints: [
+                      0.99, 1.0, 0.85, 0.90, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                    ],
                   ),
-                  _StatCard(
-                    'Alertas activas',
-                    '1',
-                    'Ver detalles',
-                    AppAssets.iconAlertShield,
-                    AppColors.critical,
+                  StatOverviewCard(
+                    title: 'Alertas activas',
+                    value: '2',
+                    caption: '1 crítica · 1 advertencia',
+                    icon: Icons.notifications_active_rounded,
+                    color: AppColors.critical,
+                    sparkPoints: [
+                      0.1, 0.2, 0.1, 0.5, 0.3, 0.2, 0.4, 0.6, 0.5, 0.7,
+                    ],
                   ),
-                  _StatCard(
-                    'Métricas recolectadas',
-                    '12,540',
-                    'Últimas 24 horas',
-                    AppAssets.iconChipMetrics,
-                    AppColors.secondary,
+                  StatOverviewCard(
+                    title: 'Métricas recolectadas',
+                    value: '12,540',
+                    caption: 'Intervalo: 5 min',
+                    icon: Icons.analytics_outlined,
+                    color: AppColors.secondary,
+                    sparkPoints: [
+                      0.4, 0.5, 0.45, 0.6, 0.55, 0.65, 0.6, 0.7, 0.68, 0.75,
+                    ],
                   ),
                 ],
               ),
@@ -73,9 +132,9 @@ class DashboardScreen extends StatelessWidget {
                       flex: 2,
                       child: Column(
                         children: [
-                          _UsageResourcesCard(),
+                          ResourceChartCard(),
                           SizedBox(height: 20),
-                          _BandwidthCard(),
+                          BandwidthChartCard(),
                         ],
                       ),
                     ),
@@ -83,9 +142,11 @@ class DashboardScreen extends StatelessWidget {
                     Expanded(
                       child: Column(
                         children: [
-                          _ServicesStatusCard(),
+                          ServicesStatusCard(),
                           SizedBox(height: 20),
-                          _RecentAlertsCard(),
+                          CollectorHealthCard(),
+                          SizedBox(height: 20),
+                          RecentEventsCard(),
                         ],
                       ),
                     ),
@@ -94,13 +155,15 @@ class DashboardScreen extends StatelessWidget {
               else
                 const Column(
                   children: [
-                    _UsageResourcesCard(),
+                    ServicesStatusCard(),
                     SizedBox(height: 20),
-                    _ServicesStatusCard(),
+                    ResourceChartCard(),
                     SizedBox(height: 20),
-                    _BandwidthCard(),
+                    BandwidthChartCard(),
                     SizedBox(height: 20),
-                    _RecentAlertsCard(),
+                    CollectorHealthCard(),
+                    SizedBox(height: 20),
+                    RecentEventsCard(),
                   ],
                 ),
             ],
@@ -111,81 +174,9 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-class _DashboardHeader extends StatelessWidget {
-  const _DashboardHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.spaceBetween,
-      runSpacing: 16,
-      spacing: 16,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Dashboard',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Resumen general de la infraestructura',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppColors.stroke),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.calendar_today_outlined, size: 18),
-                  SizedBox(width: 10),
-                  Text('12 may. 2025 - 12 may. 2025'),
-                ],
-              ),
-            ),
-            FilledButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.refresh),
-              label: const Text('Actualizar'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard(
-    this.title,
-    this.value,
-    this.caption,
-    this.assetPath,
-    this.color,
-  );
-
-  final String title;
-  final String value;
-  final String caption;
-  final String assetPath;
-  final Color color;
+// ignore: unused_element
+class _SparkPreview extends StatelessWidget {
+  const _SparkPreview();
 
   @override
   Widget build(BuildContext context) {
@@ -193,225 +184,33 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: BrandAssetIcon(
-              assetPath: assetPath,
-              size: 80,
-              backgroundColor: color.withValues(alpha: 0.10),
-              borderColor: color.withValues(alpha: 0.18),
-            ),
-          ),
-          const Spacer(),
           Text(
-            value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
+            'Vista rápida',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            caption,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UsageResourcesCard extends StatelessWidget {
-  const _UsageResourcesCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Uso de recursos',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              const _SegmentChip(label: 'Memoria', selected: true),
-              const SizedBox(width: 8),
-              const _SegmentChip(label: 'Disco'),
-              const SizedBox(width: 8),
-              const _SegmentChip(label: 'Red'),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const MetricChartPlaceholder(
-            points: [
-              0.26,
-              0.31,
-              0.37,
-              0.52,
-              0.46,
-              0.43,
-              0.57,
-              0.49,
-              0.41,
-              0.45,
-              0.53,
-              0.48,
-              0.46,
-              0.58,
-              0.55,
-              0.63,
-              0.61,
-              0.67,
-            ],
-            lineColor: AppColors.chartRam,
           ),
           const SizedBox(height: 16),
-          const Row(
-            children: [
-              _LegendDot(color: AppColors.chartRam, label: 'Passbolt'),
-              SizedBox(width: 18),
-              _LegendDot(color: AppColors.chartCpu, label: 'ChkMonitor'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BandwidthCard extends StatelessWidget {
-  const _BandwidthCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ancho de banda',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 18),
-          const MetricChartPlaceholder(
-            points: [
-              0.18,
-              0.24,
-              0.20,
-              0.33,
-              0.23,
-              0.29,
-              0.21,
-              0.34,
-              0.28,
-              0.39,
-              0.24,
-              0.27,
-              0.22,
-              0.41,
-              0.30,
-              0.46,
-              0.54,
-              0.44,
-            ],
-            lineColor: AppColors.chartNetwork,
-          ),
-          const SizedBox(height: 16),
-          const Row(
-            children: [
-              _LegendDot(color: AppColors.chartNetwork, label: 'Entrante'),
-              SizedBox(width: 18),
-              _LegendDot(color: AppColors.chartCpu, label: 'Saliente'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ServicesStatusCard extends StatelessWidget {
-  const _ServicesStatusCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Estado de servicios',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 18),
-          const _ServiceStatusRow(
+          _SparkRow(
             imagePath: AppAssets.badgePassboltSuccess,
-            title: 'Passbolt',
-            subtitle: 'Uptime 99.9%',
-            status: 'Activo',
-          ),
-          const SizedBox(height: 12),
-          const _ServiceStatusRow(
-            imagePath: AppAssets.badgeServerSuccess,
-            title: 'ChkMonitor',
-            subtitle: 'Uptime 99.7%',
-            status: 'Activo',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RecentAlertsCard extends StatelessWidget {
-  const _RecentAlertsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Alertas recientes',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              TextButton(onPressed: () {}, child: const Text('Ver todas')),
+            name: 'Passbolt',
+            cpu: 45,
+            ram: 30,
+            color: AppColors.primary,
+            cpuPoints: const [
+              0.38, 0.42, 0.44, 0.47, 0.45, 0.43, 0.46, 0.48, 0.45, 0.44,
             ],
           ),
           const SizedBox(height: 12),
-          const _AlertTile(
-            title: 'Uso de memoria crítico en Passbolt',
-            level: 'Crítica',
-            value: '85%',
-            color: AppColors.danger,
-          ),
-          const SizedBox(height: 12),
-          const _AlertTile(
-            title: 'Tráfico de red elevado en ChkMonitor',
-            level: 'Advertencia',
-            value: '120 Mbps',
-            color: AppColors.warning,
+          _SparkRow(
+            imagePath: AppAssets.badgeServerSuccess,
+            name: 'ChkMonitor',
+            cpu: 12,
+            ram: 25,
+            color: AppColors.secondary,
+            cpuPoints: const [
+              0.10, 0.11, 0.12, 0.13, 0.11, 0.12, 0.13, 0.12, 0.11, 0.12,
+            ],
           ),
         ],
       ),
@@ -419,152 +218,56 @@ class _RecentAlertsCard extends StatelessWidget {
   }
 }
 
-class _SegmentChip extends StatelessWidget {
-  const _SegmentChip({required this.label, this.selected = false});
-
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: selected ? AppColors.tealGlow : AppColors.surfaceSoft,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: selected ? AppColors.primary : AppColors.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-class _LegendDot extends StatelessWidget {
-  const _LegendDot({required this.color, required this.label});
-
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 8),
-        Text(label),
-      ],
-    );
-  }
-}
-
-class _ServiceStatusRow extends StatelessWidget {
-  const _ServiceStatusRow({
+class _SparkRow extends StatelessWidget {
+  const _SparkRow({
     required this.imagePath,
-    required this.title,
-    required this.subtitle,
-    required this.status,
+    required this.name,
+    required this.cpu,
+    required this.ram,
+    required this.color,
+    required this.cpuPoints,
   });
 
   final String imagePath;
-  final String title;
-  final String subtitle;
-  final String status;
+  final String name;
+  final int cpu;
+  final int ram;
+  final Color color;
+  final List<double> cpuPoints;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceSoft,
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.panel,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.stroke),
       ),
       child: Row(
         children: [
-          Image.asset(imagePath, width: 48, height: 48),
+          Image.asset(imagePath, width: 36, height: 36),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: Theme.of(context).textTheme.titleMedium),
+                Text(name, style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  'CPU $cpu%  ·  RAM $ram%',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.successGlow,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              status,
-              style: const TextStyle(color: AppColors.primaryBright),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AlertTile extends StatelessWidget {
-  const _AlertTile({
-    required this.title,
-    required this.level,
-    required this.value,
-    required this.color,
-  });
-
-  final String title;
-  final String level;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  level,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(title),
-              ],
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(color: color, fontWeight: FontWeight.w700),
+          Sparkline(
+            points: cpuPoints,
+            color: color,
+            width: 64,
+            height: 28,
           ),
         ],
       ),

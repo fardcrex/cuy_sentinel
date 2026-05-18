@@ -95,22 +95,36 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.panel,
-        indicatorColor: AppColors.tealGlow,
-        labelTextStyle: WidgetStatePropertyAll(
-          textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.18),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: AppColors.primary);
+          }
+          return const IconThemeData(color: AppColors.textSecondary);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return textTheme.labelMedium?.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+            );
+          }
+          return textTheme.labelMedium?.copyWith(
+            color: AppColors.textSecondary,
+          );
+        }),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: AppColors.panel,
-        indicatorColor: AppColors.tealGlow,
+        indicatorColor: AppColors.primary.withValues(alpha: 0.18),
         selectedIconTheme: const IconThemeData(color: AppColors.primary),
-        unselectedIconTheme: const IconThemeData(color: AppColors.textInactive),
+        unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
         selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
           color: AppColors.primary,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
         unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(
-          color: AppColors.textInactive,
+          color: AppColors.textSecondary,
         ),
       ),
     );

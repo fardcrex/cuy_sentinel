@@ -7,7 +7,7 @@ class GetMetricsHistoryUseCase {
   final IMetricsRepository _repository;
 
   Future<List<Metric>> execute({
-    required int serviceId,
+    required String serviceId,
     required DateTime from,
     required DateTime to,
   }) => _repository.getByRange(serviceId: serviceId, from: from, to: to);

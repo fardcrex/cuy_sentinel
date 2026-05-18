@@ -4,6 +4,9 @@ import '../../core/assets/app_assets.dart';
 import '../../core/responsive/app_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/app_card.dart';
+import 'widgets/alert_threshold_tile.dart';
+import 'widgets/incident_record_tile.dart';
+import 'widgets/screen_header.dart';
 
 class AlertsScreen extends StatelessWidget {
   const AlertsScreen({super.key});
@@ -14,42 +17,54 @@ class AlertsScreen extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final padding = AppBreakpoints.horizontalPadding(width);
+        final isWide = AppBreakpoints.isDesktop(width);
 
         return SingleChildScrollView(
           padding: EdgeInsets.all(padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Alertas',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+              ScreenHeader(
+                title: 'Alertas',
+                subtitle: 'Umbrales derivados de métricas SNMP + historial de incidentes',
+                trailing: const _AlertSummaryBadges(),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Listado demo de eventos priorizados para el dashboard multiplataforma.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 20),
-              AppBreakpoints.isDesktop(width)
-                  ? const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(flex: 2, child: _AlertsList()),
-                        SizedBox(width: 20),
-                        Expanded(child: _AlertsAside()),
-                      ],
-                    )
-                  : const Column(
-                      children: [
-                        _AlertsAside(),
-                        SizedBox(height: 20),
-                        _AlertsList(),
-                      ],
+              const SizedBox(height: 24),
+              if (isWide)
+                const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        children: [
+                          _AlertsSection(),
+                          SizedBox(height: 24),
+                          _IncidentsSection(),
+                        ],
+                      ),
                     ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        children: [
+                          _AlertsAside(),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              else
+                const Column(
+                  children: [
+                    _AlertsAside(),
+                    SizedBox(height: 24),
+                    _AlertsSection(),
+                    SizedBox(height: 24),
+                    _IncidentsSection(),
+                  ],
+                ),
             ],
           ),
         );
@@ -58,98 +73,138 @@ class AlertsScreen extends StatelessWidget {
   }
 }
 
-class _AlertsList extends StatelessWidget {
-  const _AlertsList();
+class _AlertSummaryBadges extends StatelessWidget {
+  const _AlertSummaryBadges();
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: const [
+        _SummaryBadge(label: '1 crítica', color: AppColors.danger),
+        _SummaryBadge(label: '1 advertencia', color: AppColors.warning),
+        _SummaryBadge(label: '0 cerradas hoy', color: AppColors.textSecondary),
+      ],
+    );
+  }
+}
+
+class _SummaryBadge extends StatelessWidget {
+  const _SummaryBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _AlertsSection extends StatelessWidget {
+  const _AlertsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _AlertRecord(
-          title: 'Uso de memoria crítico en Passbolt',
-          subtitle: 'Hace 5 min',
-          level: 'Crítica',
-          value: '85%',
-          color: AppColors.danger,
+        Text(
+          'Alertas activas',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        SizedBox(height: 14),
-        _AlertRecord(
-          title: 'Tráfico de red elevado en ChkMonitor',
-          subtitle: 'Hace 15 min',
-          level: 'Advertencia',
-          value: '120 Mbps',
-          color: AppColors.warning,
+        const SizedBox(height: 14),
+        const AlertThresholdTile(
+          service: 'Passbolt',
+          metric: 'Uso de memoria (RAM)',
+          currentValue: '85%',
+          threshold: '80%',
+          severity: AlertSeverity.critical,
+          timestamp: 'Hace 5 min',
         ),
-        SizedBox(height: 14),
-        _AlertRecord(
-          title: 'Latencia superior al umbral de referencia',
-          subtitle: 'Hace 28 min',
-          level: 'Observación',
-          value: '230 ms',
-          color: AppColors.secondary,
+        const SizedBox(height: 12),
+        const AlertThresholdTile(
+          service: 'ChkMonitor',
+          metric: 'Ancho de banda entrante',
+          currentValue: '120 Mbps',
+          threshold: '100 Mbps',
+          severity: AlertSeverity.warning,
+          timestamp: 'Hace 15 min',
+        ),
+        const SizedBox(height: 12),
+        const AlertThresholdTile(
+          service: 'Passbolt',
+          metric: 'Latencia de respuesta SNMP',
+          currentValue: '230 ms',
+          threshold: '200 ms',
+          severity: AlertSeverity.info,
+          timestamp: 'Hace 28 min',
         ),
       ],
     );
   }
 }
 
-class _AlertRecord extends StatelessWidget {
-  const _AlertRecord({
-    required this.title,
-    required this.subtitle,
-    required this.level,
-    required this.value,
-    required this.color,
-  });
-
-  final String title;
-  final String subtitle;
-  final String level;
-  final String value;
-  final Color color;
+class _IncidentsSection extends StatelessWidget {
+  const _IncidentsSection();
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.16),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.warning_amber_rounded, color: color),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Historial de incidentes',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  level,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 6),
-                Text(title, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            value,
-            style: TextStyle(color: color, fontWeight: FontWeight.w800),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 14),
+        const IncidentRecordTile(
+          service: 'ChkMonitor',
+          type: IncidentType.down,
+          startTime: '15 may 14:23',
+          endTime: '15 may 14:35',
+          duration: '12 min',
+          cause: 'Servicio no disponible — tiempo de respuesta agotado',
+        ),
+        const SizedBox(height: 12),
+        const IncidentRecordTile(
+          service: 'ChkMonitor',
+          type: IncidentType.down,
+          startTime: '13 may 09:11',
+          endTime: '13 may 09:17',
+          duration: '6 min',
+          cause: 'Reinicio del contenedor detectado vía SNMP',
+        ),
+        const SizedBox(height: 12),
+        const IncidentRecordTile(
+          service: 'Passbolt',
+          type: IncidentType.recovered,
+          startTime: '10 may 07:55',
+          endTime: '10 may 08:00',
+          duration: '5 min',
+          cause: 'Recuperación automática tras actualización de imagen',
+        ),
+      ],
     );
   }
 }
@@ -164,12 +219,17 @@ class _AlertsAside extends StatelessWidget {
         AppCard(
           child: Column(
             children: [
-              Image.asset(AppAssets.badgeAlertWarning, width: 180, height: 180),
+              Image.asset(
+                AppAssets.badgeAlertWarning,
+                width: 160,
+                height: 160,
+              ),
               const SizedBox(height: 12),
               Text(
-                'Unificar alertas y métricas en una sola shell responsive evita divergencias entre web y mobile.',
+                'Las alertas se derivan automáticamente al superar los umbrales '
+                'definidos sobre las métricas SNMP recolectadas.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                   height: 1.6,
                 ),
@@ -182,14 +242,71 @@ class _AlertsAside extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Resumen'),
-              SizedBox(height: 12),
-              Text('1 alerta crítica activa'),
-              SizedBox(height: 6),
-              Text('2 advertencias recientes'),
-              SizedBox(height: 6),
-              Text('0 incidentes cerrados hoy'),
+              Row(
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Umbrales configurados',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              SizedBox(height: 14),
+              _ThresholdRow(metric: 'RAM', threshold: '> 80%', color: AppColors.danger),
+              SizedBox(height: 8),
+              _ThresholdRow(metric: 'CPU', threshold: '> 75%', color: AppColors.warning),
+              SizedBox(height: 8),
+              _ThresholdRow(metric: 'Disco', threshold: '> 85%', color: AppColors.warning),
+              SizedBox(height: 8),
+              _ThresholdRow(metric: 'BW', threshold: '> 100 Mbps', color: AppColors.secondary),
+              SizedBox(height: 8),
+              _ThresholdRow(metric: 'Latencia', threshold: '> 200 ms', color: AppColors.secondary),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ThresholdRow extends StatelessWidget {
+  const _ThresholdRow({
+    required this.metric,
+    required this.threshold,
+    required this.color,
+  });
+
+  final String metric;
+  final String threshold;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            metric,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+        ),
+        Text(
+          threshold,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
           ),
         ),
       ],

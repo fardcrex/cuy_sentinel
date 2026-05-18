@@ -66,6 +66,11 @@ class ResponsiveShell extends StatelessWidget {
     _ShellDestination('Servicios', AppRoutes.services, Icons.storage_outlined),
     _ShellDestination('Métricas', AppRoutes.metrics, Icons.insights_outlined),
     _ShellDestination('Alertas', AppRoutes.alerts, Icons.notifications_none),
+    _ShellDestination(
+      'Usuarios',
+      AppRoutes.users,
+      Icons.people_outline_rounded,
+    ),
   ];
 
   @override
@@ -303,7 +308,7 @@ class _SidebarItem extends StatelessWidget {
             children: [
               Icon(
                 destination.icon,
-                color: selected ? AppColors.primary : AppColors.textInactive,
+                color: selected ? AppColors.primary : AppColors.textSecondary,
               ),
               const SizedBox(width: 14),
               Text(

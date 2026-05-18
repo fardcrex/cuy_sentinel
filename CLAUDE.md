@@ -10,28 +10,30 @@ Equipo: Jair Conislla Bocangel · Daniel Rojas Sanchez · Jheampierre Ralli Pera
 
 ## Stack
 
-| Área | Tecnología |
-|---|---|
-| Panel (frontend) | Flutter multiplataforma |
-| Routing | go_router con ShellRoute |
-| Recolector | Go (backend_go/) — fase 2 |
-| BD Fase 1 | Supabase (PostgreSQL cloud) |
-| BD Fase 2 | PostgreSQL propio con réplica streaming/WAL |
-| API Fase 2 | Node.js + Socket.IO |
-| SNMP | Passbolt :1161 · ChkMonitor :2161 |
-| SO despliegue | Ubuntu 24.04 LTS |
+| Área             | Tecnología                                  |
+| ---------------- | ------------------------------------------- |
+| Panel (frontend) | Flutter multiplataforma                     |
+| Routing          | go_router con ShellRoute                    |
+| Recolector       | Go (backend_go/) — fase 2                   |
+| BD Fase 1        | Supabase (PostgreSQL cloud)                 |
+| BD Fase 2        | PostgreSQL propio con réplica streaming/WAL |
+| API Fase 2       | Node.js + Socket.IO                         |
+| SNMP             | Passbolt :1161 · ChkMonitor :2161           |
+| SO despliegue    | Ubuntu 24.04 LTS                            |
 
 ---
 
 ## Arquitectura en dos fases
 
 ### Fase 1 — rápida (Supabase)
+
 ```
 Flutter → Supabase (REST + Realtime)
 Go recolector → SNMP → Supabase
 ```
 
 ### Fase 2 — escalable (self-hosted)
+
 ```
 Flutter → Node.js API + Socket.IO
 Go recolector → SNMP → PostgreSQL primario
@@ -53,10 +55,9 @@ Projects/
 │   │   ├── sentinel.phase1.json    # Supabase (NO se versiona)
 │   │   └── sentinel.phase2.json    # PostgreSQL/API (NO se versiona)
 │   └── lib/
-│       ├── app/            # assets · navigation · responsive · theme
-│       ├── core/           # env · services/interfaces
+│       ├── core/           # env · services/interfaces  # assets · navigation · responsive · theme
 │       ├── feature/        # auth/domain · monitoring/domain
-│       └── presentation/   # screens · widgets
+│       └── presentation/   # pages · widgets
 │
 └── cuy_sentinel_go/        # recolector SNMP en Go
     ├── database/
@@ -72,15 +73,15 @@ Projects/
 
 ## Rutas (go_router)
 
-| Constante | Path | Shell |
-|---|---|---|
-| `AppRoutes.splash` | `/splash` | No |
-| `AppRoutes.login` | `/` | No |
-| `AppRoutes.welcome` | `/welcome` | No |
-| `AppRoutes.dashboard` | `/dashboard` | Sí |
-| `AppRoutes.services` | `/services` | Sí |
-| `AppRoutes.metrics` | `/metrics` | Sí |
-| `AppRoutes.alerts` | `/alerts` | Sí |
+| Constante             | Path         | Shell |
+| --------------------- | ------------ | ----- |
+| `AppRoutes.splash`    | `/splash`    | No    |
+| `AppRoutes.login`     | `/`          | No    |
+| `AppRoutes.welcome`   | `/welcome`   | No    |
+| `AppRoutes.dashboard` | `/dashboard` | Sí    |
+| `AppRoutes.services`  | `/services`  | Sí    |
+| `AppRoutes.metrics`   | `/metrics`   | Sí    |
+| `AppRoutes.alerts`    | `/alerts`    | Sí    |
 
 Navegar: `context.go(AppRoutes.dashboard)` — nunca usar `Navigator` directamente.
 
@@ -108,12 +109,12 @@ cp envs/sentinel.example.json envs/sentinel.phase1.json
 # Editar con URL y anon key de Supabase
 ```
 
-| Variable | Descripción |
-|---|---|
-| `SUPABASE_URL` | URL del proyecto Supabase |
-| `SUPABASE_ANON_KEY` | Anon key pública |
-| `API_BASE_URL` | Base URL del API Node.js (Fase 2) |
-| `API_SECRET` | Secret para autenticar el recolector (Fase 2) |
+| Variable            | Descripción                                   |
+| ------------------- | --------------------------------------------- |
+| `SUPABASE_URL`      | URL del proyecto Supabase                     |
+| `SUPABASE_ANON_KEY` | Anon key pública                              |
+| `API_BASE_URL`      | Base URL del API Node.js (Fase 2)             |
+| `API_SECRET`        | Secret para autenticar el recolector (Fase 2) |
 
 ---
 
@@ -144,6 +145,7 @@ cd backend_go && go run main.go
 ## Diseño — sistema de colores
 
 No modificar los tokens de `AppColors`. El sistema de diseño usa:
+
 - Fondo: `voidBlack` / `darkPanel`
 - Acento primario: `primaryCyberTeal` (verde)
 - Acento secundario: `neonShieldGreen` / `deepMonitoringCyan`
@@ -162,8 +164,8 @@ No modificar los tokens de `AppColors`. El sistema de diseño usa:
 
 ## Etapas del proyecto
 
-| Etapa | Fecha | Estado |
-|---|---|---|
-| 1 — Infraestructura + SNMP | 12 mayo 2025 | ✅ Completada |
+| Etapa                            | Fecha        | Estado         |
+| -------------------------------- | ------------ | -------------- |
+| 1 — Infraestructura + SNMP       | 12 mayo 2025 | ✅ Completada  |
 | 2 — Sistema web + almacenamiento | 19 mayo 2025 | 🔄 En progreso |
-| 3 — Costeo y concurrencia | 26 mayo 2025 | ⏳ Pendiente |
+| 3 — Costeo y concurrencia        | 26 mayo 2025 | ⏳ Pendiente   |

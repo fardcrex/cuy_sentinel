@@ -5,8 +5,7 @@ import '../domain/entities/app_user.dart';
 import '../domain/interfaces/i_auth_repository.dart';
 
 class InMemoryAuthRepository implements IAuthRepository {
-  static const _email = 'admin@cuysentinel.local';
-  static const _password = 'CuySentinel123';
+  static const _password = 'cuy123';
 
   final _controller = StreamController<AppUser?>.broadcast();
   AppUser? _current;
@@ -26,7 +25,7 @@ class InMemoryAuthRepository implements IAuthRepository {
     required String password,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (email.trim() != _email || password != _password) {
+    if (password != _password) {
       throw const InvalidCredentialsException();
     }
     final user = AppUser(id: 'dev-001', email: email.trim());

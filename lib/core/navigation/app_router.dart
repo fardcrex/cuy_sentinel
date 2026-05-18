@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../presentation/auth/bloc/auth_bloc.dart';
+import '../../presentation/auth/login_screen.dart';
 import '../../presentation/screens/alerts_screen.dart';
 import '../../presentation/screens/dashboard_screen.dart';
-import '../../presentation/screens/login_screen.dart';
 import '../../presentation/screens/metrics_screen.dart';
 import '../../presentation/screens/not_found_screen.dart';
 import '../../presentation/screens/services_screen.dart';
-import '../../presentation/screens/welcome_screen.dart';
+import '../../presentation/welcome/welcome_screen.dart';
 import '../../presentation/widgets/responsive_shell.dart';
 
 abstract final class AppRoutes {
@@ -26,63 +26,59 @@ abstract final class AppRoutes {
 const _publicRoutes = {AppRoutes.welcome, AppRoutes.login};
 
 GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
-      initialLocation: AppRoutes.welcome,
-      refreshListenable: _GoRouterRefreshStream(authBloc.stream),
-      redirect: (context, state) {
-        final isAuthenticated = authBloc.state is AuthAuthenticated;
-        final loc = state.matchedLocation;
+  initialLocation: AppRoutes.welcome,
+  refreshListenable: _GoRouterRefreshStream(authBloc.stream),
+  redirect: (context, state) {
+    final isAuthenticated = authBloc.state is AuthAuthenticated;
+    final loc = state.matchedLocation;
 
-        if (!isAuthenticated && !_publicRoutes.contains(loc)) {
-          return AppRoutes.login;
-        }
-        if (isAuthenticated && loc == AppRoutes.login) {
-          return AppRoutes.dashboard;
-        }
-        return null;
-      },
+    if (!isAuthenticated && !_publicRoutes.contains(loc)) {
+      return AppRoutes.login;
+    }
+    if (isAuthenticated && loc == AppRoutes.login) {
+      return AppRoutes.dashboard;
+    }
+    return null;
+  },
+  routes: [
+    GoRoute(
+      path: AppRoutes.login,
+      pageBuilder: (context, state) => _buildPage(state, const LoginScreen()),
+    ),
+    GoRoute(
+      path: AppRoutes.welcome,
+      pageBuilder: (context, state) => _buildPage(state, const WelcomeScreen()),
+    ),
+    ShellRoute(
+      builder: (context, state, child) =>
+          ResponsiveShell(currentPath: state.matchedLocation, child: child),
       routes: [
         GoRoute(
-          path: AppRoutes.login,
+          path: AppRoutes.dashboard,
           pageBuilder: (context, state) =>
-              _buildPage(state, const LoginScreen()),
+              _buildPage(state, const DashboardScreen()),
         ),
         GoRoute(
-          path: AppRoutes.welcome,
+          path: AppRoutes.services,
           pageBuilder: (context, state) =>
-              _buildPage(state, const WelcomeScreen()),
+              _buildPage(state, const ServicesScreen()),
         ),
-        ShellRoute(
-          builder: (context, state, child) => ResponsiveShell(
-            currentPath: state.matchedLocation,
-            child: child,
-          ),
-          routes: [
-            GoRoute(
-              path: AppRoutes.dashboard,
-              pageBuilder: (context, state) =>
-                  _buildPage(state, const DashboardScreen()),
-            ),
-            GoRoute(
-              path: AppRoutes.services,
-              pageBuilder: (context, state) =>
-                  _buildPage(state, const ServicesScreen()),
-            ),
-            GoRoute(
-              path: AppRoutes.metrics,
-              pageBuilder: (context, state) =>
-                  _buildPage(state, const MetricsScreen()),
-            ),
-            GoRoute(
-              path: AppRoutes.alerts,
-              pageBuilder: (context, state) =>
-                  _buildPage(state, const AlertsScreen()),
-            ),
-          ],
+        GoRoute(
+          path: AppRoutes.metrics,
+          pageBuilder: (context, state) =>
+              _buildPage(state, const MetricsScreen()),
+        ),
+        GoRoute(
+          path: AppRoutes.alerts,
+          pageBuilder: (context, state) =>
+              _buildPage(state, const AlertsScreen()),
         ),
       ],
-      errorBuilder: (context, state) =>
-          NotFoundScreen(location: state.uri.toString()),
-    );
+    ),
+  ],
+  errorBuilder: (context, state) =>
+      NotFoundScreen(location: state.uri.toString()),
+);
 
 Page<void> _buildPage(GoRouterState state, Widget child) {
   if (kIsWeb) {

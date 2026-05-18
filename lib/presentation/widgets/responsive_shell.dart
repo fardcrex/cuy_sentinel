@@ -1,11 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/assets/app_assets.dart';
 import '../../core/navigation/app_router.dart';
 import '../../core/responsive/app_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
+import '../auth/bloc/auth_bloc.dart';
 import 'app_card.dart';
+
+Future<void> _confirmLogout(BuildContext context) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: AppColors.panel,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: AppColors.stroke),
+      ),
+      title: const Text('Cerrar sesión'),
+      content: const Text('¿Deseas salir del panel de monitoreo?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.danger,
+            foregroundColor: AppColors.textPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('Cerrar sesión'),
+        ),
+      ],
+    ),
+  );
+  if ((confirmed ?? false) && context.mounted) {
+    // Despachar el evento limpia la sesión en el repositorio y emite
+    // AuthUnauthenticated. El refreshListenable del router detecta el cambio
+    // y redirige a /login automáticamente — sin context.go manual.
+    context.read<AuthBloc>().add(const AuthLogoutRequested());
+  }
+}
 
 class ResponsiveShell extends StatelessWidget {
   const ResponsiveShell({
@@ -48,6 +88,14 @@ class ResponsiveShell extends StatelessWidget {
                   const Text('Cuy Sentinel'),
                 ],
               ),
+              actions: [
+                IconButton(
+                  tooltip: 'Cerrar sesión',
+                  icon: const Icon(Icons.logout_rounded),
+                  onPressed: () => _confirmLogout(context),
+                ),
+                const SizedBox(width: 4),
+              ],
             ),
             body: child,
             bottomNavigationBar: NavigationBar(
@@ -85,6 +133,17 @@ class ResponsiveShell extends StatelessWidget {
                         AppAssets.logoMarkShield,
                         width: 52,
                         height: 52,
+                      ),
+                    ),
+                    trailing: Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: IconButton(
+                        tooltip: 'Cerrar sesión',
+                        icon: const Icon(
+                          Icons.logout_rounded,
+                          color: AppColors.textInactive,
+                        ),
+                        onPressed: () => _confirmLogout(context),
                       ),
                     ),
                     destinations: destinations
@@ -189,6 +248,27 @@ class _DesktopSidebar extends StatelessWidget {
                   style: TextStyle(color: AppColors.textSecondary, height: 1.5),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Builder(
+            builder: (ctx) => SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textInactive,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                onPressed: () => _confirmLogout(ctx),
+                icon: const Icon(Icons.logout_rounded, size: 18),
+                label: const Text('Cerrar sesión'),
+              ),
             ),
           ),
         ],

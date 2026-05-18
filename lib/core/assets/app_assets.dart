@@ -21,6 +21,8 @@ class AppAssets {
       'assets/illustrations/illustration_anomaly_detected.png';
   static const illustrationGuardianShield =
       'assets/illustrations/illustration_guardian_shield.png';
+  static const illustrationIntrusoDetected =
+      'assets/illustrations/illustration_intruso_detected.png';
   static const illustrationLoginGuard =
       'assets/illustrations/illustration_login_guard.png';
   static const illustrationMonitoringGuard =
@@ -43,4 +45,5 @@ class AppAssets {
   static const teamJair = 'assets/team/team_jair.png';
   static const teamDaniel = 'assets/team/team_daniel.png';
   static const teamJheampierre = 'assets/team/team_jheampierre.png';
+  static const teamProfe = 'assets/team/team_profe.png';
 }

@@ -48,11 +48,11 @@ flutter_launcher_icons:
     image_path: assets/logos/logo_mark_shield.png
 
 flutter_native_splash:
-  color: "#020507"
-  image: assets/splash/splash_logo.png
+  color: "#031417"
+  image: assets/logos/logo_stack_primary.png
   android: true
   ios: true
   web: true
   android_12:
-    color: "#020507"
-    image: assets/splash/splash_logo.png
+    color: "#031417"
+    image: assets/logos/logo_stack_primary.png

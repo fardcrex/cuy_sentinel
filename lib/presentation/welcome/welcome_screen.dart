@@ -22,6 +22,7 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen>
     with SingleTickerProviderStateMixin {
   final _teamKey = GlobalKey();
+  final _servicesKey = GlobalKey();
   final _etapaKey = GlobalKey();
   final _archKey = GlobalKey();
   final _platformsKey = GlobalKey();
@@ -67,7 +68,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 builder: (_, _) => CustomPaint(
                   painter: MatrixBackgroundPainter(
                     progress: _bgController.value,
-                    density: 0.35,
+                    density: 0.8,
                     toneColor: AppColors.primary,
                     accentToneColor: AppColors.primaryBright,
                   ),
@@ -85,8 +86,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   onPlatforms: () => _scrollTo(_platformsKey),
                   onTech: () => _scrollTo(_techKey),
                 ),
-                _HeroSection(onViewArch: () => _scrollTo(_archKey)),
+                const _HeroSection(),
                 _TeamSection(sectionKey: _teamKey),
+                const _ProfessorSection(),
+                _ServicesSection(sectionKey: _servicesKey),
                 _EtapaObjectivesSection(sectionKey: _etapaKey),
                 _Phase1Section(sectionKey: _archKey),
                 const _Phase2Section(),
@@ -119,72 +122,262 @@ class _NavBar extends StatelessWidget {
   final VoidCallback onPlatforms;
   final VoidCallback onTech;
 
+  void _openMenu(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => _NavBottomSheet(
+        onTeam: () { Navigator.pop(ctx); onTeam(); },
+        onEtapa: () { Navigator.pop(ctx); onEtapa(); },
+        onArch: () { Navigator.pop(ctx); onArch(); },
+        onPlatforms: () { Navigator.pop(ctx); onPlatforms(); },
+        onTech: () { Navigator.pop(ctx); onTech(); },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.panel.withValues(alpha: 0.92),
-        border: const Border(bottom: BorderSide(color: AppColors.stroke)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+    return SafeArea(
+      bottom: false,
+      left: false,
+      right: false,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.panel.withValues(alpha: 0.92),
+          border: const Border(bottom: BorderSide(color: AppColors.stroke)),
+        ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: _kContentMaxWidth),
-          child: Row(
-            children: [
-              Image.asset(AppAssets.logoHorizontalPrimary, height: 36),
-              const Spacer(),
-              _NavPill(label: 'Equipo', onTap: onTeam),
-              const SizedBox(width: 2),
-              _NavPill(label: 'Objetivos', onTap: onEtapa),
-              const SizedBox(width: 2),
-              _NavPill(label: 'Arquitectura', onTap: onArch),
-              const SizedBox(width: 2),
-              _NavPill(label: 'Plataformas', onTap: onPlatforms),
-              const SizedBox(width: 2),
-              _NavPill(label: 'Tecnologías', onTap: onTech),
-              const SizedBox(width: 16),
-              Builder(
-                builder: (context) => DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    gradient: AppColors.successGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.22),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: AppColors.background,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      textStyle:
-                          Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 700;
+
+              if (isMobile) {
+                return Row(
+                  children: [
+                    Image.asset(AppAssets.logoMarkShield, height: 32),
+                    const Spacer(),
+                    Builder(
+                      builder: (ctx) => FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.background,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
                           ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        onPressed: () => ctx.go(AppRoutes.login),
+                        icon: const Icon(Icons.lock_open_rounded, size: 15),
+                        label: const Text('Acceder'),
+                      ),
                     ),
-                    onPressed: () => context.go(AppRoutes.login),
-                    icon: const Icon(Icons.lock_open_rounded, size: 16),
-                    label: const Text('Acceder al panel'),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: 'Menú',
+                      icon: const Icon(
+                        Icons.menu_rounded,
+                        color: AppColors.textSecondary,
+                      ),
+                      onPressed: () => _openMenu(context),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Image.asset(AppAssets.logoHorizontalPrimary, height: 36),
+                  const Spacer(),
+                  _NavPill(label: 'Equipo', onTap: onTeam),
+                  const SizedBox(width: 2),
+                  _NavPill(label: 'Objetivos', onTap: onEtapa),
+                  const SizedBox(width: 2),
+                  _NavPill(label: 'Arquitectura', onTap: onArch),
+                  const SizedBox(width: 2),
+                  _NavPill(label: 'Plataformas', onTap: onPlatforms),
+                  const SizedBox(width: 2),
+                  _NavPill(label: 'Tecnologías', onTap: onTech),
+                  const SizedBox(width: 16),
+                  Builder(
+                    builder: (ctx) => DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        gradient: AppColors.successGradient,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.22),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: AppColors.background,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          textStyle: Theme.of(ctx).textTheme.labelLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        onPressed: () => ctx.go(AppRoutes.login),
+                        icon: const Icon(Icons.lock_open_rounded, size: 16),
+                        label: const Text('Acceder al panel'),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
+    ),
+  );
+  }
+}
+
+class _NavBottomSheet extends StatelessWidget {
+  const _NavBottomSheet({
+    required this.onTeam,
+    required this.onEtapa,
+    required this.onArch,
+    required this.onPlatforms,
+    required this.onTech,
+  });
+
+  final VoidCallback onTeam;
+  final VoidCallback onEtapa;
+  final VoidCallback onArch;
+  final VoidCallback onPlatforms;
+  final VoidCallback onTech;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        16,
+        24,
+        MediaQuery.of(context).padding.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.stroke,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 24),
+          _NavSheetItem(
+            icon: Icons.people_outline_rounded,
+            label: 'Equipo',
+            onTap: onTeam,
+          ),
+          _NavSheetItem(
+            icon: Icons.flag_outlined,
+            label: 'Objetivos',
+            onTap: onEtapa,
+          ),
+          _NavSheetItem(
+            icon: Icons.account_tree_outlined,
+            label: 'Arquitectura',
+            onTap: onArch,
+          ),
+          _NavSheetItem(
+            icon: Icons.devices_rounded,
+            label: 'Plataformas',
+            onTap: onPlatforms,
+          ),
+          _NavSheetItem(
+            icon: Icons.layers_outlined,
+            label: 'Tecnologías',
+            onTap: onTech,
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: AppColors.stroke),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: Builder(
+              builder: (ctx) => FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.background,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () => ctx.go(AppRoutes.login),
+                icon: const Icon(Icons.lock_open_rounded, size: 16),
+                label: const Text(
+                  'Acceder al panel',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavSheetItem extends StatelessWidget {
+  const _NavSheetItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      leading: Icon(icon, color: AppColors.textSecondary, size: 20),
+      title: Text(
+        label,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.arrow_forward_ios_rounded,
+        size: 14,
+        color: AppColors.textInactive,
+      ),
+      onTap: onTap,
     );
   }
 }
@@ -211,9 +404,7 @@ class _NavPill extends StatelessWidget {
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
 class _HeroSection extends StatelessWidget {
-  const _HeroSection({required this.onViewArch});
-
-  final VoidCallback onViewArch;
+  const _HeroSection();
 
   @override
   Widget build(BuildContext context) {
@@ -222,8 +413,8 @@ class _HeroSection extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.background,
-            AppColors.panel.withValues(alpha: 0.8),
+            AppColors.background.withValues(alpha: 0.9),
+            AppColors.panel.withValues(alpha: 0.2),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -235,15 +426,12 @@ class _HeroSection extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: _kContentMaxWidth),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= AppBreakpoints.tablet;
+              final isWide = constraints.maxWidth >= AppBreakpoints.mobile;
               if (isWide) {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(
-                      flex: 5,
-                      child: _HeroContent(onViewArch: onViewArch),
-                    ),
+                    const Expanded(flex: 5, child: _HeroContent()),
                     const SizedBox(width: 48),
                     Expanded(
                       flex: 4,
@@ -260,7 +448,7 @@ class _HeroSection extends StatelessWidget {
               }
               return Column(
                 children: [
-                  _HeroContent(onViewArch: onViewArch),
+                  const _HeroContent(),
                   const SizedBox(height: 40),
                   Image.asset(
                     AppAssets.illustrationMonitoringGuard,
@@ -278,9 +466,7 @@ class _HeroSection extends StatelessWidget {
 }
 
 class _HeroContent extends StatelessWidget {
-  const _HeroContent({required this.onViewArch});
-
-  final VoidCallback onViewArch;
+  const _HeroContent();
 
   @override
   Widget build(BuildContext context) {
@@ -292,9 +478,7 @@ class _HeroContent extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.tealGlow,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.4),
-            ),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -305,11 +489,13 @@ class _HeroContent extends StatelessWidget {
                 color: AppColors.primary,
               ),
               const SizedBox(width: 8),
-              Text(
-                'Programación de Interfaces y Dispositivos Periféricos',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
+              Flexible(
+                child: Text(
+                  'Programación de Interfaces y Dispositivos Periféricos',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -338,120 +524,158 @@ class _HeroContent extends StatelessWidget {
             height: 1.3,
           ),
         ),
-        const SizedBox(height: 20),
-        Text(
-          'Monitoreamos Passbolt y ChkMonitor vía SNMP, almacenamos métricas en '
-          'base de datos redundante y visualizamos el estado de la infraestructura '
-          'en tiempo real desde cualquier dispositivo.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-            height: 1.7,
+        const SizedBox(height: 80),
+        // Etapa 2 progress card
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.stroke),
           ),
-        ),
-        const SizedBox(height: 32),
-        Builder(
-          builder: (context) => Wrap(
-            spacing: 12,
-            runSpacing: 12,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: AppColors.successGradient,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: AppColors.background,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 18,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    textStyle: Theme.of(
-                      context,
-                    ).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
+              Row(
+                children: [
+                  const Icon(
+                    Icons.route_rounded,
+                    size: 15,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Progreso del proyecto',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  onPressed: () => context.go(AppRoutes.login),
-                  icon: const Icon(
-                    Icons.dashboard_customize_outlined,
-                    size: 20,
-                  ),
-                  label: const Text('Entrar al panel'),
-                ),
+                ],
               ),
-              OutlinedButton.icon(
-                onPressed: onViewArch,
-                icon: const Icon(Icons.account_tree_outlined, size: 18),
-                label: const Text('Ver arquitectura'),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  _EtapaChip(
+                    label: 'Etapa 1',
+                    sublabel: 'Infraestructura',
+                    done: true,
+                  ),
+                  _EtapaDivider(active: true),
+                  _EtapaChip(
+                    label: 'Etapa 2',
+                    sublabel: 'Sistema web',
+                    active: true,
+                  ),
+                  _EtapaDivider(active: false),
+                  _EtapaChip(
+                    label: 'Etapa 3',
+                    sublabel: 'Análisis y sustentación',
+                    done: false,
+                  ),
+                ],
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 36),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            _HeroBadge(asset: AppAssets.badgeSnmpSuccess, label: 'SNMP v2c/v3'),
-            _HeroBadge(
-              asset: AppAssets.badgePassboltSuccess,
-              label: 'Passbolt :1161',
-            ),
-            _HeroBadge(
-              asset: AppAssets.badgeServerSuccess,
-              label: 'ChkMonitor :2161',
-            ),
-            _HeroBadge(
-              asset: AppAssets.badgeBdSuccess,
-              label: 'BD Redundante',
-            ),
-          ],
         ),
       ],
     );
   }
 }
 
-class _HeroBadge extends StatelessWidget {
-  const _HeroBadge({required this.asset, required this.label});
+class _EtapaChip extends StatelessWidget {
+  const _EtapaChip({
+    required this.label,
+    required this.sublabel,
+    this.done = false,
+    this.active = false,
+  });
 
-  final String asset;
   final String label;
+  final String sublabel;
+  final bool done;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.stroke),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    final Color accent = done
+        ? AppColors.primary
+        : active
+        ? AppColors.warning
+        : AppColors.textInactive;
+
+    return Expanded(
+      child: Column(
         children: [
-          Image.asset(asset, width: 20, height: 20),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: accent.withValues(alpha: active || done ? 0.5 : 0.2),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (done)
+                  Icon(Icons.check_circle_rounded, size: 12, color: accent)
+                else if (active)
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: accent,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                else
+                  Icon(Icons.schedule_rounded, size: 12, color: accent),
+                const SizedBox(width: 5),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: accent,
+                  ),
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 5),
+          Text(
+            sublabel,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 10,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _EtapaDivider extends StatelessWidget {
+  const _EtapaDivider({required this.active});
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: SizedBox(
+        width: 20,
+        child: Divider(
+          color: active
+              ? AppColors.primary.withValues(alpha: 0.5)
+              : AppColors.stroke,
+          thickness: 1.5,
+        ),
       ),
     );
   }
@@ -460,11 +684,7 @@ class _HeroBadge extends StatelessWidget {
 // ─── Section wrapper ─────────────────────────────────────────────────────────
 
 class _Section extends StatelessWidget {
-  const _Section({
-    this.sectionKey,
-    required this.color,
-    required this.child,
-  });
+  const _Section({this.sectionKey, required this.color, required this.child});
 
   final GlobalKey? sectionKey;
   final Color color;
@@ -525,19 +745,19 @@ class _TeamSection extends StatelessWidget {
           const _SectionLabel(label: 'EQUIPO'),
           const SizedBox(height: 12),
           Text(
-            'Los que lo construyeron',
+            'Fundadores',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
-            'Programación de Interfaces y Dispositivos Periféricos · Prof. Rene A. Zamudio Ariza',
+            'El equipo detrás de Cuy Sentinel',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 48),
           LayoutBuilder(
@@ -583,12 +803,14 @@ class _Member {
     required this.role,
     required this.initials,
     required this.asset,
+    this.roleColor = AppColors.primary,
   });
 
   final String name;
   final String role;
   final String initials;
   final String asset;
+  final Color roleColor;
 }
 
 class _MemberCard extends StatelessWidget {
@@ -605,7 +827,11 @@ class _MemberCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.stroke),
         boxShadow: const [
-          BoxShadow(color: AppColors.shadow, blurRadius: 20, offset: Offset(0, 8)),
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
         ],
       ),
       child: Column(
@@ -615,21 +841,21 @@ class _MemberCard extends StatelessWidget {
           Text(
             member.name,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
-              color: AppColors.tealGlow,
+              color: member.roleColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
               member.role,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.primary,
+                color: member.roleColor,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -729,17 +955,17 @@ class _EtapaObjectivesSection extends StatelessWidget {
           Text(
             '¿Qué estamos construyendo?',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
             'Desarrollo del sistema web y almacenamiento de métricas',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 48),
           LayoutBuilder(
@@ -923,11 +1149,8 @@ class _Phase1Section extends StatelessWidget {
                   children: [
                     Text(
                       'Fase 1 · Implementación Rápida',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -969,7 +1192,7 @@ class _Phase1Section extends StatelessWidget {
               final isWide = constraints.maxWidth >= 800;
               if (isWide) {
                 return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Expanded(flex: 5, child: _Phase1Content()),
                     const SizedBox(width: 48),
@@ -1094,7 +1317,9 @@ class _Phase1Content extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.warning.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.warning.withValues(alpha: 0.25)),
+            border: Border.all(
+              color: AppColors.warning.withValues(alpha: 0.25),
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1157,11 +1382,8 @@ class _Phase2Section extends StatelessWidget {
                   children: [
                     Text(
                       'Fase 2 · Arquitectura Escalable',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -1203,7 +1425,7 @@ class _Phase2Section extends StatelessWidget {
               final isWide = constraints.maxWidth >= 800;
               if (isWide) {
                 return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       flex: 4,
@@ -1418,15 +1640,15 @@ class _FlowStep extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             title,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           Text(
             subtitle,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -1584,17 +1806,17 @@ class _PlatformsSection extends StatelessWidget {
           Text(
             'Disponible en todos los dispositivos',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
             'Un único codebase Flutter compilado nativamente para cada plataforma',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 56),
           Wrap(
@@ -1643,11 +1865,13 @@ class _PlatformsSection extends StatelessWidget {
                   size: 20,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Flutter — un codebase, infinitas plataformas',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    'Flutter — un codebase, infinitas plataformas',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -1672,27 +1896,29 @@ class _DeviceShowcase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isWide =
+        type == _DeviceType.laptop || type == _DeviceType.desktop;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 120,
-          height: 130,
+          width: isWide ? 160 : 130,
+          height: 148,
           child: CustomPaint(painter: _DevicePainter(type)),
         ),
         const SizedBox(height: 14),
         Text(
           label,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 4),
         Text(
           platforms,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );
@@ -1704,181 +1930,452 @@ class _DevicePainter extends CustomPainter {
 
   final _DeviceType type;
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final bodyFill = Paint()
-      ..color = AppColors.surface
-      ..style = PaintingStyle.fill;
-    final bodyStroke = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.65)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    final screenFill = Paint()
-      ..color = AppColors.tealGlow
-      ..style = PaintingStyle.fill;
-    final lineHint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.18)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-    final accentFill = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.4)
-      ..style = PaintingStyle.fill;
+  Paint _fill(Color c) => Paint()..color = c..style = PaintingStyle.fill;
+  Paint _stroke(Color c, [double w = 0.8]) =>
+      Paint()..color = c..style = PaintingStyle.stroke..strokeWidth = w;
+  RRect _rr(Rect r, [double radius = 2.5]) =>
+      RRect.fromRectAndRadius(r, Radius.circular(radius));
 
-    switch (type) {
-      case _DeviceType.phone:
-        _drawPhone(canvas, size, bodyFill, bodyStroke, screenFill, lineHint, accentFill);
-      case _DeviceType.tablet:
-        _drawTablet(canvas, size, bodyFill, bodyStroke, screenFill, lineHint, accentFill);
-      case _DeviceType.laptop:
-        _drawLaptop(canvas, size, bodyFill, bodyStroke, screenFill, lineHint);
-      case _DeviceType.desktop:
-        _drawDesktop(canvas, size, bodyFill, bodyStroke, screenFill, lineHint);
-    }
-  }
-
-  void _drawPhone(
-    Canvas c, Size s,
-    Paint bf, Paint bs, Paint sf, Paint lh, Paint af,
-  ) {
-    final cx = s.width / 2;
-    final cy = s.height / 2 - 4;
-    final body = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx, cy), width: 52, height: 96),
-      const Radius.circular(12),
-    );
-    c.drawRRect(body, bf);
-    c.drawRRect(body, bs);
-    final screen = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx, cy - 2), width: 44, height: 76),
-      const Radius.circular(5),
-    );
-    c.drawRRect(screen, sf);
-    c.drawOval(
-      Rect.fromCenter(center: Offset(cx, cy - 42), width: 10, height: 4),
-      af,
-    );
+  // Miniature metric card
+  void _card(Canvas c, double x, double y, double w, double h, Color accent) {
+    c.drawRRect(_rr(Rect.fromLTWH(x, y, w, h), 2), _fill(AppColors.surface));
     c.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(cx, cy + 44), width: 18, height: 3),
-        const Radius.circular(2),
-      ),
-      af,
+      _rr(Rect.fromLTWH(x, y, w, h), 2),
+      _stroke(AppColors.stroke, 0.4),
     );
-    for (var i = 0; i < 3; i++) {
-      final y = cy - 18 + i * 14.0;
-      c.drawLine(Offset(cx - 14, y), Offset(cx + (i == 1 ? 6 : 14), y), lh);
-    }
+    // left accent bar
+    c.drawRRect(
+      _rr(Rect.fromLTWH(x, y, 2, h), 1),
+      _fill(accent.withValues(alpha: 0.8)),
+    );
+    // value line
+    c.drawRRect(
+      _rr(Rect.fromLTWH(x + 5, y + 2.5, w * 0.45, 2), 1),
+      _fill(accent.withValues(alpha: 0.6)),
+    );
+    // label line
+    c.drawRRect(
+      _rr(Rect.fromLTWH(x + 5, y + 6.5, w * 0.3, 1.5), 1),
+      _fill(AppColors.textInactive.withValues(alpha: 0.35)),
+    );
   }
 
-  void _drawTablet(
-    Canvas c, Size s,
-    Paint bf, Paint bs, Paint sf, Paint lh, Paint af,
-  ) {
-    final cx = s.width / 2;
-    final cy = s.height / 2 - 2;
-    final body = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx, cy), width: 76, height: 96),
-      const Radius.circular(10),
+  // Header bar
+  void _header(Canvas c, Rect screen, double h) {
+    c.drawRect(
+      Rect.fromLTWH(screen.left, screen.top, screen.width, h),
+      _fill(AppColors.panel),
     );
-    c.drawRRect(body, bf);
-    c.drawRRect(body, bs);
-    final screen = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx, cy), width: 66, height: 84),
-      const Radius.circular(4),
+    // bottom border with teal tint
+    c.drawLine(
+      Offset(screen.left, screen.top + h),
+      Offset(screen.right, screen.top + h),
+      _stroke(AppColors.primary.withValues(alpha: 0.3), 0.5),
     );
-    c.drawRRect(screen, sf);
-    c.drawCircle(Offset(cx, cy - 43), 3, af);
+    // logo dot
+    c.drawCircle(
+      Offset(screen.left + 5, screen.top + h / 2),
+      2,
+      _fill(AppColors.primary.withValues(alpha: 0.85)),
+    );
+  }
+
+  // Sidebar navigation
+  void _sidebar(Canvas c, Rect screen, double w) {
+    c.drawRect(
+      Rect.fromLTWH(screen.left, screen.top, w, screen.height),
+      _fill(AppColors.panel),
+    );
+    c.drawLine(
+      Offset(screen.left + w, screen.top),
+      Offset(screen.left + w, screen.bottom),
+      _stroke(AppColors.stroke, 0.4),
+    );
+    // nav items
     for (var i = 0; i < 4; i++) {
-      final y = cy - 22 + i * 13.0;
-      c.drawLine(
-        Offset(cx - 24, y),
-        Offset(cx + (i % 2 == 0 ? 24 : 14), y),
-        lh,
+      final y = screen.top + 14 + i * 9.0;
+      if (i == 0) {
+        c.drawRRect(
+          _rr(Rect.fromLTWH(screen.left + 2, y - 1, w - 4, 7), 2),
+          _fill(AppColors.primary.withValues(alpha: 0.18)),
+        );
+      }
+      c.drawRRect(
+        _rr(Rect.fromLTWH(screen.left + 4, y + 1, w - 10, 3), 1),
+        _fill(
+          (i == 0 ? AppColors.primary : AppColors.textInactive)
+              .withValues(alpha: i == 0 ? 0.6 : 0.22),
+        ),
       );
     }
   }
 
-  void _drawLaptop(
-    Canvas c, Size s,
-    Paint bf, Paint bs, Paint sf, Paint lh,
-  ) {
-    final cx = s.width / 2;
-    final screenFrame = RRect.fromRectAndRadius(
-      Rect.fromLTWH(cx - 52, 4, 104, 68),
-      const Radius.circular(5),
+  // Bottom navigation bar (phone)
+  void _bottomNav(Canvas c, Rect screen, int count) {
+    const h = 10.0;
+    c.drawRect(
+      Rect.fromLTWH(screen.left, screen.bottom - h, screen.width, h),
+      _fill(AppColors.panel),
     );
-    c.drawRRect(screenFrame, bf);
-    c.drawRRect(screenFrame, bs);
-    final screenInner = RRect.fromRectAndRadius(
-      Rect.fromLTWH(cx - 47, 8, 94, 60),
-      const Radius.circular(3),
+    c.drawLine(
+      Offset(screen.left, screen.bottom - h),
+      Offset(screen.right, screen.bottom - h),
+      _stroke(AppColors.stroke, 0.4),
     );
-    c.drawRRect(screenInner, sf);
-    c.drawCircle(
-      Offset(cx, 7),
-      2,
-      Paint()..color = AppColors.primary.withValues(alpha: 0.4)..style = PaintingStyle.fill,
-    );
-    c.drawRect(Rect.fromLTWH(cx - 57, 72, 114, 4), bf);
-    c.drawRect(Rect.fromLTWH(cx - 57, 72, 114, 4), bs);
-    final base = RRect.fromRectAndRadius(
-      Rect.fromLTWH(cx - 58, 76, 116, 20),
-      const Radius.circular(3),
-    );
-    c.drawRRect(base, bf);
-    c.drawRRect(base, bs);
-    final keyPaint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.15)
-      ..style = PaintingStyle.fill;
-    for (var row = 0; row < 2; row++) {
-      for (var col = 0; col < 5; col++) {
-        c.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromLTWH(cx - 44 + col * 18.0, 80 + row * 7.0, 13, 4),
-            const Radius.circular(1),
+    final spacing = screen.width / count;
+    for (var i = 0; i < count; i++) {
+      final x = screen.left + spacing * i + spacing / 2;
+      c.drawCircle(
+        Offset(x, screen.bottom - h / 2),
+        2,
+        _fill(
+          i == 0
+              ? AppColors.primary.withValues(alpha: 0.9)
+              : AppColors.textInactive.withValues(alpha: 0.3),
+        ),
+      );
+    }
+  }
+
+  // Mini bar chart
+  void _chart(Canvas c, Rect area) {
+    c.drawRRect(_rr(area, 2), _fill(AppColors.surface));
+    c.drawRRect(_rr(area, 2), _stroke(AppColors.stroke, 0.4));
+    final colors = [
+      AppColors.primary,
+      AppColors.primaryBright,
+      AppColors.primary,
+      AppColors.secondary,
+      AppColors.primaryBright,
+      AppColors.primary,
+    ];
+    final bw = (area.width - 6) / colors.length;
+    for (var i = 0; i < colors.length; i++) {
+      final bh = 2.5 + (i % 3) * 2.5;
+      c.drawRRect(
+        _rr(
+          Rect.fromLTWH(
+            area.left + 3 + i * (bw + 0.5),
+            area.bottom - 3 - bh,
+            bw,
+            bh,
           ),
-          keyPaint,
+          1,
+        ),
+        _fill(colors[i].withValues(alpha: 0.65)),
+      );
+    }
+  }
+
+  // Status chip row
+  void _statusRow(Canvas c, double x, double y, double w, int count) {
+    final chipW = (w - (count - 1) * 2) / count;
+    for (var i = 0; i < count; i++) {
+      final cx = x + i * (chipW + 2);
+      c.drawRRect(
+        _rr(Rect.fromLTWH(cx, y, chipW, 6), 2),
+        _fill(AppColors.tealGlow),
+      );
+      c.drawCircle(
+        Offset(cx + 4, y + 3),
+        1.5,
+        _fill(AppColors.primary.withValues(alpha: 0.8)),
+      );
+    }
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    switch (type) {
+      case _DeviceType.phone:
+        _drawPhone(canvas, size);
+      case _DeviceType.tablet:
+        _drawTablet(canvas, size);
+      case _DeviceType.laptop:
+        _drawLaptop(canvas, size);
+      case _DeviceType.desktop:
+        _drawDesktop(canvas, size);
+    }
+  }
+
+  void _drawPhone(Canvas c, Size s) {
+    final cx = s.width / 2;
+    final cy = s.height / 2 - 2;
+    // Body
+    c.drawRRect(
+      _rr(Rect.fromCenter(center: Offset(cx, cy), width: 56, height: 104), 13),
+      _fill(AppColors.surface),
+    );
+    c.drawRRect(
+      _rr(Rect.fromCenter(center: Offset(cx, cy), width: 56, height: 104), 13),
+      _stroke(AppColors.primary.withValues(alpha: 0.6), 1.5),
+    );
+    // Screen
+    final screen = Rect.fromCenter(
+      center: Offset(cx, cy - 1),
+      width: 48,
+      height: 88,
+    );
+    c.drawRRect(_rr(screen, 6), _fill(AppColors.background));
+    // Notch
+    c.drawOval(
+      Rect.fromCenter(
+        center: Offset(cx, screen.top + 3),
+        width: 10,
+        height: 4,
+      ),
+      _fill(AppColors.primary.withValues(alpha: 0.4)),
+    );
+    // Header
+    _header(c, screen, 9);
+    // 2×2 cards
+    final cw = (screen.width - 5) / 2;
+    final ch = 13.0;
+    final cardColors = [
+      AppColors.primary,
+      AppColors.warning,
+      AppColors.secondary,
+      AppColors.primaryBright,
+    ];
+    for (var row = 0; row < 2; row++) {
+      for (var col = 0; col < 2; col++) {
+        _card(
+          c,
+          screen.left + 1 + col * (cw + 2),
+          screen.top + 11 + row * (ch + 3),
+          cw,
+          ch,
+          cardColors[row * 2 + col],
         );
       }
     }
-    for (var i = 0; i < 3; i++) {
-      final y = 20.0 + i * 13.0;
-      c.drawLine(Offset(cx - 34, y), Offset(cx + (i == 1 ? 18 : 34), y), lh);
+    // Status chips
+    _statusRow(
+      c,
+      screen.left + 1,
+      screen.top + 11 + 2 * (ch + 3) + 2,
+      screen.width - 2,
+      2,
+    );
+    // Bottom nav
+    _bottomNav(c, screen, 4);
+    // Home bar
+    c.drawRRect(
+      _rr(
+        Rect.fromCenter(center: Offset(cx, cy + 50), width: 18, height: 3),
+        2,
+      ),
+      _fill(AppColors.primary.withValues(alpha: 0.35)),
+    );
+  }
+
+  void _drawTablet(Canvas c, Size s) {
+    final cx = s.width / 2;
+    final cy = s.height / 2 - 2;
+    // Body
+    c.drawRRect(
+      _rr(Rect.fromCenter(center: Offset(cx, cy), width: 84, height: 104), 10),
+      _fill(AppColors.surface),
+    );
+    c.drawRRect(
+      _rr(Rect.fromCenter(center: Offset(cx, cy), width: 84, height: 104), 10),
+      _stroke(AppColors.primary.withValues(alpha: 0.6), 1.5),
+    );
+    // Screen
+    final screen = Rect.fromCenter(
+      center: Offset(cx, cy),
+      width: 74,
+      height: 92,
+    );
+    c.drawRRect(_rr(screen, 4), _fill(AppColors.background));
+    // Camera
+    c.drawCircle(
+      Offset(cx, screen.top - 5),
+      2.5,
+      _fill(AppColors.primary.withValues(alpha: 0.35)),
+    );
+    // Narrow rail sidebar
+    _sidebar(c, screen, 16);
+    final content = Rect.fromLTRB(
+      screen.left + 16,
+      screen.top,
+      screen.right,
+      screen.bottom,
+    );
+    // Header in content area
+    _header(c, content, 9);
+    // 2×2 cards
+    final cw = (content.width - 5) / 2;
+    final ch = 15.0;
+    final cardColors = [
+      AppColors.primary,
+      AppColors.warning,
+      AppColors.secondary,
+      AppColors.primaryBright,
+    ];
+    for (var row = 0; row < 2; row++) {
+      for (var col = 0; col < 2; col++) {
+        _card(
+          c,
+          content.left + 1 + col * (cw + 2),
+          content.top + 11 + row * (ch + 3),
+          cw,
+          ch,
+          cardColors[row * 2 + col],
+        );
+      }
+    }
+    // Status row
+    _statusRow(
+      c,
+      content.left + 1,
+      content.top + 11 + 2 * (ch + 3) + 2,
+      content.width - 2,
+      2,
+    );
+  }
+
+  void _drawLaptop(Canvas c, Size s) {
+    final cx = s.width / 2;
+    // Frame
+    c.drawRRect(
+      _rr(Rect.fromLTWH(cx - 58, 4, 116, 74), 5),
+      _fill(AppColors.surface),
+    );
+    c.drawRRect(
+      _rr(Rect.fromLTWH(cx - 58, 4, 116, 74), 5),
+      _stroke(AppColors.primary.withValues(alpha: 0.6), 1.5),
+    );
+    // Screen inner
+    final screen = Rect.fromLTWH(cx - 53, 8, 106, 66);
+    c.drawRRect(_rr(screen, 3), _fill(AppColors.background));
+    // Camera
+    c.drawCircle(
+      Offset(cx, 7),
+      2,
+      _fill(AppColors.primary.withValues(alpha: 0.35)),
+    );
+    // Sidebar
+    _sidebar(c, screen, 20);
+    final content = Rect.fromLTRB(
+      screen.left + 20,
+      screen.top,
+      screen.right,
+      screen.bottom,
+    );
+    // Header
+    _header(c, content, 8);
+    // 3 cards in a row
+    final cw = (content.width - 8) / 3;
+    final cardColors = [AppColors.primary, AppColors.warning, AppColors.secondary];
+    for (var col = 0; col < 3; col++) {
+      _card(
+        c,
+        content.left + 2 + col * (cw + 2),
+        content.top + 11,
+        cw,
+        14,
+        cardColors[col],
+      );
+    }
+    // Chart
+    _chart(
+      c,
+      Rect.fromLTWH(content.left + 2, content.top + 29, content.width - 4, 16),
+    );
+    // Status chips
+    _statusRow(c, content.left + 2, content.top + 49, content.width - 4, 3);
+    // Hinge
+    c.drawRect(
+      Rect.fromLTWH(cx - 63, 78, 126, 4),
+      _fill(AppColors.surface),
+    );
+    c.drawRect(
+      Rect.fromLTWH(cx - 63, 78, 126, 4),
+      _stroke(AppColors.primary.withValues(alpha: 0.5), 1.5),
+    );
+    // Base
+    c.drawRRect(
+      _rr(Rect.fromLTWH(cx - 64, 82, 128, 22), 3),
+      _fill(AppColors.surface),
+    );
+    c.drawRRect(
+      _rr(Rect.fromLTWH(cx - 64, 82, 128, 22), 3),
+      _stroke(AppColors.primary.withValues(alpha: 0.5), 1.5),
+    );
+    // Keys
+    final kp = _fill(AppColors.primary.withValues(alpha: 0.14));
+    for (var row = 0; row < 2; row++) {
+      for (var col = 0; col < 6; col++) {
+        c.drawRRect(
+          _rr(Rect.fromLTWH(cx - 50 + col * 17.0, 86 + row * 7.0, 13, 4), 1),
+          kp,
+        );
+      }
     }
   }
 
-  void _drawDesktop(
-    Canvas c, Size s,
-    Paint bf, Paint bs, Paint sf, Paint lh,
-  ) {
+  void _drawDesktop(Canvas c, Size s) {
     final cx = s.width / 2;
-    final monitor = RRect.fromRectAndRadius(
-      Rect.fromLTWH(cx - 52, 2, 104, 70),
-      const Radius.circular(5),
+    // Monitor frame
+    c.drawRRect(
+      _rr(Rect.fromLTWH(cx - 58, 2, 116, 78), 5),
+      _fill(AppColors.surface),
     );
-    c.drawRRect(monitor, bf);
-    c.drawRRect(monitor, bs);
-    final screen = RRect.fromRectAndRadius(
-      Rect.fromLTWH(cx - 47, 6, 94, 62),
-      const Radius.circular(3),
+    c.drawRRect(
+      _rr(Rect.fromLTWH(cx - 58, 2, 116, 78), 5),
+      _stroke(AppColors.primary.withValues(alpha: 0.6), 1.5),
     );
-    c.drawRRect(screen, sf);
-    c.drawRect(Rect.fromLTWH(cx - 4, 72, 8, 18), bf);
-    c.drawRect(Rect.fromLTWH(cx - 4, 72, 8, 18), bs);
-    final base = RRect.fromRectAndRadius(
-      Rect.fromLTWH(cx - 28, 90, 56, 10),
-      const Radius.circular(5),
+    // Screen
+    final screen = Rect.fromLTWH(cx - 53, 6, 106, 70);
+    c.drawRRect(_rr(screen, 3), _fill(AppColors.background));
+    // Sidebar (wider on desktop)
+    _sidebar(c, screen, 24);
+    final content = Rect.fromLTRB(
+      screen.left + 24,
+      screen.top,
+      screen.right,
+      screen.bottom,
     );
-    c.drawRRect(base, bf);
-    c.drawRRect(base, bs);
-    for (var i = 0; i < 4; i++) {
-      final y = 18.0 + i * 12.0;
-      c.drawLine(
-        Offset(cx - 36, y),
-        Offset(cx + (i % 2 == 0 ? 36 : 22), y),
-        lh,
+    // Header
+    _header(c, content, 8);
+    // 3 cards
+    final cw = (content.width - 8) / 3;
+    final cardColors = [AppColors.primary, AppColors.warning, AppColors.secondary];
+    for (var col = 0; col < 3; col++) {
+      _card(
+        c,
+        content.left + 2 + col * (cw + 2),
+        content.top + 11,
+        cw,
+        14,
+        cardColors[col],
       );
     }
+    // Chart
+    _chart(
+      c,
+      Rect.fromLTWH(content.left + 2, content.top + 29, content.width - 4, 18),
+    );
+    // Status chips
+    _statusRow(c, content.left + 2, content.top + 51, content.width - 4, 3);
+    // Stand
+    c.drawRect(
+      Rect.fromLTWH(cx - 5, 80, 10, 20),
+      _fill(AppColors.surface),
+    );
+    c.drawRect(
+      Rect.fromLTWH(cx - 5, 80, 10, 20),
+      _stroke(AppColors.primary.withValues(alpha: 0.5), 1.5),
+    );
+    c.drawRRect(
+      _rr(Rect.fromLTWH(cx - 30, 100, 60, 10), 5),
+      _fill(AppColors.surface),
+    );
+    c.drawRRect(
+      _rr(Rect.fromLTWH(cx - 30, 100, 60, 10), 5),
+      _stroke(AppColors.primary.withValues(alpha: 0.5), 1.5),
+    );
   }
 
   @override
@@ -1949,17 +2446,17 @@ class _TechStackSection extends StatelessWidget {
           Text(
             'Stack moderno de extremo a extremo',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
             'Cada herramienta elegida por una razón específica',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 48),
           LayoutBuilder(
@@ -2047,9 +2544,9 @@ class _TechCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             tech.name,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
@@ -2076,85 +2573,167 @@ class _FooterSection extends StatelessWidget {
       color: AppColors.panel,
       child: Column(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              if (isMobile) {
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Image.asset(AppAssets.logoHorizontalPrimary, height: 36),
                     const SizedBox(height: 12),
                     Text(
-                      'Sistema externo de monitoreo y\nverificación de actividad.',
+                      'Sistema externo de monitoreo y verificación de actividad.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
                         height: 1.6,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 32),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Servicios monitoreados',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
+                    const SizedBox(height: 32),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Servicios',
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const _FooterLink('Passbolt · 1161'),
+                              const _FooterLink('ChkMonitor · 2161'),
+                              const _FooterLink('SNMP v2c / v3'),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Etapas',
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const _FooterLink('Etapa 1 ✓'),
+                              const _FooterLink('Etapa 2 ⟳'),
+                              const _FooterLink('Etapa 3 ⏳'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    const _FooterLink('Passbolt · puerto 1161'),
-                    const _FooterLink('ChkMonitor · puerto 2161'),
-                    const _FooterLink('SNMP v2c / v3'),
                   ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Etapas',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Image.asset(AppAssets.logoHorizontalPrimary, height: 36),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Sistema externo de monitoreo y\nverificación de actividad.',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                            color: AppColors.textSecondary,
+                            height: 1.6,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    const _FooterLink('Etapa 1 · Infraestructura ✓'),
-                    const _FooterLink('Etapa 2 · Sistema web ⟳'),
-                    const _FooterLink('Etapa 3 · Concurrencia ⏳'),
-                  ],
-                ),
-              ),
-            ],
+                  ),
+                  const SizedBox(width: 32),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Servicios monitoreados',
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const _FooterLink('Passbolt · puerto 1161'),
+                        const _FooterLink('ChkMonitor · puerto 2161'),
+                        const _FooterLink('SNMP v2c / v3'),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Etapas',
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const _FooterLink('Etapa 1 · Infraestructura ✓'),
+                        const _FooterLink('Etapa 2 · Sistema web ⟳'),
+                        const _FooterLink('Etapa 3 · Concurrencia ⏳'),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 40),
           const Divider(color: AppColors.stroke),
           const SizedBox(height: 20),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  'Programación de Interfaces y Dispositivos Periféricos · Prof. Rene Alejandro Zamudio Ariza',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textInactive,
-                  ),
-                ),
-              ),
               Text(
-                '© 2025 Cuy Sentinel',
+                'Programación de Interfaces y Dispositivos Periféricos',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textInactive,
                 ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Prof. Rene Alejandro Zamudio Ariza',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textInactive,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '© 2025 Cuy Sentinel',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textInactive,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -2179,6 +2758,246 @@ class _FooterLink extends StatelessWidget {
           color: AppColors.textSecondary,
           height: 1.4,
         ),
+      ),
+    );
+  }
+}
+
+// ─── Professor ────────────────────────────────────────────────────────────────
+
+class _ProfessorSection extends StatelessWidget {
+  const _ProfessorSection();
+
+  static const _profe = _Member(
+    name: 'Rene Alejandro Zamudio Ariza',
+    role: 'Docente del Curso',
+    initials: 'RZ',
+    asset: AppAssets.teamProfe,
+    roleColor: AppColors.warning,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      color: AppColors.background,
+      child: Column(
+        children: [
+          const _SectionLabel(label: 'MENTORÍA & LIDERAZGO'),
+          const SizedBox(height: 50),
+          SizedBox(width: 260, child: _MemberCard(member: _profe)),
+          const SizedBox(height: 60),
+          Text(
+            'El pilar académico del curso',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Su enfoque práctico y exigente nos llevó a construir algo más que un trabajo universitario',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 32),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.format_quote_rounded,
+                    color: AppColors.warning,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      'El Prof. Zamudio nos enseñó que monitorear infraestructura no es solo capturar datos — es entender cada capa del sistema. Esa visión guió cada decisión de arquitectura en Cuy Sentinel.',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppColors.textPrimary,
+                        height: 1.65,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Services ─────────────────────────────────────────────────────────────────
+
+class _ServicesSection extends StatelessWidget {
+  const _ServicesSection({required this.sectionKey});
+
+  final GlobalKey sectionKey;
+
+  static const _services = [
+    _ServiceItem(
+      asset: AppAssets.badgeSnmpSuccess,
+      name: 'SNMP v2c / v3',
+      description:
+          'Protocolo de monitoreo de red para recolección periódica de métricas.',
+    ),
+    _ServiceItem(
+      asset: AppAssets.badgePassboltSuccess,
+      name: 'Passbolt',
+      description:
+          'Gestor de contraseñas dockerizado. Monitoreado en el puerto :1161.',
+    ),
+    _ServiceItem(
+      asset: AppAssets.badgeServerSuccess,
+      name: 'ChkMonitor',
+      description:
+          'Servicio de verificación de actividad expuesto en el puerto :2161.',
+    ),
+    _ServiceItem(
+      asset: AppAssets.badgeBdSuccess,
+      name: 'BD Redundante',
+      description:
+          'Réplica asíncrona vía Streaming/WAL para alta disponibilidad.',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      sectionKey: sectionKey,
+      color: AppColors.panel,
+      child: Column(
+        children: [
+          const _SectionLabel(label: 'INFRAESTRUCTURA'),
+          const SizedBox(height: 12),
+          Text(
+            'Servicios monitoreados',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Acceso remoto vía SNMP a los servicios dockerizados de la institución',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 56),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 700;
+              if (isWide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _services
+                      .map(
+                        (s) => Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: _ServiceCard(service: s),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                );
+              }
+              return Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.center,
+                children: _services
+                    .map(
+                      (s) =>
+                          SizedBox(width: 200, child: _ServiceCard(service: s)),
+                    )
+                    .toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceItem {
+  const _ServiceItem({
+    required this.asset,
+    required this.name,
+    required this.description,
+  });
+
+  final String asset;
+  final String name;
+  final String description;
+}
+
+class _ServiceCard extends StatelessWidget {
+  const _ServiceCard({required this.service});
+
+  final _ServiceItem service;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.stroke),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            service.asset,
+            width: 150,
+            height: 150,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            service.name,
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            service.description,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }

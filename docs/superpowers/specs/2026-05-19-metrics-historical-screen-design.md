@@ -44,7 +44,7 @@ datos newest-first) y un `MetricsFilterRow` sin callback. El resultado es:
 | Carga inicial vs recarga | `MetricsLoading` solo al arranque; `isRefreshing` en cambio de rango | UX no disruptiva |
 | Orden de datos | Ascendente garantizado en `MetricsCubit` (sort defensivo) | No asumimos orden del repositorio |
 | Agregación uptime | Ratio medio `(pb + ck) / 2` | Suma carece de semántica; ratio = fracción disponible |
-| Agregación BW | Suma solo si `isComplete` (`pb + ck`); null si falta alguno | Suma parcial induciría valor erróneo |
+| Agregación BW | Suma solo si `isComplete` (`pb + ck`); null si falta alguno — no hay campo `combined` precomputado; cada widget calcula su propio agregado | Suma parcial induciría valor erróneo |
 
 ---
 
@@ -94,6 +94,11 @@ Algoritmo por bucket `i` con `start = from + bs*i`, `end = (i==11) ? to : start+
 2. Si vacío, busca la muestra más reciente en `[start - tolerance, start)` → fallback puntual,
    **no** un promedio de ventana ampliada.
 3. Si sigue vacío → `null`.
+
+Ejemplo: bucket 1h/bucket 5min con datos escasos. Si el tramo `[10:00, 10:05)` no tiene
+muestras pero hay una en `10:02:30` del tramo anterior (dentro de los 7.5min de tolerancia),
+se usa ese valor puntual. Si la muestra más cercana está en `09:50`, cae fuera de la
+ventana y el bucket queda `null` (gap visible).
 
 ### Extensión en `MetricsLoadedModelX`
 

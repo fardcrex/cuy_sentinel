@@ -215,14 +215,29 @@ List<MetricsBucket> _bwBuckets(
   double? Function(Metric) select,
 ) {
   final to = DateTime.now();
-  final all = [...passboltMetrics, ...chkmonitorMetrics];
-  final from = all.isEmpty
-      ? to.subtract(const Duration(hours: 1))
-      : all.map((m) => m.collectedAt).reduce((a, b) => a.isBefore(b) ? a : b);
-  final spanMs = to.difference(from).inMilliseconds;
-  final bs = spanMs <= 0
-      ? const Duration(minutes: 5)
-      : Duration(milliseconds: (spanMs / 12).ceil());
+  if (passboltMetrics.isEmpty && chkmonitorMetrics.isEmpty) {
+    return bucketizeLatest(
+      passboltAsc: [],
+      chkmonitorAsc: [],
+      from: to.subtract(const Duration(hours: 1)),
+      to: to,
+      bucketSize: const Duration(minutes: 5),
+      lookbackTolerance: const Duration(minutes: 7, seconds: 30),
+      select: select,
+    );
+  }
+  // Estimate interval from recent samples so the window stays proportional to
+  // collection speed — works for both demo (seconds) and production (5 min).
+  final interval = _estimateCollectionInterval(
+    [...passboltMetrics, ...chkmonitorMetrics],
+  );
+  final sampleCount = passboltMetrics.length > chkmonitorMetrics.length
+      ? passboltMetrics.length
+      : chkmonitorMetrics.length;
+  final from = to.subtract(interval * sampleCount);
+  final bs = Duration(
+    milliseconds: (to.difference(from).inMilliseconds / 12).ceil(),
+  );
   final tol = Duration(milliseconds: (bs.inMilliseconds * 1.5).round());
   return bucketizeLatest(
     passboltAsc: passboltMetrics,
@@ -233,4 +248,22 @@ List<MetricsBucket> _bwBuckets(
     lookbackTolerance: tol,
     select: select,
   );
+}
+
+// Median gap of the last 3 samples — reacts quickly when demo mode kicks in.
+Duration _estimateCollectionInterval(List<Metric> metrics) {
+  if (metrics.length < 2) return const Duration(minutes: 5);
+  final sorted = [...metrics]
+    ..sort((a, b) => a.collectedAt.compareTo(b.collectedAt));
+  final n = sorted.length;
+  final recent = sorted.sublist(n >= 3 ? n - 3 : 0);
+  var totalMs = 0;
+  for (var i = 1; i < recent.length; i++) {
+    totalMs += recent[i].collectedAt
+        .difference(recent[i - 1].collectedAt)
+        .inMilliseconds
+        .abs();
+  }
+  final avgMs = totalMs ~/ (recent.length - 1);
+  return Duration(milliseconds: avgMs.clamp(1000, 10 * 60 * 1000));
 }

@@ -21,10 +21,10 @@ class GuideSummaryTab extends StatelessWidget {
         final width = constraints.maxWidth;
         final padding = AppBreakpoints.horizontalPadding(width);
         final columns = AppBreakpoints.isDesktop(width)
-            ? 5
+            ? 3
             : AppBreakpoints.isTablet(width)
-                ? 3
-                : 2;
+                ? 2
+                : 1;
 
         return SingleChildScrollView(
           padding: EdgeInsets.all(padding),
@@ -139,23 +139,6 @@ class _SummaryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (columns >= 5) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < _cards.length; i++) ...[
-            if (i > 0) const SizedBox(width: 16),
-            Expanded(
-              child: _SummaryScreenCard(
-                data: _cards[i],
-                onTap: () => tabController.animateTo(_cards[i].tabIndex),
-              ),
-            ),
-          ],
-        ],
-      );
-    }
-
     final rows = <Widget>[];
     for (var i = 0; i < _cards.length; i += columns) {
       final rowCards = _cards.skip(i).take(columns).toList();
@@ -211,52 +194,75 @@ class _SummaryScreenCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AppCard(
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 180 / 260,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                alignment: Alignment.topCenter,
-                child: data.miniature,
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              data.name,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (final bullet in data.bullets)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '· ',
-                      style: TextStyle(
-                        color: data.accentColor,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        bullet,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
+              child: Container(
+                width: double.infinity,
+                color: AppColors.background,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 10,
+                ),
+                child: AspectRatio(
+                  aspectRatio: 280 / 170,
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    alignment: Alignment.topCenter,
+                    child: data.miniature,
+                  ),
                 ),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final bullet in data.bullets)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '· ',
+                            style: TextStyle(
+                              color: data.accentColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              bullet,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

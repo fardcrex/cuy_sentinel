@@ -9,8 +9,8 @@ class MetricsMiniature extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 180,
-      height: 260,
+      width: 280,
+      height: 170,
       decoration: BoxDecoration(
         color: AppColors.panel,
         borderRadius: BorderRadius.circular(8),
@@ -122,7 +122,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        height: 22,
+        height: 18,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(3),

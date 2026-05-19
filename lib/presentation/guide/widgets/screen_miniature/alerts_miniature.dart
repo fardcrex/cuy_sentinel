@@ -8,8 +8,8 @@ class AlertsMiniature extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 180,
-      height: 260,
+      width: 280,
+      height: 170,
       decoration: BoxDecoration(
         color: AppColors.panel,
         borderRadius: BorderRadius.circular(8),
@@ -115,7 +115,7 @@ class _AlertItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 18,
+      height: 14,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: const BorderRadius.only(
@@ -147,7 +147,7 @@ class _ThresholdRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 20,
+      height: 16,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(3),

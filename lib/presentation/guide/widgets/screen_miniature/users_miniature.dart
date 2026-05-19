@@ -9,8 +9,8 @@ class UsersMiniature extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 180,
-      height: 260,
+      width: 280,
+      height: 170,
       decoration: BoxDecoration(
         color: AppColors.panel,
         borderRadius: BorderRadius.circular(8),
@@ -103,8 +103,8 @@ class _UserRow extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 14,
-          height: 14,
+          width: 12,
+          height: 12,
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.2),
             shape: BoxShape.circle,

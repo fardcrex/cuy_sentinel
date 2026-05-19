@@ -16,8 +16,8 @@ class _ServicesMiniatureState extends State<ServicesMiniature> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 180,
-      height: 260,
+      width: 280,
+      height: 170,
       decoration: BoxDecoration(
         color: AppColors.panel,
         borderRadius: BorderRadius.circular(8),

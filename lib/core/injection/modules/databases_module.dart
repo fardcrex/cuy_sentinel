@@ -7,12 +7,6 @@ abstract final class DatabasesModule {
   static List<RepositoryProvider<Object>> repositoryProviders(
     IDatabasesRepository repo,
   ) => [
-    RepositoryProvider<GetDatabaseInstancesUseCase>(
-      create: (_) => GetDatabaseInstancesUseCase(repo),
-    ),
-    RepositoryProvider<GetDatabaseHealthUseCase>(
-      create: (_) => GetDatabaseHealthUseCase(repo),
-    ),
     RepositoryProvider<WatchDatabaseHealthUseCase>(
       create: (_) => WatchDatabaseHealthUseCase(repo),
     ),

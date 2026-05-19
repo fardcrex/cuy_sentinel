@@ -1,4 +1,4 @@
-part of '../welcome_screen.dart';
+part of '../welcome_page.dart';
 
 class _TeamSection extends StatelessWidget {
   const _TeamSection({required this.sectionKey});

@@ -13,7 +13,9 @@ import '../widgets/service_card.dart';
 import '../widgets/services_badge.dart';
 
 class ServicesTabView extends StatelessWidget {
-  const ServicesTabView({super.key});
+  const ServicesTabView({super.key, this.physics});
+
+  final ScrollPhysics? physics;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +59,7 @@ class ServicesTabView extends StatelessWidget {
         final isWide = width >= 900;
 
         return SingleChildScrollView(
+          physics: physics,
           padding: EdgeInsets.all(padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

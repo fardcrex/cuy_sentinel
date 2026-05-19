@@ -30,33 +30,37 @@ class MetricsContentView extends StatelessWidget {
         final padding = AppBreakpoints.horizontalPadding(width);
         final isWide = AppBreakpoints.isDesktop(width);
 
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ScreenHeader(
-                title: 'Métricas',
-                subtitle:
-                    'Histórico de rendimiento recolectado vía SNMP cada 5 min',
-                trailing: MetricsFilterRow(
-                  selected: state.range,
-                  onChanged: context.read<MetricsCubit>().changeRange,
+        final filterRow = MetricsFilterRow(
+          selected: state.range,
+          onChanged: context.read<MetricsCubit>().changeRange,
+        );
+
+        final progressBar = SizedBox(
+          height: 2,
+          child: state.isRefreshing
+              ? const LinearProgressIndicator(
+                  color: AppColors.primary,
+                  backgroundColor: Colors.transparent,
+                )
+              : null,
+        );
+
+        if (isWide) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(padding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ScreenHeader(
+                  title: 'Métricas',
+                  subtitle:
+                      'Histórico de rendimiento recolectado vía SNMP cada 5 min',
+                  trailing: filterRow,
                 ),
-              ),
-              SizedBox(
-                height: 2,
-                child: state.isRefreshing
-                    ? const LinearProgressIndicator(
-                        color: AppColors.primary,
-                        backgroundColor: Colors.transparent,
-                      )
-                    : null,
-              ),
-              const SizedBox(height: 24),
-              MetricsSummaryGrid(cards: summaryCards),
-              const SizedBox(height: 24),
-              if (isWide)
+                progressBar,
+                const SizedBox(height: 24),
+                MetricsSummaryGrid(cards: summaryCards),
+                const SizedBox(height: 24),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -88,10 +92,41 @@ class MetricsContentView extends StatelessWidget {
                       ),
                     ),
                   ],
-                )
-              else
-                Column(
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Mobile: header scrolls away, filter row stays pinned
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(padding, padding, padding, 0),
+                child: const ScreenHeader(
+                  title: 'Métricas',
+                  subtitle:
+                      'Histórico de rendimiento recolectado vía SNMP cada 5 min',
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(child: progressBar),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyFilterDelegate(
+                padding: padding,
+                child: filterRow,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(padding, 24, padding, padding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    MetricsSummaryGrid(cards: summaryCards),
+                    const SizedBox(height: 24),
                     ResourceChartCard(
                       passboltMetrics: state.passboltMetrics,
                       chkmonitorMetrics: state.chkmonitorMetrics,
@@ -107,10 +142,49 @@ class MetricsContentView extends StatelessWidget {
                     MetricsSnmpHealthCard(rows: snmpRows),
                   ],
                 ),
-            ],
-          ),
+              ),
+            ),
+          ],
         );
       },
     );
   }
+}
+
+class _StickyFilterDelegate extends SliverPersistentHeaderDelegate {
+  const _StickyFilterDelegate({required this.padding, required this.child});
+
+  final double padding;
+  final Widget child;
+
+  static const double _verticalPadding = 12.0;
+  static const double _filterHeight = 42.0;
+
+  @override
+  double get minExtent => _filterHeight + _verticalPadding * 2;
+
+  @override
+  double get maxExtent => _filterHeight + _verticalPadding * 2;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ColoredBox(
+      color: AppColors.background,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: padding,
+          vertical: _verticalPadding,
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_StickyFilterDelegate oldDelegate) =>
+      oldDelegate.padding != padding || oldDelegate.child != child;
 }

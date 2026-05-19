@@ -251,6 +251,19 @@ class _LineChartPainter extends CustomPainter {
       segmentStarted = false;
     }
 
+    // When the new series enters from the right (hShift > 0, sliding-window
+    // animation), extend it horizontally to x=0 at the height of its first
+    // point so the left edge is always filled.
+    if (hShift > 0 && points.isNotEmpty && points[0] != null) {
+      final dy = size.height - (size.height * points[0]!);
+      linePath.moveTo(0, dy);
+      fillPath
+        ..moveTo(0, size.height)
+        ..lineTo(0, dy);
+      segmentStarted = true;
+      lastDx = 0.0;
+    }
+
     for (var i = 0; i < n; i++) {
       final value = points[i];
       final dx = (n == 1 ? 0.0 : (size.width * i / (n - 1))) + hShift;

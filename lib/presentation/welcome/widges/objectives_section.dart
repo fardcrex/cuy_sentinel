@@ -1,4 +1,4 @@
-part of '../welcome_screen.dart';
+part of '../welcome_page.dart';
 
 class _EtapaObjectivesSection extends StatelessWidget {
   const _EtapaObjectivesSection({required this.sectionKey});

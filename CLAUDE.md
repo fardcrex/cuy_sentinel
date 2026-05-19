@@ -126,20 +126,20 @@ cp envs/sentinel.example.json envs/sentinel.phase1.json
 # Instalar dependencias
 flutter pub get
 
-# Correr panel (Fase 1 — Supabase)
-flutter run --dart-define-from-file=envs/sentinel.phase1.json
-
-# Correr panel web
-flutter run -d chrome --dart-define-from-file=envs/sentinel.phase1.json
-
-# Correr panel sin credenciales (modo visual/demo)
+# Demo — data sembrada, streams periódicos, sin credenciales
 flutter run
+flutter run -d chrome
+
+# Fase 1 — Supabase (requiere envs/sentinel.phase1.json)
+flutter run --target lib/main_production.dart \
+            --dart-define-from-file=envs/sentinel.phase1.json
+
+# Fase 2 — Node.js API (requiere envs/sentinel.phase2.json)
+flutter run --target lib/main_phase2.dart \
+            --dart-define-from-file=envs/sentinel.phase2.json
 
 # Análisis estático
 flutter analyze
-
-# Backend Go (cuando esté implementado)
-cd backend_go && go run main.go
 ```
 
 ---

@@ -15,15 +15,14 @@ class MetricsFilterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.stroke),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.stroke),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

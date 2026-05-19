@@ -16,8 +16,8 @@ class AppBreakpoints {
   }
 
   static int metricsColumns(double width) {
-    if (width >= 1400) return 4;
-    if (width >= 900) return 2;
+    if (width >= 1100) return 4;
+    if (width >= 600) return 2;
     return 1;
   }
 }

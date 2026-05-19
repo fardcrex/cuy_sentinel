@@ -44,8 +44,9 @@ List<MetricsBucket> bucketize({
 
   double? avg(List<Metric> src, DateTime start, DateTime end) {
     final values = src
-        .where((m) =>
-            !m.collectedAt.isBefore(start) && m.collectedAt.isBefore(end))
+        .where(
+          (m) => !m.collectedAt.isBefore(start) && m.collectedAt.isBefore(end),
+        )
         .map(select)
         .whereType<double>()
         .toList();
@@ -55,9 +56,11 @@ List<MetricsBucket> bucketize({
 
   double? nearest(List<Metric> src, DateTime start) {
     final candidates = src
-        .where((m) =>
-            !m.collectedAt.isBefore(start.subtract(tol)) &&
-            m.collectedAt.isBefore(start))
+        .where(
+          (m) =>
+              !m.collectedAt.isBefore(start.subtract(tol)) &&
+              m.collectedAt.isBefore(start),
+        )
         .toList();
     if (candidates.isEmpty) return null;
     return select(candidates.last);
@@ -90,8 +93,9 @@ List<MetricsBucket> bucketizeLatest({
 
   double? latest(List<Metric> src, DateTime start, DateTime end) {
     final inBucket = src
-        .where((m) =>
-            !m.collectedAt.isBefore(start) && m.collectedAt.isBefore(end))
+        .where(
+          (m) => !m.collectedAt.isBefore(start) && m.collectedAt.isBefore(end),
+        )
         .toList();
     if (inBucket.isEmpty) return null;
     return select(inBucket.last);
@@ -99,9 +103,11 @@ List<MetricsBucket> bucketizeLatest({
 
   double? nearest(List<Metric> src, DateTime start) {
     final candidates = src
-        .where((m) =>
-            !m.collectedAt.isBefore(start.subtract(lookbackTolerance)) &&
-            m.collectedAt.isBefore(start))
+        .where(
+          (m) =>
+              !m.collectedAt.isBefore(start.subtract(lookbackTolerance)) &&
+              m.collectedAt.isBefore(start),
+        )
         .toList();
     if (candidates.isEmpty) return null;
     return select(candidates.last);
@@ -257,31 +263,31 @@ extension MetricsLoadedModelX on MetricsLoaded {
   }
 
   List<MetricsBucket> get bandwidthInBuckets => bucketize(
-        passboltAsc: passboltMetrics,
-        chkmonitorAsc: chkmonitorMetrics,
-        from: queryFrom,
-        to: queryTo,
-        range: range,
-        select: (m) => m.bandwidthInMb,
-      );
+    passboltAsc: passboltMetrics,
+    chkmonitorAsc: chkmonitorMetrics,
+    from: queryFrom,
+    to: queryTo,
+    range: range,
+    select: (m) => m.bandwidthInMb,
+  );
 
   List<MetricsBucket> get bandwidthOutBuckets => bucketize(
-        passboltAsc: passboltMetrics,
-        chkmonitorAsc: chkmonitorMetrics,
-        from: queryFrom,
-        to: queryTo,
-        range: range,
-        select: (m) => m.bandwidthOutMb,
-      );
+    passboltAsc: passboltMetrics,
+    chkmonitorAsc: chkmonitorMetrics,
+    from: queryFrom,
+    to: queryTo,
+    range: range,
+    select: (m) => m.bandwidthOutMb,
+  );
 
   List<MetricsBucket> get uptimeBuckets => bucketize(
-        passboltAsc: passboltMetrics,
-        chkmonitorAsc: chkmonitorMetrics,
-        from: queryFrom,
-        to: queryTo,
-        range: range,
-        select: (m) => m.serviceStatus == ServiceStatus.online ? 1.0 : 0.0,
-      );
+    passboltAsc: passboltMetrics,
+    chkmonitorAsc: chkmonitorMetrics,
+    from: queryFrom,
+    to: queryTo,
+    range: range,
+    select: (m) => m.serviceStatus == ServiceStatus.online ? 1.0 : 0.0,
+  );
 }
 
 Widget _buildAnimatedValue(

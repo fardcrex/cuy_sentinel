@@ -51,7 +51,7 @@ class InMemoryMetricsRepository implements IMetricsRepository {
       history = [nextMetric, ...history].take(normalizedLimit).toList();
       yield history;
       tick++;
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 5));
     }
   }
 
@@ -77,7 +77,7 @@ class InMemoryMetricsRepository implements IMetricsRepository {
     // First sample after gap = 108 h → falls in B7 [98 h, 112 h) → B7 has data.
     final bool is7d = diffMin >= 7 * 24 * 60 - 60;
     final gapStart = is7d ? from.add(const Duration(hours: 49)) : null;
-    final gapEnd   = is7d ? from.add(const Duration(hours: 108)) : null;
+    final gapEnd = is7d ? from.add(const Duration(hours: 108)) : null;
 
     final metrics = <Metric>[];
     for (var i = 0; i < count; i++) {
@@ -104,7 +104,7 @@ class InMemoryMetricsRepository implements IMetricsRepository {
   ) {
     final now = DateTime.now();
     return List.generate(limit.clamp(1, 50), (i) {
-      final t = now.subtract(Duration(minutes: i * 5));
+      final t = now.subtract(Duration(seconds: i * 5));
       return _buildMetric(serviceId, tick + i, rng, t);
     });
   }

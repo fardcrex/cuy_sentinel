@@ -1,4 +1,4 @@
-part of '../welcome_screen.dart';
+part of '../welcome_page.dart';
 
 class _TechStackSection extends StatelessWidget {
   const _TechStackSection({required this.sectionKey});

@@ -122,6 +122,22 @@ extension DashboardLoadedModelX on DashboardLoaded {
     );
     final lookback = bucketSize * 1.5;
 
+    final uptimeSparkPoints = List<double>.generate(10, (i) {
+      final start = from.add(bucketSize * i);
+      final end = i == 9 ? to : start.add(bucketSize);
+      final inBucket = allMetrics
+          .where(
+            (m) =>
+                !m.collectedAt.isBefore(start) && m.collectedAt.isBefore(end),
+          )
+          .toList();
+      if (inBucket.isEmpty) return uptimePercent / 100;
+      return inBucket
+              .where((m) => m.serviceStatus == ServiceStatus.online)
+              .length /
+          inBucket.length;
+    });
+
     return [
       DashboardStatCardModel(
         title: 'Servicios activos',
@@ -146,30 +162,11 @@ extension DashboardLoadedModelX on DashboardLoaded {
       ),
       DashboardStatCardModel(
         title: 'Uptime promedio',
-        value: AnimatedNumberText(
-          value: uptimePercent,
-          decimalDigits: 1,
-          suffix: '%',
-        ),
-        caption: Wrap(
-          spacing: 3,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            const Text('Últimas'),
-            AnimatedNumberText(value: allMetrics.length),
-            const Text('lecturas'),
-          ],
-        ),
-        icon: Icons.shield_outlined,
+        value: AnimatedNumberText(value: uptimePercent.round(), suffix: '%'),
+        caption: const Text('de lecturas online'),
+        icon: Icons.timeline_rounded,
         color: AppColors.primaryBright,
-        sparkPoints: _statusPoints(
-          chkmonitorMetrics,
-          (m) => m.serviceStatus,
-          from: from,
-          to: to,
-          bucketSize: bucketSize,
-          lookbackTolerance: lookback,
-        ).map((v) => v ?? 0.0).toList(),
+        sparkPoints: uptimeSparkPoints,
       ),
       DashboardStatCardModel(
         title: 'Alertas activas',
@@ -214,23 +211,30 @@ List<MetricsBucket> _bwBuckets(
   List<Metric> chkmonitorMetrics,
   double? Function(Metric) select,
 ) {
-  final to = DateTime.now();
-  if (passboltMetrics.isEmpty && chkmonitorMetrics.isEmpty) {
+  final allMetrics = [...passboltMetrics, ...chkmonitorMetrics];
+  if (allMetrics.isEmpty) {
+    final now = DateTime.now();
     return bucketizeLatest(
       passboltAsc: [],
       chkmonitorAsc: [],
-      from: to.subtract(const Duration(hours: 1)),
-      to: to,
+      from: now.subtract(const Duration(hours: 1)),
+      to: now,
       bucketSize: const Duration(minutes: 5),
       lookbackTolerance: const Duration(minutes: 7, seconds: 30),
       select: select,
     );
   }
-  // Estimate interval from recent samples so the window stays proportional to
-  // collection speed — works for both demo (seconds) and production (5 min).
-  final interval = _estimateCollectionInterval(
-    [...passboltMetrics, ...chkmonitorMetrics],
-  );
+
+  // Anchor `to` to the most recent sample + 1 s so bucket boundaries are
+  // deterministic between frames. This guarantees that when the window shifts
+  // by exactly one interval (one new tick), old[k+1] and new[k] cover the
+  // same time range → MetricChartPlaceholder detects the sliding-window shift.
+  final mostRecent = allMetrics
+      .map((m) => m.collectedAt)
+      .reduce((a, b) => a.isAfter(b) ? a : b);
+  final to = mostRecent.add(const Duration(seconds: 1));
+
+  final interval = _estimateCollectionInterval(allMetrics);
   final sampleCount = passboltMetrics.length > chkmonitorMetrics.length
       ? passboltMetrics.length
       : chkmonitorMetrics.length;
@@ -239,7 +243,7 @@ List<MetricsBucket> _bwBuckets(
     milliseconds: (to.difference(from).inMilliseconds / 12).ceil(),
   );
   final tol = Duration(milliseconds: (bs.inMilliseconds * 1.5).round());
-  return bucketizeLatest(
+  final buckets = bucketizeLatest(
     passboltAsc: passboltMetrics,
     chkmonitorAsc: chkmonitorMetrics,
     from: from,
@@ -248,22 +252,50 @@ List<MetricsBucket> _bwBuckets(
     lookbackTolerance: tol,
     select: select,
   );
+  return _fillLeadingNulls(buckets);
 }
 
-// Median gap of the last 3 samples — reacts quickly when demo mode kicks in.
+List<MetricsBucket> _fillLeadingNulls(List<MetricsBucket> buckets) {
+  final firstIdx = buckets.indexWhere(
+    (b) => b.passbolt != null || b.chkmonitor != null,
+  );
+  if (firstIdx <= 0) return buckets;
+  final fill = buckets[firstIdx];
+  return [
+    for (var i = 0; i < buckets.length; i++)
+      i < firstIdx
+          ? MetricsBucket(
+              time: buckets[i].time,
+              passbolt: fill.passbolt,
+              chkmonitor: fill.chkmonitor,
+            )
+          : buckets[i],
+  ];
+}
+
+// Median gap computed per-service to avoid near-zero cross-service gaps when
+// both services share the same collection timestamp.
 Duration _estimateCollectionInterval(List<Metric> metrics) {
   if (metrics.length < 2) return const Duration(minutes: 5);
-  final sorted = [...metrics]
-    ..sort((a, b) => a.collectedAt.compareTo(b.collectedAt));
-  final n = sorted.length;
-  final recent = sorted.sublist(n >= 3 ? n - 3 : 0);
-  var totalMs = 0;
-  for (var i = 1; i < recent.length; i++) {
-    totalMs += recent[i].collectedAt
-        .difference(recent[i - 1].collectedAt)
-        .inMilliseconds
-        .abs();
+  final byService = <String, List<Metric>>{};
+  for (final m in metrics) {
+    (byService[m.serviceId] ??= []).add(m);
   }
-  final avgMs = totalMs ~/ (recent.length - 1);
-  return Duration(milliseconds: avgMs.clamp(1000, 10 * 60 * 1000));
+  final gaps = <int>[];
+  for (final group in byService.values) {
+    if (group.length < 2) continue;
+    group.sort((a, b) => a.collectedAt.compareTo(b.collectedAt));
+    for (var i = 1; i < group.length; i++) {
+      gaps.add(
+        group[i].collectedAt
+            .difference(group[i - 1].collectedAt)
+            .inMilliseconds
+            .abs(),
+      );
+    }
+  }
+  if (gaps.isEmpty) return const Duration(minutes: 5);
+  gaps.sort();
+  final median = gaps[gaps.length ~/ 2];
+  return Duration(milliseconds: median.clamp(1000, 10 * 60 * 1000));
 }

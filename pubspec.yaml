@@ -37,15 +37,15 @@ flutter_launcher_icons:
   image_path: assets/launcher.png
   web:
     generate: true
-    image_path: assets/launcher.png
+    image_path: assets/launcher_web.png
     background_color: "#0F172A"
     theme_color: "#22C55E"
   macos:
     generate: true
-    image_path: assets/launcher.png
+    image_path: assets/launcher_macos.png
   windows:
     generate: true
-    image_path: assets/launcher.png
+    image_path: assets/launcher_windows.png
 
 flutter_native_splash:
   color: "#031417"

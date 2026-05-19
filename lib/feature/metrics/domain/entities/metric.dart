@@ -13,6 +13,7 @@ class Metric {
     this.uptimeSeconds,
     required this.serviceStatus,
     this.snmpLatencyMs,
+    this.snmpLossPercent,
     required this.collectedAt,
   });
 
@@ -35,6 +36,7 @@ class Metric {
 
   // SNMP metadata
   final int? snmpLatencyMs;
+  final double? snmpLossPercent;
 
   final DateTime collectedAt;
 
@@ -57,6 +59,7 @@ class Metric {
       json['service_status'] as String? ?? 'offline',
     ),
     snmpLatencyMs: json['snmp_latency_ms'] as int?,
+    snmpLossPercent: (json['snmp_loss_percent'] as num?)?.toDouble(),
     collectedAt: DateTime.parse(json['collected_at'] as String),
   );
 
@@ -72,6 +75,7 @@ class Metric {
     'uptime_seconds': uptimeSeconds,
     'service_status': serviceStatus.toJson(),
     'snmp_latency_ms': snmpLatencyMs,
+    'snmp_loss_percent': snmpLossPercent,
     'collected_at': collectedAt.toIso8601String(),
   };
 }

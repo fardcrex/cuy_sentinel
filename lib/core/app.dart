@@ -52,7 +52,7 @@ class _CuySentinelAppState extends State<CuySentinelApp> {
     final deps = widget.dependencies;
     return MultiRepositoryProvider(
       providers: [
-...MonitoringModule.repositoryProviders(deps.monitoringRepository),
+        ...MonitoringModule.repositoryProviders(deps.monitoringRepository),
         ...MetricsModule.repositoryProviders(deps.metricsRepository),
         ...AlertsModule.repositoryProviders(deps.alertsRepository),
         ...UsersModule.repositoryProviders(deps.usersRepository),

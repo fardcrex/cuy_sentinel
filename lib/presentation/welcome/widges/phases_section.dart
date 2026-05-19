@@ -1,4 +1,4 @@
-part of '../welcome_screen.dart';
+part of '../welcome_page.dart';
 
 class _Phase1Section extends StatelessWidget {
   const _Phase1Section({required this.sectionKey});

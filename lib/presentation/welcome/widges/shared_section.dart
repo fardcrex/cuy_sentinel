@@ -1,4 +1,4 @@
-part of '../welcome_screen.dart';
+part of '../welcome_page.dart';
 
 class _Section extends StatelessWidget {
   const _Section({this.sectionKey, required this.color, required this.child});

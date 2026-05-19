@@ -7,7 +7,7 @@ import 'app_card.dart';
 import 'metric_chart_placeholder.dart';
 import 'metric_stats_row.dart';
 
-class BandwidthChartCard extends StatelessWidget {
+class BandwidthChartCard extends StatefulWidget {
   const BandwidthChartCard({
     super.key,
     required this.inBuckets,
@@ -18,9 +18,56 @@ class BandwidthChartCard extends StatelessWidget {
   final List<MetricsBucket> outBuckets;
 
   @override
+  State<BandwidthChartCard> createState() => _BandwidthChartCardState();
+}
+
+class _BandwidthChartCardState extends State<BandwidthChartCard> {
+  int _serviceIndex = 0; // 0=Ambos, 1=Passbolt, 2=ChkMonitor
+
+  static const _services = ['Ambos', 'Passbolt', 'ChkMonitor'];
+
+  // Sticky max: only grows so the scale is stable between frames,
+  // which lets MetricChartPlaceholder detect the sliding-window shift.
+  double _displayMax = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateMax();
+  }
+
+  @override
+  void didUpdateWidget(covariant BandwidthChartCard old) {
+    super.didUpdateWidget(old);
+    _updateMax();
+  }
+
+  void _updateMax() {
+    final values = [
+      ...widget.inBuckets,
+      ...widget.outBuckets,
+    ].map(_rawValue).whereType<double>();
+    if (values.isEmpty) return;
+    final curMax = values.reduce((a, b) => a > b ? a : b);
+    if (curMax > _displayMax) _displayMax = curMax;
+  }
+
+  double? _rawValue(MetricsBucket b) => switch (_serviceIndex) {
+    0 => b.isComplete ? b.passbolt! + b.chkmonitor! : null,
+    1 => b.passbolt,
+    _ => b.chkmonitor,
+  };
+
+  @override
   Widget build(BuildContext context) {
-    final inRaw = _toRaw(inBuckets);
-    final outRaw = _toRaw(outBuckets);
+    final inRaw = widget.inBuckets.map(_rawValue).toList();
+    final outRaw = widget.outBuckets.map(_rawValue).toList();
+    // LOG: Mostrar los arrays de puntos que se van a graficar (incluyendo nulls)
+    // Solo para debug visual de gaps
+    // ignore: avoid_print
+    print('[BandwidthChartCard] Entrante: $inRaw');
+    // ignore: avoid_print
+    print('[BandwidthChartCard] Saliente: $outRaw');
     final inStats = _buildStats(inRaw);
     final outStats = _buildStats(outRaw);
 
@@ -28,20 +75,36 @@ class BandwidthChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Ancho de banda',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w700),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Ancho de banda',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              for (var i = 0; i < _services.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                _Chip(
+                  label: _services[i],
+                  selected: i == _serviceIndex,
+                  onTap: () => setState(() {
+                    _serviceIndex = i;
+                    _displayMax = 0;
+                    _updateMax();
+                  }),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 6),
           Text(
-            'Tráfico agregado — Passbolt + ChkMonitor',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: AppColors.textSecondary),
+            'Entrante / Saliente — ${_services[_serviceIndex]}',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 18),
           _SeriesRow(label: 'Entrante', color: AppColors.chartNetwork),
@@ -78,19 +141,11 @@ class BandwidthChartCard extends StatelessWidget {
     );
   }
 
-  List<double?> _toRaw(List<MetricsBucket> buckets) => buckets
-      .map((b) => b.isComplete ? b.passbolt! + b.chkmonitor! : null)
-      .toList();
-
   List<double?> _buildPoints(List<double?> rawValues) {
-    final nonNull = rawValues.whereType<double>().toList();
-    if (nonNull.isEmpty) return rawValues;
-    final minV = nonNull.reduce((a, b) => a < b ? a : b);
-    final maxV = nonNull.reduce((a, b) => a > b ? a : b);
-    final span = maxV - minV;
+    if (_displayMax <= 0) return List.filled(rawValues.length, null);
     return rawValues.map((v) {
       if (v == null) return null;
-      return span <= 0.0001 ? 0.5 : 0.12 + ((v - minV) / span) * 0.76;
+      return (0.12 + (v / _displayMax) * 0.76).clamp(0.0, 1.0);
     }).toList();
   }
 
@@ -115,6 +170,48 @@ class _BandwidthStats {
   final double? max;
 }
 
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.16)
+              : AppColors.panel,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected
+                ? AppColors.primary.withValues(alpha: 0.5)
+                : AppColors.stroke,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: selected ? AppColors.primary : AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SeriesRow extends StatelessWidget {
   const _SeriesRow({required this.label, required this.color});
 
@@ -133,10 +230,9 @@ class _SeriesRow extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .titleSmall
-              ?.copyWith(color: AppColors.textSecondary),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );

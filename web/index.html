@@ -1,119 +1,490 @@
-<!DOCTYPE html><html><head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+<!doctype html>
+<html>
+  <head>
+    <base href="$FLUTTER_BASE_HREF" />
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+    <meta charset="UTF-8" />
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
+    <title>Cuy Sentinel</title>
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+    <meta
+      name="description"
+      content="Cuy Sentinel - Plataforma avanzada de monitoreo SNMP."
+    />
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="cuy_sentinel">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#020507" />
 
-  <title>cuy_sentinel</title>
-  <link rel="manifest" href="manifest.json">
-  
-  
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
-  <style id="splash-screen-style">
-    html {
-      height: 100%
-    }
+    <meta name="color-scheme" content="dark" />
 
-    body {
-      margin: 0;
-      min-height: 100%;
-      background-color: #031417;
-          background-size: 100% 100%;
-    }
+    <meta name="mobile-web-app-capable" content="yes" />
 
-    .center {
-      margin: 0;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      -ms-transform: translate(-50%, -50%);
-      transform: translate(-50%, -50%);
-    }
+    <meta name="apple-mobile-web-app-capable" content="yes" />
 
-    .contain {
-      display:block;
-      width:100%; height:100%;
-      object-fit: contain;
-    }
+    <link rel="manifest" href="manifest.json" />
 
-    .stretch {
-      display:block;
-      width:100%; height:100%;
-    }
+    <link rel="icon" type="image/png" href="favicon.png" />
 
-    .cover {
-      display:block;
-      width:100%; height:100%;
-      object-fit: cover;
-    }
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
 
-    .bottom {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      -ms-transform: translate(-50%, 0);
-      transform: translate(-50%, 0);
-    }
+    <style>
+      :root {
+        --bg: #020507;
+        --primary: #22f5c7;
+        --secondary: #5ce673;
+      }
 
-    .bottomLeft {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-    }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    .bottomRight {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-    }
-  </style>
-  <script id="splash-screen-script">
-    function removeSplashFromWeb() {
-      document.getElementById("splash")?.remove();
-      document.getElementById("splash-branding")?.remove();
-      document.body.style.background = "transparent";
-    }
-  </script>
-</head>
-<body>
-  <picture id="splash">
-      <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
-      <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
-      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
-  </picture>
-  
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        font-family: Inter, system-ui, sans-serif;
+      }
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
-  <script src="flutter_bootstrap.js" async=""></script>
+      body {
+        margin: 0;
+        padding: 0;
+      }
 
+      /* SPLASH */
 
-</body></html>
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        overflow: hidden;
+
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(34, 245, 199, 0.08),
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(0, 217, 184, 0.05),
+            transparent 35%
+          ),
+          linear-gradient(180deg, #020507 0%, #04080b 100%);
+
+        transition:
+          opacity 0.45s ease,
+          visibility 0.45s ease;
+      }
+
+      #splash.fade-out {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      /* MATRIX */
+
+      .matrix-bg {
+        position: absolute;
+        inset: 0;
+
+        background-image: repeating-linear-gradient(
+          180deg,
+          rgba(34, 245, 199, 0.08) 0px,
+          rgba(34, 245, 199, 0.08) 2px,
+          transparent 2px,
+          transparent 22px
+        );
+
+        background-size: 100% 22px;
+
+        opacity: 0.06;
+
+        animation: matrixMove 12s linear infinite;
+
+        will-change: transform;
+
+        transform: translateZ(0);
+      }
+
+      @keyframes matrixMove {
+        from {
+          transform: translateY(-22px) translateZ(0);
+        }
+
+        to {
+          transform: translateY(22px) translateZ(0);
+        }
+      }
+
+      /* GRID */
+
+      .grid-overlay {
+        position: absolute;
+        inset: 0;
+
+        background:
+          linear-gradient(rgba(34, 245, 199, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(34, 245, 199, 0.025) 1px, transparent 1px);
+
+        background-size: 60px 60px;
+
+        pointer-events: none;
+      }
+
+      /* SCANLINE */
+
+      .scanline {
+        position: absolute;
+        inset: 0;
+
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba(34, 245, 199, 0.02),
+          transparent
+        );
+
+        animation: scanline 10s linear infinite;
+
+        pointer-events: none;
+
+        will-change: transform;
+
+        transform: translateZ(0);
+      }
+
+      @keyframes scanline {
+        from {
+          transform: translateY(-100%) translateZ(0);
+        }
+
+        to {
+          transform: translateY(100%) translateZ(0);
+        }
+      }
+
+      /* CENTER */
+
+      .center-stage {
+        position: absolute;
+        inset: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .logo-system {
+        position: relative;
+
+        width: min(42vw, 500px);
+        height: min(42vw, 500px);
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* RINGS */
+
+      .ring {
+        position: absolute;
+
+        border-radius: 50%;
+
+        border: 1px solid rgba(34, 245, 199, 0.12);
+
+        will-change: transform;
+
+        transform: translateZ(0);
+      }
+
+      .ring-1 {
+        inset: -10%;
+
+        border-top-color: rgba(34, 245, 199, 0.8);
+
+        border-bottom-color: rgba(0, 217, 184, 0.25);
+
+        animation: rotate 18s linear infinite;
+      }
+
+      .ring-2 {
+        inset: -22%;
+
+        border-left-color: rgba(92, 230, 115, 0.55);
+
+        border-right-color: rgba(34, 245, 199, 0.12);
+
+        animation: rotateReverse 24s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg) translateZ(0);
+        }
+
+        to {
+          transform: rotate(360deg) translateZ(0);
+        }
+      }
+
+      @keyframes rotateReverse {
+        from {
+          transform: rotate(360deg) translateZ(0);
+        }
+
+        to {
+          transform: rotate(0deg) translateZ(0);
+        }
+      }
+
+      /* LOGO */
+
+      .logo-wrapper {
+        position: relative;
+
+        width: 58%;
+
+        z-index: 5;
+
+        animation:
+          floatLogo 5s ease-in-out infinite,
+          logoAppear 1.2s ease;
+
+        will-change: transform;
+
+        transform: translateZ(0);
+
+        backface-visibility: hidden;
+
+        perspective: 1000px;
+
+        filter: drop-shadow(0 0 14px rgba(34, 245, 199, 0.25));
+      }
+
+      .logo-wrapper::before {
+        content: "";
+
+        position: absolute;
+
+        inset: -16%;
+
+        border-radius: 50%;
+
+        background: radial-gradient(
+          circle,
+          rgba(34, 245, 199, 0.1),
+          transparent 70%
+        );
+
+        z-index: -1;
+      }
+
+      .logo-wrapper img {
+        width: 100%;
+
+        display: block;
+
+        object-fit: contain;
+
+        user-select: none;
+
+        -webkit-user-drag: none;
+      }
+
+      @keyframes floatLogo {
+        0%,
+        100% {
+          transform: translateY(0px) translateZ(0);
+        }
+
+        50% {
+          transform: translateY(-8px) translateZ(0);
+        }
+      }
+
+      @keyframes logoAppear {
+        from {
+          opacity: 0;
+          transform: scale(0.9) translateZ(0);
+        }
+
+        to {
+          opacity: 1;
+          transform: scale(1) translateZ(0);
+        }
+      }
+
+      /* LOADING */
+
+      .bottom-ui {
+        position: absolute;
+
+        left: 50%;
+
+        bottom: 8vh;
+
+        transform: translateX(-50%);
+
+        width: min(500px, 72vw);
+      }
+
+      .loading-bar {
+        position: relative;
+
+        width: 100%;
+
+        height: 3px;
+
+        overflow: hidden;
+
+        border-radius: 999px;
+
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .loading-bar::before {
+        content: "";
+
+        position: absolute;
+
+        inset: 0;
+
+        width: 35%;
+
+        border-radius: inherit;
+
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(34, 245, 199, 1),
+          rgba(92, 230, 115, 0.9)
+        );
+
+        box-shadow: 0 0 18px rgba(34, 245, 199, 0.4);
+
+        animation: loadingMove 2s ease-in-out infinite;
+
+        will-change: transform;
+
+        transform: translateZ(0);
+      }
+
+      @keyframes loadingMove {
+        0% {
+          transform: translateX(-120%) translateZ(0);
+        }
+
+        100% {
+          transform: translateX(320%) translateZ(0);
+        }
+      }
+
+      /* RESPONSIVE */
+
+      @media (max-width: 768px) {
+        .logo-system {
+          width: 76vw;
+          height: 76vw;
+        }
+
+        .bottom-ui {
+          width: 82vw;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- SPLASH -->
+
+    <div id="splash">
+      <div class="matrix-bg"></div>
+
+      <div class="grid-overlay"></div>
+
+      <div class="scanline"></div>
+
+      <div class="center-stage">
+        <div class="logo-system">
+          <div class="ring ring-1"></div>
+
+          <div class="ring ring-2"></div>
+
+          <div class="logo-wrapper">
+            <img
+              src="splash/img/light-2x.png"
+              srcset="
+                splash/img/light-1x.png 1x,
+                splash/img/light-2x.png 2x,
+                splash/img/light-3x.png 3x,
+                splash/img/light-4x.png 4x
+              "
+              alt="Logo"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-ui">
+        <div class="loading-bar"></div>
+      </div>
+    </div>
+
+    <!-- REMOVE SPLASH -->
+
+    <script>
+      function removeSplash() {
+        const splash = document.getElementById("splash");
+
+        if (!splash || splash.classList.contains("fade-out")) {
+          return;
+        }
+
+        splash.classList.add("fade-out");
+
+        setTimeout(() => {
+          splash.remove();
+        }, 500);
+      }
+
+      window.addEventListener("flutter-first-frame", () => {
+        setTimeout(removeSplash, 250);
+      });
+
+      const observer = new MutationObserver(() => {
+        const flutterReady =
+          document.querySelector("flt-glass-pane") ||
+          document.querySelector("flutter-view");
+
+        if (flutterReady) {
+          setTimeout(removeSplash, 250);
+
+          observer.disconnect();
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+      });
+
+      setTimeout(removeSplash, 10000);
+    </script>
+
+    <!-- FLUTTER -->
+
+       <script>
+      {{flutter_bootstrap_js}}
+    </script>
+    </script>
+  </body>
+</html>

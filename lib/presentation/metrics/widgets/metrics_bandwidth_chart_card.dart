@@ -98,7 +98,7 @@ class _MetricsBandwidthChartCardState
             color: AppColors.chartNetwork,
           ),
           const SizedBox(height: 20),
-          _SeriesLabel(label: 'Saliente', color: AppColors.secondary),
+          _SeriesLabel(label: 'Saliente', color: AppColors.chartCpu),
           const SizedBox(height: 8),
           SizedBox(
             height: 100,
@@ -107,7 +107,7 @@ class _MetricsBandwidthChartCardState
               painter: _BandwidthPainter(
                 values: outValues,
                 maxY: maxY,
-                lineColor: AppColors.secondary,
+                lineColor: AppColors.chartCpu,
               ),
             ),
           ),
@@ -116,7 +116,7 @@ class _MetricsBandwidthChartCardState
             min: _statWidget(outStats.min),
             avg: _statWidget(outStats.avg),
             max: _statWidget(outStats.max),
-            color: AppColors.secondary,
+            color: AppColors.chartCpu,
           ),
         ],
       ),

@@ -16,9 +16,9 @@ class MetricsProviderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<MetricsCubit>(
-      create: (ctx) => MetricsCubit(
-        getHistory: ctx.read<GetMetricsHistoryUseCase>(),
-      )..init(),
+      create: (ctx) =>
+          MetricsCubit(getHistory: ctx.read<GetMetricsHistoryUseCase>())
+            ..init(),
       child: const MetricsPage(),
     );
   }

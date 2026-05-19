@@ -8,7 +8,6 @@ import '../feature/auth/application/watch_session_use_case.dart';
 import '../presentation/auth/bloc/auth_bloc.dart';
 import 'injection/app_dependencies.dart';
 import 'injection/modules/alerts_module.dart';
-import 'injection/modules/auth_module.dart';
 import 'injection/modules/databases_module.dart';
 import 'injection/modules/metrics_module.dart';
 import 'injection/modules/monitoring_module.dart';
@@ -53,8 +52,7 @@ class _CuySentinelAppState extends State<CuySentinelApp> {
     final deps = widget.dependencies;
     return MultiRepositoryProvider(
       providers: [
-        ...AuthModule.repositoryProviders(deps.authRepository),
-        ...MonitoringModule.repositoryProviders(deps.monitoringRepository),
+...MonitoringModule.repositoryProviders(deps.monitoringRepository),
         ...MetricsModule.repositoryProviders(deps.metricsRepository),
         ...AlertsModule.repositoryProviders(deps.alertsRepository),
         ...UsersModule.repositoryProviders(deps.usersRepository),

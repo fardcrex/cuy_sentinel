@@ -3,20 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../presentation/alerts/alerts_page.dart';
 import '../../presentation/auth/bloc/auth_bloc.dart';
-import '../../presentation/auth/login_screen.dart';
-import '../../presentation/screens/alerts_screen.dart';
-import '../../presentation/screens/dashboard_screen.dart';
-import '../../presentation/screens/metrics_screen.dart';
-import '../../presentation/screens/not_found_screen.dart';
-import '../../presentation/screens/services_screen.dart';
-import '../../presentation/screens/users_screen.dart';
-import '../../presentation/welcome/welcome_screen.dart';
+import '../../presentation/auth/login_page.dart';
+import '../../presentation/dashboard/dashboard_page.dart';
+
+import '../../presentation/metrics/metrics_page.dart';
+import '../../presentation/not_found/not_found_page.dart';
+import '../../presentation/services/services_page.dart';
+import '../../presentation/users/users_page.dart';
+import '../../presentation/guide/guide_page.dart';
+import '../../presentation/welcome/welcome_page.dart';
 import '../../presentation/widgets/responsive_shell.dart';
 
 abstract final class AppRoutes {
   static const login = '/login';
   static const welcome = '/';
+  static const guide = '/guide';
   static const dashboard = '/dashboard';
   static const services = '/services';
   static const metrics = '/metrics';
@@ -24,7 +27,7 @@ abstract final class AppRoutes {
   static const users = '/users';
 }
 
-const _publicRoutes = {AppRoutes.welcome, AppRoutes.login};
+const _publicRoutes = {AppRoutes.welcome, AppRoutes.login, AppRoutes.guide};
 
 GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
   initialLocation: AppRoutes.welcome,
@@ -44,11 +47,15 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
   routes: [
     GoRoute(
       path: AppRoutes.login,
-      pageBuilder: (context, state) => _buildPage(state, const LoginScreen()),
+      pageBuilder: (context, state) => _buildPage(state, const LoginPage()),
     ),
     GoRoute(
       path: AppRoutes.welcome,
-      pageBuilder: (context, state) => _buildPage(state, const WelcomeScreen()),
+      pageBuilder: (context, state) => _buildPage(state, const WelcomePage()),
+    ),
+    GoRoute(
+      path: AppRoutes.guide,
+      pageBuilder: (context, state) => _buildPage(state, const GuidePage()),
     ),
     ShellRoute(
       builder: (context, state, child) =>
@@ -57,33 +64,32 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
         GoRoute(
           path: AppRoutes.dashboard,
           pageBuilder: (context, state) =>
-              _buildPage(state, const DashboardScreen()),
+              _buildPage(state, const DashboardProviderPage()),
         ),
         GoRoute(
           path: AppRoutes.services,
           pageBuilder: (context, state) =>
-              _buildPage(state, const ServicesScreen()),
+              _buildPage(state, const ServicesProviderPage()),
         ),
         GoRoute(
           path: AppRoutes.metrics,
           pageBuilder: (context, state) =>
-              _buildPage(state, const MetricsScreen()),
+              _buildPage(state, const MetricsProviderPage()),
         ),
         GoRoute(
           path: AppRoutes.alerts,
           pageBuilder: (context, state) =>
-              _buildPage(state, const AlertsScreen()),
+              _buildPage(state, const AlertsProviderPage()),
         ),
         GoRoute(
           path: AppRoutes.users,
-          pageBuilder: (context, state) =>
-              _buildPage(state, const UsersScreen()),
+          pageBuilder: (context, state) => _buildPage(state, const UsersProviderPage()),
         ),
       ],
     ),
   ],
   errorBuilder: (context, state) =>
-      NotFoundScreen(location: state.uri.toString()),
+      NotFoundPage(location: state.uri.toString()),
 );
 
 Page<void> _buildPage(GoRouterState state, Widget child) {

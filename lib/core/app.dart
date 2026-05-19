@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../feature/alerts/application/get_alerts_use_case.dart';
 import '../feature/auth/application/sign_in_use_case.dart';
 import '../feature/auth/application/sign_out_use_case.dart';
 import '../feature/auth/application/watch_session_use_case.dart';
 import '../presentation/auth/bloc/auth_bloc.dart';
+import '../presentation/alerts/cubit/alert_notifier_cubit.dart';
+import '../presentation/alerts/cubit/alert_notifier_state.dart';
 import 'injection/app_dependencies.dart';
 import 'injection/modules/alerts_module.dart';
 import 'injection/modules/databases_module.dart';
@@ -14,6 +17,8 @@ import 'injection/modules/monitoring_module.dart';
 import 'injection/modules/users_module.dart';
 import 'navigation/app_router.dart';
 import 'theme/app_theme.dart';
+import 'widgets/alert_notification_dialog.dart';
+import 'widgets/alert_toast_stack.dart';
 
 class CuySentinelApp extends StatefulWidget {
   const CuySentinelApp({super.key, required this.dependencies});
@@ -58,13 +63,29 @@ class _CuySentinelAppState extends State<CuySentinelApp> {
         ...UsersModule.repositoryProviders(deps.usersRepository),
         ...DatabasesModule.repositoryProviders(deps.databasesRepository),
       ],
-      child: BlocProvider.value(
-        value: _authBloc,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: _authBloc),
+          BlocProvider<AlertNotifierCubit>(
+            lazy: false,
+            create: (ctx) => AlertNotifierCubit(
+              watchAlerts: ctx.read<WatchActiveAlertsUseCase>(),
+            )..init(),
+          ),
+        ],
         child: MaterialApp.router(
           title: 'Cuy Sentinel',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.dark(),
           routerConfig: _router,
+          builder: (ctx, child) => BlocListener<AlertNotifierCubit, AlertNotifierState>(
+            listener: (ctx, state) {
+              if (state is! AlertNotifierNewAlert) return;
+              showAlertNotificationDialog(ctx, state.alert);
+              AlertToastStack.add(ctx, state.alert);
+            },
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );

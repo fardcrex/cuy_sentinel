@@ -97,10 +97,30 @@ class InMemoryAlertsRepository implements IAlertsRepository {
     ),
   ];
 
+  static bool _nuclearDemoFired = false;
+
   @override
   Stream<List<AlertEvent>> watchActiveAlerts() async* {
+    var tick = 0;
     while (true) {
+      if (!_nuclearDemoFired && tick == 3) {
+        _nuclearDemoFired = true;
+        _activeAlerts.insert(
+          0,
+          AlertEvent(
+            id: 'alrt-nuclear-demo',
+            serviceId: 'svc-passbolt',
+            serviceName: 'Passbolt',
+            metricName: 'Intrusión de Sistema',
+            currentValue: 9999,
+            thresholdValue: 0,
+            severity: AlertSeverity.nuclear,
+            triggeredAt: DateTime.now(),
+          ),
+        );
+      }
       yield List.of(_activeAlerts);
+      tick++;
       await Future.delayed(const Duration(seconds: 8));
     }
   }

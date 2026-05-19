@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import 'app_card.dart';
 
-enum AlertSeverity { critical, warning, info }
+enum AlertSeverity { nuclear, critical, warning, info }
 
 class AlertThresholdTile extends StatelessWidget {
   const AlertThresholdTile({
@@ -24,18 +24,21 @@ class AlertThresholdTile extends StatelessWidget {
   final String timestamp;
 
   Color get _color => switch (severity) {
+    AlertSeverity.nuclear => const Color(0xFFFF0040),
     AlertSeverity.critical => AppColors.danger,
     AlertSeverity.warning => AppColors.warning,
     AlertSeverity.info => AppColors.secondary,
   };
 
   String get _severityLabel => switch (severity) {
+    AlertSeverity.nuclear => 'Nuclear',
     AlertSeverity.critical => 'Crítica',
     AlertSeverity.warning => 'Advertencia',
     AlertSeverity.info => 'Observación',
   };
 
   IconData get _icon => switch (severity) {
+    AlertSeverity.nuclear => Icons.crisis_alert_rounded,
     AlertSeverity.critical => Icons.error_outline_rounded,
     AlertSeverity.warning => Icons.warning_amber_rounded,
     AlertSeverity.info => Icons.info_outline_rounded,

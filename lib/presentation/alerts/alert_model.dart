@@ -11,12 +11,14 @@ import 'cubit/alerts_state.dart';
 // ── private helpers ───────────────────────────────────────────────────────────
 
 AlertSeverity _mapSeverity(ds.AlertSeverity s) => switch (s) {
+      ds.AlertSeverity.nuclear => AlertSeverity.nuclear,
       ds.AlertSeverity.critical => AlertSeverity.critical,
       ds.AlertSeverity.warning => AlertSeverity.warning,
       ds.AlertSeverity.info => AlertSeverity.info,
     };
 
 Color _severityColor(ds.AlertSeverity s) => switch (s) {
+      ds.AlertSeverity.nuclear => const Color(0xFFFF0040),
       ds.AlertSeverity.critical => AppColors.danger,
       ds.AlertSeverity.warning => AppColors.warning,
       ds.AlertSeverity.info => AppColors.secondary,

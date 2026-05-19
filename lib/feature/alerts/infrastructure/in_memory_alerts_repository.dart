@@ -30,8 +30,8 @@ class InMemoryAlertsRepository implements IAlertsRepository {
       id: 'thr-disk-warning',
       serviceId: null,
       metricName: 'disk_usage_percent',
-      thresholdValue: 40.0,
-      severity: AlertSeverity.info,
+      thresholdValue: 70.0,
+      severity: AlertSeverity.warning,
     ),
     const AlertThreshold(
       id: 'thr-latency-warning',
@@ -58,9 +58,9 @@ class InMemoryAlertsRepository implements IAlertsRepository {
       serviceId: 'svc-chkmonitor',
       serviceName: 'ChkMonitor',
       metricName: 'Uso de disco',
-      currentValue: 44,
-      thresholdValue: 40,
-      severity: AlertSeverity.info,
+      currentValue: 73,
+      thresholdValue: 70,
+      severity: AlertSeverity.warning,
       triggeredAt: DateTime.now().subtract(const Duration(hours: 5)),
     ),
   ];

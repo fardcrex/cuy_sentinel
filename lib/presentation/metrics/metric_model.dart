@@ -74,6 +74,50 @@ List<MetricsBucket> bucketize({
   });
 }
 
+List<MetricsBucket> bucketizeLatest({
+  required List<Metric> passboltAsc,
+  required List<Metric> chkmonitorAsc,
+  required DateTime from,
+  required DateTime to,
+  required Duration bucketSize,
+  required Duration lookbackTolerance,
+  required double? Function(Metric) select,
+}) {
+  final pb = [...passboltAsc]
+    ..sort((a, b) => a.collectedAt.compareTo(b.collectedAt));
+  final ck = [...chkmonitorAsc]
+    ..sort((a, b) => a.collectedAt.compareTo(b.collectedAt));
+
+  double? latest(List<Metric> src, DateTime start, DateTime end) {
+    final inBucket = src
+        .where((m) =>
+            !m.collectedAt.isBefore(start) && m.collectedAt.isBefore(end))
+        .toList();
+    if (inBucket.isEmpty) return null;
+    return select(inBucket.last);
+  }
+
+  double? nearest(List<Metric> src, DateTime start) {
+    final candidates = src
+        .where((m) =>
+            !m.collectedAt.isBefore(start.subtract(lookbackTolerance)) &&
+            m.collectedAt.isBefore(start))
+        .toList();
+    if (candidates.isEmpty) return null;
+    return select(candidates.last);
+  }
+
+  return List.generate(12, (i) {
+    final start = from.add(bucketSize * i);
+    final end = (i == 11) ? to : start.add(bucketSize);
+
+    final pbVal = latest(pb, start, end) ?? nearest(pb, start);
+    final ckVal = latest(ck, start, end) ?? nearest(ck, start);
+
+    return MetricsBucket(time: start, passbolt: pbVal, chkmonitor: ckVal);
+  });
+}
+
 // ── models ────────────────────────────────────────────────────────────────────
 
 class MetricSummaryCardModel {

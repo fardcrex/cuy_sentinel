@@ -293,27 +293,30 @@ class RecentEventsIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _EventRow(
-          text: 'Passbolt · SNMP online',
-          time: 'hace 2 min',
-          color: AppColors.primary,
-        ),
-        SizedBox(height: 5),
-        _EventRow(
-          text: 'ChkMonitor · CPU pico 78%',
-          time: 'hace 18 min',
-          color: AppColors.warning,
-        ),
-        SizedBox(height: 5),
-        _EventRow(
-          text: 'Passbolt · CPU recuperado',
-          time: 'hace 1 h',
-          color: AppColors.secondary,
-        ),
-      ],
+    return const SizedBox(
+      width: double.infinity,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _EventRow(
+            text: 'Passbolt · SNMP online',
+            time: 'hace 2 min',
+            color: AppColors.primary,
+          ),
+          SizedBox(height: 5),
+          _EventRow(
+            text: 'ChkMonitor · CPU pico 78%',
+            time: 'hace 18 min',
+            color: AppColors.warning,
+          ),
+          SizedBox(height: 5),
+          _EventRow(
+            text: 'Passbolt · CPU recuperado',
+            time: 'hace 1 h',
+            color: AppColors.secondary,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1145,30 +1148,33 @@ class AlertListIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _AlertItemRow(
-          text: 'Passbolt · CPU > 80%',
-          value: '82%',
-          time: 'hace 5 min',
-          color: AppColors.danger,
-        ),
-        SizedBox(height: 5),
-        _AlertItemRow(
-          text: 'ChkMonitor · RAM > 75%',
-          value: '77%',
-          time: 'hace 12 min',
-          color: AppColors.warning,
-        ),
-        SizedBox(height: 5),
-        _AlertItemRow(
-          text: 'Passbolt · Disco > 70%',
-          value: '73%',
-          time: 'hace 1 h',
-          color: AppColors.warning,
-        ),
-      ],
+    return const SizedBox(
+      width: double.infinity,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _AlertItemRow(
+            text: 'Passbolt · CPU > 80%',
+            value: '82%',
+            time: 'hace 5 min',
+            color: AppColors.danger,
+          ),
+          SizedBox(height: 5),
+          _AlertItemRow(
+            text: 'ChkMonitor · RAM > 75%',
+            value: '77%',
+            time: 'hace 12 min',
+            color: AppColors.warning,
+          ),
+          SizedBox(height: 5),
+          _AlertItemRow(
+            text: 'Passbolt · Disco > 70%',
+            value: '73%',
+            time: 'hace 1 h',
+            color: AppColors.warning,
+          ),
+        ],
+      ),
     );
   }
 }

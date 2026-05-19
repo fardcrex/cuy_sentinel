@@ -24,11 +24,13 @@ class GuideScreenTab extends StatelessWidget {
     required this.title,
     required this.description,
     required this.cards,
+    this.screenPreview,
   });
 
   final String title;
   final String description;
   final List<GuideCardData> cards;
+  final Widget? screenPreview;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +60,11 @@ class GuideScreenTab extends StatelessWidget {
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              if (screenPreview != null) ...[
+                _ScreenPreviewBanner(child: screenPreview!),
+                const SizedBox(height: 24),
+              ],
               _CardGrid(cards: cards, columns: columns),
             ],
           ),
@@ -105,6 +111,41 @@ class _CardGrid extends StatelessWidget {
       if (i + 2 < cards.length) rows.add(const SizedBox(height: 16));
     }
     return Column(children: rows);
+  }
+}
+
+class _ScreenPreviewBanner extends StatelessWidget {
+  const _ScreenPreviewBanner({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Vista general',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.8,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.panel,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.stroke),
+            ),
+            padding: const EdgeInsets.all(10),
+            child: child,
+          ),
+        ),
+      ],
+    );
   }
 }
 

@@ -6,6 +6,11 @@ import 'widgets/guide_illustrations.dart';
 import 'widgets/guide_screen_tab.dart';
 import 'widgets/guide_summary_tab.dart';
 import 'widgets/guide_tab_bar.dart';
+import 'widgets/screen_miniature/alerts_miniature.dart';
+import 'widgets/screen_miniature/dashboard_miniature.dart';
+import 'widgets/screen_miniature/metrics_miniature.dart';
+import 'widgets/screen_miniature/services_miniature.dart';
+import 'widgets/screen_miniature/users_miniature.dart';
 
 class GuidePage extends StatefulWidget {
   const GuidePage({super.key});
@@ -58,6 +63,7 @@ class _GuidePageState extends State<GuidePage>
 
   Widget _dashboardTab() => const GuideScreenTab(
     title: 'Dashboard',
+    screenPreview: DashboardMiniature(),
     description:
         'Vista principal del panel. Muestra el estado en tiempo real de ambos servicios con métricas resumidas, gráficos de rendimiento y últimos eventos del sistema.',
     cards: [
@@ -124,6 +130,7 @@ class _GuidePageState extends State<GuidePage>
 
   Widget _serviciosTab() => const GuideScreenTab(
     title: 'Servicios',
+    screenPreview: ServicesMiniature(),
     description:
         'Detalle de los servicios monitoreados y la infraestructura de base de datos. '
         'Se divide en dos sub-tabs: Servicios y Bases de datos.',
@@ -181,6 +188,7 @@ class _GuidePageState extends State<GuidePage>
 
   Widget _metricasTab() => const GuideScreenTab(
     title: 'Métricas',
+    screenPreview: MetricsMiniature(),
     description:
         'Histórico de métricas con filtro temporal. Permite analizar el comportamiento '
         'de cada servicio en un rango de tiempo específico, con gráficos y estadísticas agregadas.',
@@ -247,6 +255,7 @@ class _GuidePageState extends State<GuidePage>
 
   Widget _alertasTab() => const GuideScreenTab(
     title: 'Alertas',
+    screenPreview: AlertsMiniature(),
     description:
         'Centro de alertas activas e historial de incidentes. Las alertas se generan '
         'automáticamente cuando una métrica SNMP supera los umbrales configurados.',
@@ -294,6 +303,7 @@ class _GuidePageState extends State<GuidePage>
 
   Widget _usuariosTab() => const GuideScreenTab(
     title: 'Usuarios',
+    screenPreview: UsersMiniature(),
     description:
         'Gestión de usuarios del panel. Muestra quién tiene acceso al sistema, '
         'sus roles asignados y su actividad reciente de sesión.',

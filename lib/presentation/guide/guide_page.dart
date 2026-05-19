@@ -89,8 +89,8 @@ class _GuidePageState extends State<GuidePage>
         body:
             'Muestra el tráfico de red entrante y saliente en MB/s. '
             'Los chips Ambos / Passbolt / ChkMonitor filtran qué servicio se visualiza. '
-            'El gráfico se desliza de derecha a izquierda con cada nuevo dato recibido '
-            '(animación de ventana deslizante cada 5 segundos).',
+            'El gráfico se desliza de derecha a izquierda con cada nueva lectura recibida '
+            '(ventana deslizante sincronizada con el intervalo de recolección de 5 minutos).',
       ),
       GuideCardData(
         icon: Icons.cloud_done_rounded,

@@ -8,25 +8,32 @@ import '../../widgets/app_card.dart';
 import '../../widgets/metric_stats_row.dart';
 import '../metric_model.dart';
 
-class MetricsBandwidthChartCard extends StatelessWidget {
+class MetricsBandwidthChartCard extends StatefulWidget {
   const MetricsBandwidthChartCard({
     super.key,
     required this.inBuckets,
     required this.outBuckets,
   });
 
-  /// bandwidthInBuckets de MetricsLoadedModelX
   final List<MetricsBucket> inBuckets;
-
-  /// bandwidthOutBuckets de MetricsLoadedModelX
   final List<MetricsBucket> outBuckets;
 
   @override
-  Widget build(BuildContext context) {
-    final inValues = _toValues(inBuckets);
-    final outValues = _toValues(outBuckets);
+  State<MetricsBandwidthChartCard> createState() =>
+      _MetricsBandwidthChartCardState();
+}
 
-    // Y-axis compartido entre ambas series
+class _MetricsBandwidthChartCardState
+    extends State<MetricsBandwidthChartCard> {
+  int _serviceIndex = 0; // 0=Passbolt, 1=ChkMonitor
+
+  static const _services = ['Passbolt', 'ChkMonitor'];
+
+  @override
+  Widget build(BuildContext context) {
+    final inValues = _toValues(widget.inBuckets);
+    final outValues = _toValues(widget.outBuckets);
+
     final allNonNull = [
       ...inValues.whereType<double>(),
       ...outValues.whereType<double>(),
@@ -40,16 +47,30 @@ class MetricsBandwidthChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Ancho de banda',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w700),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Ancho de banda',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              for (var i = 0; i < _services.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                _Chip(
+                  label: _services[i],
+                  selected: i == _serviceIndex,
+                  onTap: () => setState(() => _serviceIndex = i),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 6),
           Text(
-            'Entrante / Saliente (Passbolt + ChkMonitor)',
+            'Entrante / Saliente — ${_services[_serviceIndex]}',
             style: Theme.of(context)
                 .textTheme
                 .bodySmall
@@ -102,9 +123,8 @@ class MetricsBandwidthChartCard extends StatelessWidget {
     );
   }
 
-  /// null si el bucket no tiene ambos servicios (isComplete=false → gap)
   List<double?> _toValues(List<MetricsBucket> buckets) => buckets
-      .map((b) => b.isComplete ? b.passbolt! + b.chkmonitor! : null)
+      .map((b) => _serviceIndex == 0 ? b.passbolt : b.chkmonitor)
       .toList();
 
   _BwStats _buildStats(List<double> values) {
@@ -235,6 +255,48 @@ class _BwStats {
   final double? min;
   final double? avg;
   final double? max;
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.16)
+              : AppColors.panel,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected
+                ? AppColors.primary.withValues(alpha: 0.5)
+                : AppColors.stroke,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: selected ? AppColors.primary : AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _SeriesLabel extends StatelessWidget {

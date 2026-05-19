@@ -112,8 +112,8 @@ class MetricsSnmpRowModel {
 
 extension MetricsLoadedModelX on MetricsLoaded {
   List<MetricSummaryCardModel> toSummaryCards() {
-    final pb = passboltMetrics.firstOrNull;
-    final ck = chkmonitorMetrics.firstOrNull;
+    final pb = passboltMetrics.lastOrNull;
+    final ck = chkmonitorMetrics.lastOrNull;
     final status = _resolveCombinedStatus(pb?.serviceStatus, ck?.serviceStatus);
 
     return [
@@ -185,8 +185,8 @@ extension MetricsLoadedModelX on MetricsLoaded {
   }
 
   List<MetricsSnmpRowModel> toSnmpRows() {
-    final pb = passboltMetrics.firstOrNull;
-    final ck = chkmonitorMetrics.firstOrNull;
+    final pb = passboltMetrics.lastOrNull;
+    final ck = chkmonitorMetrics.lastOrNull;
 
     return [
       MetricsSnmpRowModel(
@@ -211,6 +211,33 @@ extension MetricsLoadedModelX on MetricsLoaded {
       ),
     ];
   }
+
+  List<MetricsBucket> get bandwidthInBuckets => bucketize(
+        passboltAsc: passboltMetrics,
+        chkmonitorAsc: chkmonitorMetrics,
+        from: queryFrom,
+        to: queryTo,
+        range: range,
+        select: (m) => m.bandwidthInMb,
+      );
+
+  List<MetricsBucket> get bandwidthOutBuckets => bucketize(
+        passboltAsc: passboltMetrics,
+        chkmonitorAsc: chkmonitorMetrics,
+        from: queryFrom,
+        to: queryTo,
+        range: range,
+        select: (m) => m.bandwidthOutMb,
+      );
+
+  List<MetricsBucket> get uptimeBuckets => bucketize(
+        passboltAsc: passboltMetrics,
+        chkmonitorAsc: chkmonitorMetrics,
+        from: queryFrom,
+        to: queryTo,
+        range: range,
+        select: (m) => m.serviceStatus == ServiceStatus.online ? 1.0 : 0.0,
+      );
 }
 
 Widget _buildAnimatedValue(

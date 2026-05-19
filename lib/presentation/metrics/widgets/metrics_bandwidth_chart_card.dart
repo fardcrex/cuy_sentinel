@@ -25,9 +25,9 @@ class MetricsBandwidthChartCard extends StatefulWidget {
 
 class _MetricsBandwidthChartCardState
     extends State<MetricsBandwidthChartCard> {
-  int _serviceIndex = 0; // 0=Passbolt, 1=ChkMonitor
+  int _serviceIndex = 0; // 0=Ambos, 1=Passbolt, 2=ChkMonitor
 
-  static const _services = ['Passbolt', 'ChkMonitor'];
+  static const _services = ['Ambos', 'Passbolt', 'ChkMonitor'];
 
   @override
   Widget build(BuildContext context) {
@@ -123,9 +123,13 @@ class _MetricsBandwidthChartCardState
     );
   }
 
-  List<double?> _toValues(List<MetricsBucket> buckets) => buckets
-      .map((b) => _serviceIndex == 0 ? b.passbolt : b.chkmonitor)
-      .toList();
+  List<double?> _toValues(List<MetricsBucket> buckets) => buckets.map((b) {
+        return switch (_serviceIndex) {
+          0 => b.isComplete ? b.passbolt! + b.chkmonitor! : null,
+          1 => b.passbolt,
+          _ => b.chkmonitor,
+        };
+      }).toList();
 
   _BwStats _buildStats(List<double> values) {
     if (values.isEmpty) return const _BwStats();

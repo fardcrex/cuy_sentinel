@@ -297,6 +297,7 @@ class RecentEventsIllustration extends StatelessWidget {
       width: double.infinity,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _EventRow(
             text: 'Passbolt · SNMP online',
@@ -1152,6 +1153,7 @@ class AlertListIllustration extends StatelessWidget {
       width: double.infinity,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _AlertItemRow(
             text: 'Passbolt · CPU > 80%',

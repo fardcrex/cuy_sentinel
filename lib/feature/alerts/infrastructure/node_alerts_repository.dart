@@ -26,13 +26,11 @@ class NodeAlertsRepository implements IAlertsRepository {
 
   @override
   Future<List<AlertEvent>> getAlertsSince(DateTime since) {
-    // TODO: implement getAlertsSince
     throw UnimplementedError();
   }
 
   @override
   Stream<AlertEvent> watchAlertInserts({void Function()? onSubscribed}) {
-    // TODO: implement watchAlertInserts
     throw UnimplementedError();
   }
 }

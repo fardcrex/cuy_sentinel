@@ -50,5 +50,9 @@ class SupabaseAuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<void> signOut() => _client.auth.signOut();
+  Future<void> signOut() async {
+    await _client.realtime.removeAllChannels();
+    _client.realtime.disconnect();
+    await _client.auth.signOut();
+  }
 }

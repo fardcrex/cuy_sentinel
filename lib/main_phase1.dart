@@ -7,7 +7,7 @@ import 'core/env/app_env.dart';
 import 'core/injection/envs/phase1_dependencies.dart';
 
 // Fase 1 — Supabase.
-// flutter run --target lib/main_production.dart \
+// flutter run --target lib/main_phase1.dart \
 //             --dart-define-from-file=envs/sentinel.phase1.json
 void main() async {
   usePathUrlStrategy();

@@ -18,6 +18,7 @@
       "name": "PROD — Supabase",
       "request": "launch",
       "type": "dart",
+      "flutterMode": "release",
       "program": "lib/main_phase1.dart",
       "args": ["--dart-define-from-file=envs/sentinel.phase1.json"]
     },

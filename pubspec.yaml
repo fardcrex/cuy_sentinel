@@ -31,7 +31,6 @@ flutter:
     - assets/illustrations/
     - assets/splash/
     - assets/icons/
-    - assets/team/
 
 flutter_launcher_icons:
   android: true

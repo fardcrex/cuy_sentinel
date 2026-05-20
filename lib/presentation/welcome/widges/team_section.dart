@@ -10,19 +10,16 @@ class _TeamSection extends StatelessWidget {
       name: 'Jair Conislla Bocangel',
       role: 'Desarrollador Full-Stack',
       initials: 'JC',
-      asset: AppAssets.teamJair,
     ),
     _Member(
       name: 'Daniel Rojas Sanchez',
       role: 'Desarrollador Full-Stack',
       initials: 'DR',
-      asset: AppAssets.teamDaniel,
     ),
     _Member(
       name: 'Jheampierre Ralli Peralta',
       role: 'Desarrollador Full-Stack',
       initials: 'JR',
-      asset: AppAssets.teamJheampierre,
     ),
   ];
 
@@ -93,14 +90,12 @@ class _Member {
     required this.name,
     required this.role,
     required this.initials,
-    required this.asset,
     this.roleColor = AppColors.primary,
   });
 
   final String name;
   final String role;
   final String initials;
-  final String asset;
   final Color roleColor;
 }
 
@@ -127,7 +122,7 @@ class _MemberCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _Avatar(asset: member.asset, initials: member.initials),
+          _Avatar(initials: member.initials),
           const SizedBox(height: 16),
           Text(
             member.name,
@@ -158,34 +153,25 @@ class _MemberCard extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.asset, required this.initials});
+  const _Avatar({required this.initials});
 
-  final String asset;
   final String initials;
 
   @override
   Widget build(BuildContext context) {
-    return ClipOval(
-      child: Image.asset(
-        asset,
-        width: 90,
-        height: 90,
-        fit: BoxFit.cover,
-        errorBuilder: (context, e, s) => Container(
-          width: 90,
-          height: 90,
-          decoration: const BoxDecoration(
-            gradient: AppColors.mainBrandGradient,
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            initials,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: AppColors.background,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
+    return Container(
+      width: 90,
+      height: 90,
+      decoration: const BoxDecoration(
+        gradient: AppColors.mainBrandGradient,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          color: AppColors.background,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );

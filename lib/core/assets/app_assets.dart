@@ -46,9 +46,4 @@ class AppAssets {
   static const miniCheck = 'assets/icons/mini_check.webp';
   static const miniPass = 'assets/icons/mini_pass.webp';
 
-  // Team profile photos
-  static const teamJair = 'assets/team/team_jair.png';
-  static const teamDaniel = 'assets/team/team_daniel.png';
-  static const teamJheampierre = 'assets/team/team_jheampierre.png';
-  static const teamProfe = 'assets/team/team_profe.png';
 }

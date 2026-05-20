@@ -21,7 +21,7 @@ abstract final class AppRoutes {
   static const login = '/login';
   static const welcome = '/';
   static const guide = '/guide';
-  static const alertPreview = '/alert-preview';
+  static const alertPreview = '/testalert';
   static const dashboard = '/dashboard';
   static const services = '/services';
   static const metrics = '/metrics';

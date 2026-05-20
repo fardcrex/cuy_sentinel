@@ -7,7 +7,6 @@ class _ProfessorSection extends StatelessWidget {
     name: 'Rene Alejandro Zamudio Ariza',
     role: 'Docente del Curso',
     initials: 'RZ',
-    asset: AppAssets.teamProfe,
     roleColor: AppColors.warning,
   );
 

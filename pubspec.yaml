@@ -1,5 +1,5 @@
 name: cuy_sentinel
-description: "A new Flutter project."
+description: "Panel de monitoreo externo para infraestructura dockerizada via SNMP."
 publish_to: "none"
 version: 0.1.0+1
 

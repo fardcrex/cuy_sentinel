@@ -64,3 +64,57 @@ jobs:
         env:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+      - name: Notify Telegram success
+        if: success()
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets are not configured; skipping notification."
+            exit 0
+          fi
+
+          message="Cuy Sentinel deploy completed successfully.
+
+Branch: ${GITHUB_REF_NAME}
+Commit: ${GITHUB_SHA}
+Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          jq -n \
+            --arg chat_id "$TELEGRAM_CHAT_ID" \
+            --arg text "$message" \
+            '{chat_id: $chat_id, text: $text}' \
+            | curl --fail --silent --show-error \
+                -X POST \
+                -H "Content-Type: application/json" \
+                -d @- \
+                "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Notify Telegram failure
+        if: failure()
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets are not configured; skipping notification."
+            exit 0
+          fi
+
+          message="Cuy Sentinel deploy failed.
+
+Branch: ${GITHUB_REF_NAME}
+Commit: ${GITHUB_SHA}
+Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          jq -n \
+            --arg chat_id "$TELEGRAM_CHAT_ID" \
+            --arg text "$message" \
+            '{chat_id: $chat_id, text: $text}' \
+            | curl --fail --silent --show-error \
+                -X POST \
+                -H "Content-Type: application/json" \
+                -d @- \
+                "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

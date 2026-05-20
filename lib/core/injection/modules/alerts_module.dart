@@ -10,11 +10,20 @@ abstract final class AlertsModule {
     RepositoryProvider<WatchActiveAlertsUseCase>(
       create: (_) => WatchActiveAlertsUseCase(repo),
     ),
+    RepositoryProvider<WatchAlertInsertsUseCase>(
+      create: (_) => WatchAlertInsertsUseCase(repo),
+    ),
     RepositoryProvider<GetAlertHistoryUseCase>(
       create: (_) => GetAlertHistoryUseCase(repo),
     ),
     RepositoryProvider<GetAlertThresholdsUseCase>(
       create: (_) => GetAlertThresholdsUseCase(repo),
+    ),
+    RepositoryProvider<ResolveAlertUseCase>(
+      create: (_) => ResolveAlertUseCase(repo),
+    ),
+    RepositoryProvider<GetAlertsSinceUseCase>(
+      create: (_) => GetAlertsSinceUseCase(repo),
     ),
   ];
 }

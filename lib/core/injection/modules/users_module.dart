@@ -16,5 +16,20 @@ abstract final class UsersModule {
     RepositoryProvider<GetAccessLogsUseCase>(
       create: (_) => GetAccessLogsUseCase(repo),
     ),
+    RepositoryProvider<LogAccessUseCase>(
+      create: (_) => LogAccessUseCase(repo),
+    ),
+    RepositoryProvider<WatchAccessLogsUseCase>(
+      create: (_) => WatchAccessLogsUseCase(repo),
+    ),
+    RepositoryProvider<WatchPresenceUseCase>(
+      create: (_) => WatchPresenceUseCase(repo),
+    ),
+    RepositoryProvider<TrackPresenceUseCase>(
+      create: (_) => TrackPresenceUseCase(repo),
+    ),
+    RepositoryProvider<UntrackPresenceUseCase>(
+      create: (_) => UntrackPresenceUseCase(repo),
+    ),
   ];
 }

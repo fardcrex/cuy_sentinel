@@ -13,6 +13,7 @@ class AppDependencies {
     required this.alertsRepository,
     required this.usersRepository,
     required this.databasesRepository,
+    this.onReconnect,
   });
 
   final IAuthRepository authRepository;
@@ -21,4 +22,5 @@ class AppDependencies {
   final IAlertsRepository alertsRepository;
   final IUsersRepository usersRepository;
   final IDatabasesRepository databasesRepository;
+  final void Function()? onReconnect;
 }

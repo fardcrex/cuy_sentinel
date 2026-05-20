@@ -15,6 +15,9 @@ abstract final class MonitoringModule {
     RepositoryProvider<GetServiceEventsUseCase>(
       create: (_) => GetServiceEventsUseCase(repo),
     ),
+    RepositoryProvider<GetRecentServiceEventsUseCase>(
+      create: (_) => GetRecentServiceEventsUseCase(repo),
+    ),
     RepositoryProvider<WatchActiveEventsUseCase>(
       create: (_) => WatchActiveEventsUseCase(repo),
     ),

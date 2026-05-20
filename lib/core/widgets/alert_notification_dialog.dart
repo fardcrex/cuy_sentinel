@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../feature/alerts/domain/entities/alert_event.dart';
 import '../../feature/alerts/domain/entities/alert_severity.dart';
+import '../assets/app_assets.dart';
 import '../theme/app_colors.dart';
 
 const _nuclearColor = Color(0xFFFF0040);
@@ -18,9 +19,10 @@ void showAlertNotificationDialog(BuildContext context, AlertEvent event) {
     transitionBuilder: (_, anim, _, child) => FadeTransition(
       opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
       child: ScaleTransition(
-        scale: Tween<double>(begin: 0.88, end: 1.0).animate(
-          CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
-        ),
+        scale: Tween<double>(
+          begin: 0.88,
+          end: 1.0,
+        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
         child: child,
       ),
     ),
@@ -52,7 +54,7 @@ class _AlertDialogPage extends StatelessWidget {
         : screen.height * 0.32;
 
     final maxWidth = event.severity == AlertSeverity.nuclear
-        ? (isMobile ? screen.width * 0.92 : 520.0)
+        ? (isMobile ? screen.width * 0.92 : 660.0)
         : (isMobile ? screen.width * 0.90 : 420.0);
 
     return Material(
@@ -62,8 +64,11 @@ class _AlertDialogPage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight, maxWidth: maxWidth),
-            child: _AlertDialogCard(event: event),
+            constraints: BoxConstraints(
+              maxHeight: maxHeight,
+              maxWidth: maxWidth,
+            ),
+            child: AlertDialogCard(event: event),
           ),
         ),
       ),
@@ -71,8 +76,8 @@ class _AlertDialogPage extends StatelessWidget {
   }
 }
 
-class _AlertDialogCard extends StatelessWidget {
-  const _AlertDialogCard({required this.event});
+class AlertDialogCard extends StatelessWidget {
+  const AlertDialogCard({super.key, required this.event});
 
   final AlertEvent event;
 
@@ -83,15 +88,15 @@ class _AlertDialogCard extends StatelessWidget {
       AlertSeverity.critical => _SeverityCard(
         event: event,
         accentColor: AppColors.danger,
-        imagePath: 'assets/badges/badge_alert_warning.webp',
-        imageSize: 52,
+        imagePath: AppAssets.badgeAlertWarning,
+        imageSize: 64,
         title: 'Alerta Crítica',
       ),
       AlertSeverity.warning => _SeverityCard(
         event: event,
         accentColor: AppColors.warning,
-        imagePath: 'assets/icons/icon_alert_shield.png',
-        imageSize: 48,
+        imagePath: AppAssets.iconAlertShield,
+        imageSize: 64,
         title: 'Advertencia',
       ),
       AlertSeverity.info => _InfoCard(event: event),
@@ -137,7 +142,11 @@ class _NuclearCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_rounded, color: _nuclearColor, size: 16),
+                  const Icon(
+                    Icons.warning_rounded,
+                    color: _nuclearColor,
+                    size: 16,
+                  ),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
@@ -151,7 +160,8 @@ class _NuclearCard extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.of(context, rootNavigator: true).pop(),
+                    onTap: () =>
+                        Navigator.of(context, rootNavigator: true).pop(),
                     child: const Icon(
                       Icons.close_rounded,
                       color: AppColors.textSecondary,
@@ -161,63 +171,79 @@ class _NuclearCard extends StatelessWidget {
                 ],
               ),
             ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      'assets/illustrations/illustration_anomaly_detected.webp',
-                      height: 96,
-                      fit: BoxFit.contain,
+            // Body: imagen izquierda (altura libre), texto+botón derecha
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Columna izquierda — ilustración portrait 256×384
+                  SizedBox(
+                    width: 256,
+
+                    child: Image.asset(
+                      AppAssets.illustrationNuclear,
+                      fit: BoxFit.fitWidth,
+                      alignment: Alignment.center,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'El servidor ${event.serviceName} ha recibido un ataque nuclear.',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Sistemas comprometidos. Respuesta de emergencia requerida — evacúe el entorno inmediatamente.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () =>
-                            Navigator.of(context, rootNavigator: true).pop(),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _nuclearColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  ),
+                  // Columna derecha — textos y botón
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'El servidor ${event.serviceName} ha recibido un ataque nuclear.',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              height: 1.4,
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          'ENTENDIDO',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.4,
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Sistemas comprometidos. Respuesta de emergencia requerida — evacúe el entorno inmediatamente.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: AppColors.textSecondary,
+                              height: 1.5,
+                            ),
                           ),
-                        ),
+                          const Spacer(),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: () => Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).pop(),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: _nuclearColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'ENTENDIDO',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.4,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],

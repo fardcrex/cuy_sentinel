@@ -19,6 +19,9 @@ class AppAssets {
 
   static const illustrationAnomalyDetected =
       'assets/illustrations/illustration_anomaly_detected.webp';
+
+  static const illustrationNuclear =
+      'assets/illustrations/illustration_nuclear.webp';
   static const illustrationGuardianShield =
       'assets/illustrations/illustration_guardian_shield.webp';
   static const illustrationIntrusoDetected =

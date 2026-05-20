@@ -12,6 +12,7 @@ import '../../presentation/metrics/metrics_page.dart';
 import '../../presentation/not_found/not_found_page.dart';
 import '../../presentation/services/services_page.dart';
 import '../../presentation/users/users_page.dart';
+import '../../presentation/alert_preview/alert_preview_page.dart';
 import '../../presentation/guide/guide_page.dart';
 import '../../presentation/welcome/welcome_page.dart';
 import '../../presentation/widgets/responsive_shell.dart';
@@ -20,6 +21,7 @@ abstract final class AppRoutes {
   static const login = '/login';
   static const welcome = '/';
   static const guide = '/guide';
+  static const alertPreview = '/alert-preview';
   static const dashboard = '/dashboard';
   static const services = '/services';
   static const metrics = '/metrics';
@@ -27,9 +29,17 @@ abstract final class AppRoutes {
   static const users = '/users';
 }
 
-const _publicRoutes = {AppRoutes.welcome, AppRoutes.login, AppRoutes.guide};
+const _publicRoutes = {
+  AppRoutes.welcome,
+  AppRoutes.login,
+  AppRoutes.guide,
+  AppRoutes.alertPreview,
+};
+
+final appNavigatorKey = GlobalKey<NavigatorState>();
 
 GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
+  navigatorKey: appNavigatorKey,
   initialLocation: AppRoutes.welcome,
   refreshListenable: _GoRouterRefreshStream(authBloc.stream),
   redirect: (context, state) {
@@ -57,9 +67,14 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
       path: AppRoutes.guide,
       pageBuilder: (context, state) => _buildPage(state, const GuidePage()),
     ),
+    GoRoute(
+      path: AppRoutes.alertPreview,
+      pageBuilder: (context, state) =>
+          _buildPage(state, const AlertPreviewPage()),
+    ),
     ShellRoute(
       builder: (context, state, child) =>
-          ResponsiveShell(currentPath: state.matchedLocation, child: child),
+          PanelShell(currentPath: state.matchedLocation, child: child),
       routes: [
         GoRoute(
           path: AppRoutes.dashboard,

@@ -12,14 +12,14 @@ abstract final class AlertToastStack {
   static OverlayEntry? _entry;
   static final _items = ValueNotifier<List<_ToastItem>>([]);
 
-  static void add(BuildContext context, AlertEvent event) {
+  static void add(OverlayState overlay, AlertEvent event) {
     _items.value = [..._items.value, _ToastItem(event: event)];
     if (_entry == null) {
       _entry = OverlayEntry(
         builder: (_) =>
             _AlertToastStackWidget(items: _items, onRemove: _remove),
       );
-      Overlay.of(context, rootOverlay: true).insert(_entry!);
+      overlay.insert(_entry!);
     }
   }
 

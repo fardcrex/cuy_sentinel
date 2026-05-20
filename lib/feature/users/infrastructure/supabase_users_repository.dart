@@ -12,7 +12,9 @@ class SupabaseUsersRepository implements IUsersRepository {
 
   final supabase.SupabaseClient _client;
   supabase.RealtimeChannel? _presenceChannel;
+  Future<void>? _presenceSetup;
   String? _trackedUserId;
+  final _presenceListeners = <StreamController<Set<String>>>{};
 
   @override
   Stream<List<PanelUser>> watchUsers({
@@ -43,37 +45,63 @@ class SupabaseUsersRepository implements IUsersRepository {
   Stream<Set<String>> watchPresence() => retryStream(_buildPresenceStream);
 
   Stream<Set<String>> _buildPresenceStream() async* {
-    if (_presenceChannel != null) {
-      await _client.removeChannel(_presenceChannel!);
-      _presenceChannel = null;
-    }
-
     final ctrl = StreamController<Set<String>>();
+    _presenceListeners.add(ctrl);
+
+    ctrl.onCancel = () async {
+      _presenceListeners.remove(ctrl);
+    };
+
+    await _ensurePresenceChannel();
+    yield _extractOnlineIds();
+    yield* ctrl.stream;
+  }
+
+  Future<void> _ensurePresenceChannel() {
+    final setup = _presenceSetup;
+    if (setup != null) return setup;
+
+    final completer = Completer<void>();
+    _presenceSetup = completer.future;
 
     _presenceChannel = _client.channel('panel:presence');
-    _presenceChannel!.onPresenceSync((_) {
-      if (!ctrl.isClosed) ctrl.add(_extractOnlineIds());
-    });
+    _presenceChannel!.onPresenceSync((_) => _emitPresence());
     _presenceChannel!.subscribe((status, _) async {
       if (status == supabase.RealtimeSubscribeStatus.subscribed) {
         final uid = _trackedUserId;
         if (uid != null) await _presenceChannel?.track({'user_id': uid});
-        if (!ctrl.isClosed) ctrl.add(_extractOnlineIds());
+        _emitPresence();
+        if (!completer.isCompleted) completer.complete();
       } else if (status == supabase.RealtimeSubscribeStatus.channelError ||
           status == supabase.RealtimeSubscribeStatus.timedOut) {
-        ctrl.addError(Exception('presence channel error — will retry'));
+        final error = Exception('presence channel error — will retry');
+        _emitPresenceError(error);
+        await _resetPresenceChannel();
+        if (!completer.isCompleted) completer.completeError(error);
       }
     });
 
-    ctrl.onCancel = () async {
-      if (_presenceChannel != null) {
-        await _client.removeChannel(_presenceChannel!);
-        _presenceChannel = null;
-      }
-    };
+    return completer.future;
+  }
 
-    yield _extractOnlineIds();
-    yield* ctrl.stream;
+  Future<void> _resetPresenceChannel() async {
+    final channel = _presenceChannel;
+    _presenceChannel = null;
+    _presenceSetup = null;
+    if (channel != null) await _client.removeChannel(channel);
+  }
+
+  void _emitPresence() {
+    final ids = _extractOnlineIds();
+    for (final listener in List.of(_presenceListeners)) {
+      if (!listener.isClosed) listener.add(ids);
+    }
+  }
+
+  void _emitPresenceError(Object error) {
+    for (final listener in List.of(_presenceListeners)) {
+      if (!listener.isClosed) listener.addError(error);
+    }
   }
 
   // presenceState() → List<SinglePresenceState>
@@ -88,13 +116,17 @@ class SupabaseUsersRepository implements IUsersRepository {
   @override
   Future<void> trackPresence(String userId) async {
     _trackedUserId = userId;
+    await _ensurePresenceChannel();
     await _presenceChannel?.track({'user_id': userId});
+    _emitPresence();
   }
 
   @override
   Future<void> untrackPresence() async {
     _trackedUserId = null;
     await _presenceChannel?.untrack();
+    await _resetPresenceChannel();
+    _emitPresence();
   }
 
   @override

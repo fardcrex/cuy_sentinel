@@ -73,11 +73,12 @@ jobs:
             exit 0
           fi
 
-          message="Cuy Sentinel deploy completed successfully.
-
-Branch: ${GITHUB_REF_NAME}
-Commit: ${GITHUB_SHA}
-Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          message=$(printf 'Cuy Sentinel deploy completed successfully.\n\nBranch: %s\nCommit: %s\nRun: %s/%s/actions/runs/%s' \
+            "$GITHUB_REF_NAME" \
+            "$GITHUB_SHA" \
+            "$GITHUB_SERVER_URL" \
+            "$GITHUB_REPOSITORY" \
+            "$GITHUB_RUN_ID")
 
           jq -n \
             --arg chat_id "$TELEGRAM_CHAT_ID" \
@@ -100,11 +101,12 @@ Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             exit 0
           fi
 
-          message="Cuy Sentinel deploy failed.
-
-Branch: ${GITHUB_REF_NAME}
-Commit: ${GITHUB_SHA}
-Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          message=$(printf 'Cuy Sentinel deploy failed.\n\nBranch: %s\nCommit: %s\nRun: %s/%s/actions/runs/%s' \
+            "$GITHUB_REF_NAME" \
+            "$GITHUB_SHA" \
+            "$GITHUB_SERVER_URL" \
+            "$GITHUB_REPOSITORY" \
+            "$GITHUB_RUN_ID")
 
           jq -n \
             --arg chat_id "$TELEGRAM_CHAT_ID" \

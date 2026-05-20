@@ -1,50 +1,113 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/utils/stream_retry.dart';
 import '../../../feature/users/application/get_users_use_case.dart';
 import '../../../feature/users/domain/entities/panel_user.dart';
-import 'users_event.dart';
+import '../../../feature/users/domain/entities/user_access_log.dart';
 import 'users_state.dart';
 
-class UsersBloc extends Bloc<UsersEvent, UsersState> {
+class UsersBloc extends Cubit<UsersState> {
   UsersBloc({
     required WatchPanelUsersUseCase watchUsers,
-    required GetAccessLogsUseCase getAccessLogs,
+    required WatchAccessLogsUseCase watchAccessLogs,
+    required WatchPresenceUseCase watchPresence,
   })  : _watchUsers = watchUsers,
-        _getAccessLogs = getAccessLogs,
-        super(UsersInitial()) {
-    on<UsersWatchRequested>(_onWatchRequested);
-    on<UserRoleChanged>(_onRoleChanged);
-    on<UserDeactivated>(_onDeactivated);
-  }
+        _watchAccessLogs = watchAccessLogs,
+        _watchPresence = watchPresence,
+        super(UsersInitial());
 
   final WatchPanelUsersUseCase _watchUsers;
-  final GetAccessLogsUseCase _getAccessLogs;
+  final WatchAccessLogsUseCase _watchAccessLogs;
+  final WatchPresenceUseCase _watchPresence;
 
-  Future<void> _onWatchRequested(
-    UsersWatchRequested event,
-    Emitter<UsersState> emit,
-  ) async {
+  StreamSubscription<List<PanelUser>>? _usersSub;
+  StreamSubscription<List<UserAccessLog>>? _logsSub;
+  StreamSubscription<Set<String>>? _presenceSub;
+  Timer? _countdownTimer;
+
+  List<PanelUser> _users = [];
+  List<UserAccessLog> _logs = [];
+  Set<String> _onlineIds = {};
+  bool _isReconnecting = false;
+  int _secondsLeft = 0;
+  bool _usersReady = false;
+
+  void load() {
     emit(UsersLoading());
-    try {
-      final logs = await _getAccessLogs.execute();
-      await emit.forEach<List<PanelUser>>(
-        _watchUsers.execute(),
-        onData: (users) => UsersLoaded(
-          users: users,
-          accessLogs: logs,
-        ),
-        onError: (e, _) => UsersError(e.toString()),
-      );
-    } catch (e) {
-      emit(UsersError(e.toString()));
+
+    _usersSub = _watchUsers.execute(onRetry: _onRetry).listen(
+      (u) {
+        _users = u;
+        _usersReady = true;
+        _emitLoaded();
+      },
+      onError: (Object e, StackTrace s) => emit(UsersError(e.toString())),
+    );
+
+    _logsSub = _watchAccessLogs.execute(onRetry: _onRetry).listen(
+      (l) {
+        _logs = l;
+        _emitLoaded();
+      },
+      onError: (Object e, StackTrace s) => emit(UsersError(e.toString())),
+    );
+
+    _presenceSub = _watchPresence.execute().listen(
+      (ids) {
+        _onlineIds = ids;
+        _emitLoaded();
+      },
+      onError: (Object e, StackTrace s) => emit(UsersError(e.toString())),
+    );
+  }
+
+  void _onRetry(RetryState retryState) {
+    switch (retryState) {
+      case Retrying(:final backoff):
+        _startCountdown(backoff);
+      case Reconnected():
+        _stopCountdown();
     }
   }
 
-  void _onRoleChanged(UserRoleChanged event, Emitter<UsersState> emit) {
-    // Mutation not yet available in repository — wired in Fase 2
+  void _startCountdown(Duration backoff) {
+    _isReconnecting = true;
+    _secondsLeft = backoff.inSeconds;
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_secondsLeft > 0) _secondsLeft--;
+      _emitLoaded();
+    });
+    _emitLoaded();
   }
 
-  void _onDeactivated(UserDeactivated event, Emitter<UsersState> emit) {
-    // Mutation not yet available in repository — wired in Fase 2
+  void _stopCountdown() {
+    _isReconnecting = false;
+    _secondsLeft = 0;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _emitLoaded();
+  }
+
+  void _emitLoaded() {
+    if (!_usersReady || isClosed) return;
+    emit(UsersLoaded(
+      users: _users,
+      accessLogs: _logs,
+      onlineIds: _onlineIds,
+      isReconnecting: _isReconnecting,
+      reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
+    ));
+  }
+
+  @override
+  Future<void> close() async {
+    await _usersSub?.cancel();
+    await _logsSub?.cancel();
+    await _presenceSub?.cancel();
+    _countdownTimer?.cancel();
+    return super.close();
   }
 }

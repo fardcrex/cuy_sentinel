@@ -13,11 +13,15 @@ final class ServicesLoaded extends ServicesState {
     required this.services,
     required this.activeEvents,
     this.lastRun,
+    this.isReconnecting = false,
+    this.reconnectingInSeconds,
   });
 
   final List<MonitoredService> services;
   final List<ServiceEvent> activeEvents;
   final CollectorRun? lastRun;
+  final bool isReconnecting;
+  final int? reconnectingInSeconds;
 }
 
 final class ServicesError extends ServicesState {

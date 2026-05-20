@@ -9,23 +9,47 @@ import '../widgets/alerts_aside.dart';
 import '../widgets/alerts_section.dart';
 import '../widgets/incidents_section.dart';
 
-class AlertsContentView extends StatelessWidget {
+class AlertsContentView extends StatefulWidget {
   const AlertsContentView({super.key, required this.state});
 
   final AlertsLoaded state;
 
   @override
+  State<AlertsContentView> createState() => _AlertsContentViewState();
+}
+
+class _AlertsContentViewState extends State<AlertsContentView> {
+  final _scrollController = ScrollController();
+  final _incidentsKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToIncidents() {
+    final ctx = _incidentsKey.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final alertModels = state.activeAlerts
-        .map((event) => event.toAlertModel())
+    final alertModels = widget.state.activeAlerts
+        .map((e) => e.toAlertModel())
         .toList();
-    final incidentModels = state.history
-        .map((event) => event.toIncidentModel())
+    final incidentModels = widget.state.incidents
+        .map((e) => e.toIncidentModel())
         .toList();
-    final thresholdModels = state.thresholds
-        .map((threshold) => threshold.toModel())
+    final thresholdModels = widget.state.thresholds
+        .map((t) => t.toModel())
         .toList();
-    final summary = state.toSummaryModel();
+    final summary = widget.state.toSummaryModel();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -34,6 +58,7 @@ class AlertsContentView extends StatelessWidget {
         final isWide = AppBreakpoints.isDesktop(width);
 
         return SingleChildScrollView(
+          controller: _scrollController,
           padding: EdgeInsets.all(padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,9 +78,15 @@ class AlertsContentView extends StatelessWidget {
                       flex: 3,
                       child: Column(
                         children: [
-                          AlertsSection(alerts: alertModels),
+                          AlertsSection(
+                            alerts: alertModels,
+                            onViewAll: _scrollToIncidents,
+                          ),
                           const SizedBox(height: 24),
-                          IncidentsSection(incidents: incidentModels),
+                          IncidentsSection(
+                            key: _incidentsKey,
+                            incidents: incidentModels,
+                          ),
                         ],
                       ),
                     ),
@@ -71,9 +102,15 @@ class AlertsContentView extends StatelessWidget {
                   children: [
                     AlertsAside(thresholds: thresholdModels),
                     const SizedBox(height: 24),
-                    AlertsSection(alerts: alertModels),
+                    AlertsSection(
+                      alerts: alertModels,
+                      onViewAll: _scrollToIncidents,
+                    ),
                     const SizedBox(height: 24),
-                    IncidentsSection(incidents: incidentModels),
+                    IncidentsSection(
+                      key: _incidentsKey,
+                      incidents: incidentModels,
+                    ),
                   ],
                 ),
             ],

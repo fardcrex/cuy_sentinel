@@ -18,7 +18,10 @@ class UsersContentView extends StatelessWidget {
   Widget build(BuildContext context) {
     final userModels = List.generate(
       state.users.length,
-      (i) => state.users[i].toModel(i),
+      (i) => state.users[i].toModel(
+        i,
+        isOnline: state.isOnline(state.users[i].id),
+      ),
     );
     final logModels = state.accessLogs.map((l) => l.toModel()).toList();
     final session = state.toSessionModel();

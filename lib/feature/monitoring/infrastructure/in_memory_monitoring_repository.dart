@@ -1,3 +1,4 @@
+import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/collector_run.dart';
 import '../domain/entities/monitored_service.dart';
 import '../domain/entities/service_event.dart';
@@ -10,6 +11,7 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
     containerName: 'passbolt_app',
     hostIp: '192.168.1.10',
     snmpPort: 1161,
+    slug: 'passbolt',
     description: 'Gestor de contraseñas auto-hospedado',
     createdAt: DateTime(2025, 3, 1),
   );
@@ -20,6 +22,7 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
     containerName: 'chkmonitor_app',
     hostIp: '192.168.1.10',
     snmpPort: 2161,
+    slug: 'chkmonitor',
     description: 'Monitor de servicios HTTP',
     createdAt: DateTime(2025, 3, 1),
   );
@@ -28,6 +31,7 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
     ServiceEvent(
       id: 'evt-001',
       serviceId: 'svc-chkmonitor',
+      serviceName: 'ChkMonitor',
       eventType: ServiceEventType.recovered,
       startedAt: DateTime.now().subtract(const Duration(days: 2, hours: 3)),
       endedAt: DateTime.now().subtract(const Duration(days: 2, hours: 2, minutes: 47)),
@@ -39,6 +43,7 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
     ServiceEvent(
       id: 'evt-002',
       serviceId: 'svc-passbolt',
+      serviceName: 'Passbolt',
       eventType: ServiceEventType.degraded,
       startedAt: DateTime.now().subtract(const Duration(days: 5, hours: 1)),
       endedAt: DateTime.now().subtract(const Duration(days: 5)),
@@ -50,6 +55,7 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
     ServiceEvent(
       id: 'evt-003',
       serviceId: 'svc-passbolt',
+      serviceName: 'Passbolt',
       eventType: ServiceEventType.down,
       startedAt: DateTime.now().subtract(const Duration(days: 7, hours: 2)),
       endedAt: DateTime.now().subtract(const Duration(days: 7)),
@@ -79,7 +85,16 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
       _events.where((e) => e.serviceId == serviceId).take(limit).toList();
 
   @override
-  Stream<List<ServiceEvent>> watchActiveEvents() async* {
+  Future<List<ServiceEvent>> getRecentServiceEvents({int limit = 30}) async {
+    final sorted = [..._events]
+      ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    return sorted.take(limit).toList();
+  }
+
+  @override
+  Stream<List<ServiceEvent>> watchActiveEvents({
+    void Function(RetryState)? onRetry,
+  }) async* {
     while (true) {
       yield _events.where((e) => e.isActive).toList();
       await Future.delayed(const Duration(seconds: 10));
@@ -91,7 +106,9 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
       _buildRuns(limit);
 
   @override
-  Stream<CollectorRun?> watchLastCollectorRun() async* {
+  Stream<CollectorRun?> watchLastCollectorRun({
+    void Function(RetryState)? onRetry,
+  }) async* {
     var tick = 0;
     while (true) {
       final now = DateTime.now();

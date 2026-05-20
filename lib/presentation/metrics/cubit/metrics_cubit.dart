@@ -1,18 +1,34 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../feature/metrics/application/get_metrics_history_use_case.dart';
+import '../../../feature/monitoring/application/get_services_use_case.dart';
 import 'metrics_range.dart';
 import 'metrics_state.dart';
 
 class MetricsCubit extends Cubit<MetricsState> {
-  MetricsCubit({required GetMetricsHistoryUseCase getHistory})
-      : _getHistory = getHistory,
-        super(const MetricsInitial());
+  MetricsCubit({
+    required GetMetricsHistoryUseCase getHistory,
+    required GetServicesUseCase getServices,
+  }) : _getHistory = getHistory,
+       _getServices = getServices,
+       super(const MetricsInitial());
 
   final GetMetricsHistoryUseCase _getHistory;
+  final GetServicesUseCase _getServices;
   MetricsRange _range = MetricsRange.h1;
+  String? _passboltId;
+  String? _chkmonitorId;
 
-  void init() => _load(_range);
+  Future<void> init() async {
+    final services = await _getServices.execute();
+    _passboltId = services
+        .firstWhere((s) => s.slug == 'passbolt', orElse: () => services.first)
+        .id;
+    _chkmonitorId = services
+        .firstWhere((s) => s.slug == 'chkmonitor', orElse: () => services.last)
+        .id;
+    _load(_range);
+  }
 
   void changeRange(MetricsRange range) {
     if (_range == range) return;
@@ -33,8 +49,8 @@ class MetricsCubit extends Cubit<MetricsState> {
       final from = to.subtract(range.duration);
 
       final results = await Future.wait([
-        _getHistory.execute(serviceId: 'svc-passbolt', from: from, to: to),
-        _getHistory.execute(serviceId: 'svc-chkmonitor', from: from, to: to),
+        _getHistory.execute(serviceId: _passboltId ?? 'svc-passbolt', from: from, to: to),
+        _getHistory.execute(serviceId: _chkmonitorId ?? 'svc-chkmonitor', from: from, to: to),
       ]);
 
       final passbolt = [...results[0]]

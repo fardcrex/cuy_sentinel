@@ -1,3 +1,4 @@
+import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/collector_run.dart';
 import '../domain/entities/monitored_service.dart';
 import '../domain/entities/service_event.dart';
@@ -20,7 +21,13 @@ class NodeMonitoringRepository implements IMonitoringRepository {
   }) => throw UnimplementedError('NodeMonitoringRepository.getServiceEvents');
 
   @override
-  Stream<List<ServiceEvent>> watchActiveEvents() => Stream.error(
+  Future<List<ServiceEvent>> getRecentServiceEvents({int limit = 30}) =>
+      throw UnimplementedError('NodeMonitoringRepository.getRecentServiceEvents');
+
+  @override
+  Stream<List<ServiceEvent>> watchActiveEvents({
+    void Function(RetryState)? onRetry,
+  }) => Stream.error(
     UnimplementedError('NodeMonitoringRepository.watchActiveEvents'),
   );
 
@@ -29,7 +36,9 @@ class NodeMonitoringRepository implements IMonitoringRepository {
       throw UnimplementedError('NodeMonitoringRepository.getCollectorRuns');
 
   @override
-  Stream<CollectorRun?> watchLastCollectorRun() => Stream.error(
+  Stream<CollectorRun?> watchLastCollectorRun({
+    void Function(RetryState)? onRetry,
+  }) => Stream.error(
     UnimplementedError('NodeMonitoringRepository.watchLastCollectorRun'),
   );
 }

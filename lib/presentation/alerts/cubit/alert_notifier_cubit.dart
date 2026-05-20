@@ -7,31 +7,49 @@ import '../../../feature/alerts/domain/entities/alert_event.dart';
 import 'alert_notifier_state.dart';
 
 class AlertNotifierCubit extends Cubit<AlertNotifierState> {
-  AlertNotifierCubit({required WatchActiveAlertsUseCase watchAlerts})
-    : _watchAlerts = watchAlerts,
-      super(const AlertNotifierIdle());
+  AlertNotifierCubit({
+    required WatchAlertInsertsUseCase watchAlertInserts,
+    required GetAlertsSinceUseCase getAlertsSince,
+  }) : _watchAlertInserts = watchAlertInserts,
+       _getAlertsSince = getAlertsSince,
+       super(const AlertNotifierIdle());
 
-  final WatchActiveAlertsUseCase _watchAlerts;
-  StreamSubscription<List<AlertEvent>>? _sub;
-  final _knownIds = <String>{};
-  bool _initialized = false;
+  final WatchAlertInsertsUseCase _watchAlertInserts;
+  final GetAlertsSinceUseCase _getAlertsSince;
+  StreamSubscription<AlertEvent>? _sub;
 
-  void init() {
-    _sub = _watchAlerts.execute().listen(
-      (alerts) {
-        if (!_initialized) {
-          _knownIds.addAll(alerts.map((a) => a.id));
-          _initialized = true;
-          return;
-        }
-        for (final alert in alerts) {
-          if (_knownIds.add(alert.id)) {
-            emit(AlertNotifierNewAlert(alert));
-          }
-        }
+  // Timestamp del último evento recibido. Se actualiza con cada INSERT que
+  // llega. Al reconectar, el catchup busca alertas después de este instante.
+  DateTime _lastSeenAt = DateTime.now();
+
+  void start() {
+    if (_sub != null) return;
+    _lastSeenAt = DateTime.now();
+    _sub = _watchAlertInserts.execute(
+      onSubscribed: _catchUpMissedAlerts,
+    ).listen(
+      (alert) {
+        _lastSeenAt = alert.triggeredAt;
+        emit(AlertNotifierNewAlert(alert));
       },
       onError: (_) {},
     );
+  }
+
+  // Busca alertas disparadas después de _lastSeenAt y las emite en orden
+  // cronológico, simulando la llegada natural de cada notificación.
+  Future<void> _catchUpMissedAlerts() async {
+    final missed = await _getAlertsSince.execute(_lastSeenAt);
+    for (final alert in missed) {
+      if (isClosed) return;
+      _lastSeenAt = alert.triggeredAt;
+      emit(AlertNotifierNewAlert(alert));
+    }
+  }
+
+  void stop() {
+    _sub?.cancel();
+    _sub = null;
   }
 
   @override

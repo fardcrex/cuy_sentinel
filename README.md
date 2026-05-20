@@ -35,6 +35,15 @@ Equipo: Jair Conislla Bocangel · Daniel Rojas Sanchez · Jheampierre Ralli Pera
 
 ---
 
+## Documentación
+
+| Documento | Descripción |
+|---|---|
+| [docs/despliegue-frontend.md](docs/despliegue-frontend.md) | Cómo correr y compilar el panel Flutter |
+| [docs/supabase-setup.md](docs/supabase-setup.md) | Setup de Supabase: tablas, RLS, usuario admin, datos de prueba |
+
+---
+
 ## Instrucciones de despliegue
 
 ### 1. Prerrequisitos

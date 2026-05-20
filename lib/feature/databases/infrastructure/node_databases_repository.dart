@@ -1,3 +1,4 @@
+import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/database_health.dart';
 import '../domain/entities/database_instance.dart';
 import '../domain/entities/table_stats.dart';
@@ -14,9 +15,10 @@ class NodeDatabasesRepository implements IDatabasesRepository {
       throw UnimplementedError('NodeDatabasesRepository.getHealth');
 
   @override
-  Stream<DatabaseHealth> watchHealth(String instanceId) => Stream.error(
-    UnimplementedError('NodeDatabasesRepository.watchHealth'),
-  );
+  Stream<DatabaseHealth> watchHealth(
+    String instanceId, {
+    void Function(RetryState)? onRetry,
+  }) => Stream.error(UnimplementedError('NodeDatabasesRepository.watchHealth'));
 
   @override
   Future<List<TableStats>> getTableStats(String instanceId) =>

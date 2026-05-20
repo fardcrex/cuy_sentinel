@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/stream_retry.dart';
 import '../../../../feature/monitoring/application/get_collector_runs_use_case.dart';
 import '../../../../feature/monitoring/application/get_service_events_use_case.dart';
 import '../../../../feature/monitoring/application/get_services_use_case.dart';
@@ -26,44 +27,82 @@ class ServicesCubit extends Cubit<ServicesState> {
 
   StreamSubscription<List<ServiceEvent>>? _eventsSub;
   StreamSubscription<CollectorRun?>? _runSub;
+  Timer? _countdownTimer;
 
+  List<MonitoredService> _services = [];
   List<ServiceEvent> _activeEvents = [];
   CollectorRun? _lastRun;
+  bool _isReconnecting = false;
+  int _secondsLeft = 0;
 
   Future<void> load() async {
     emit(ServicesLoading());
     try {
-      final services = await _getServices.execute();
-      emit(ServicesLoaded(
-        services: services,
-        activeEvents: _activeEvents,
-        lastRun: _lastRun,
-      ));
+      _services = await _getServices.execute();
+      _emitLoaded();
 
-      _eventsSub = _watchEvents.execute().listen((events) {
+      _eventsSub = _watchEvents.execute(
+        onRetry: _onRetry,
+      ).listen((events) {
         _activeEvents = events;
-        _emitLoaded(services);
+        _emitLoaded();
       });
 
-      _runSub = _watchRun.execute().listen((run) {
+      _runSub = _watchRun.execute(
+        onRetry: _onRetry,
+      ).listen((run) {
         _lastRun = run;
-        _emitLoaded(services);
+        _emitLoaded();
       });
     } catch (e) {
       emit(ServicesError(e.toString()));
     }
   }
 
-  void _emitLoaded(List<MonitoredService> services) => emit(ServicesLoaded(
-        services: services,
-        activeEvents: _activeEvents,
-        lastRun: _lastRun,
-      ));
+  void _onRetry(RetryState retryState) {
+    switch (retryState) {
+      case Retrying(:final backoff):
+        _startCountdown(backoff);
+      case Reconnected():
+        _stopCountdown();
+    }
+  }
+
+  void _startCountdown(Duration backoff) {
+    _isReconnecting = true;
+    _secondsLeft = backoff.inSeconds;
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_secondsLeft > 0) _secondsLeft--;
+      _emitLoaded();
+    });
+    _emitLoaded();
+  }
+
+  void _stopCountdown() {
+    _isReconnecting = false;
+    _secondsLeft = 0;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _emitLoaded();
+  }
+
+  void _emitLoaded() {
+    if (_services.isEmpty && state is! ServicesLoaded) return;
+    emit(ServicesLoaded(
+      services: _services,
+      activeEvents: _activeEvents,
+      lastRun: _lastRun,
+      isReconnecting: _isReconnecting,
+      reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
+    ));
+  }
 
   @override
   Future<void> close() {
     _eventsSub?.cancel();
     _runSub?.cancel();
+    _countdownTimer?.cancel();
     return super.close();
   }
 }

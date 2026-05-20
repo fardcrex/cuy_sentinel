@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../feature/alerts/domain/entities/alert_event.dart';
 import '../../feature/alerts/domain/entities/alert_severity.dart' as ds;
 import '../../feature/alerts/domain/entities/alert_threshold.dart';
+import '../../feature/monitoring/domain/entities/service_event.dart';
 import '../widgets/alert_threshold_tile.dart';
 import '../widgets/incident_record_tile.dart';
 import 'cubit/alerts_state.dart';
@@ -90,6 +91,7 @@ String _thresholdValue(AlertThreshold t) => switch (t.metricName) {
 /// UI representation of an active [AlertEvent] — feeds [AlertThresholdTile].
 class AlertEventModel {
   AlertEventModel({
+    required this.id,
     required this.service,
     required this.metric,
     required this.currentValue,
@@ -98,6 +100,7 @@ class AlertEventModel {
     required this.timestamp,
   });
 
+  final String id;
   final String service;
   final String metric;
   final String currentValue;
@@ -142,6 +145,7 @@ class AlertThresholdModel {
 
 extension AlertEventModelX on AlertEvent {
   AlertEventModel toAlertModel() => AlertEventModel(
+        id: id,
         service: serviceName,
         metric: metricName,
         currentValue: _formatValue(metricName, currentValue),
@@ -189,12 +193,35 @@ class AlertsSummaryModel {
   final String closedTodayLabel;
 }
 
+extension ServiceEventModelX on ServiceEvent {
+  IncidentModel toIncidentModel() {
+    final type = switch (eventType) {
+      ServiceEventType.down     => IncidentType.down,
+      ServiceEventType.degraded => IncidentType.degraded,
+      ServiceEventType.warning  => IncidentType.degraded,
+      ServiceEventType.recovered => IncidentType.recovered,
+    };
+    final end = endedAt != null ? _formatDate(endedAt!) : 'Activo';
+    final dur = endedAt != null
+        ? _formatDuration(endedAt!.difference(startedAt))
+        : _formatDuration(DateTime.now().difference(startedAt));
+    return IncidentModel(
+      service: serviceName ?? serviceId,
+      type: type,
+      startTime: _formatDate(startedAt),
+      endTime: end,
+      duration: dur,
+      cause: cause ?? '',
+    );
+  }
+}
+
 extension AlertsSummaryModelX on AlertsLoaded {
   AlertsSummaryModel toSummaryModel() {
     final now = DateTime.now();
-    final closedToday = history.where((a) {
-      if (!a.resolved || a.resolvedAt == null) return false;
-      final r = a.resolvedAt!;
+    final closedToday = incidents.where((e) {
+      if (!e.resolved || e.endedAt == null) return false;
+      final r = e.endedAt!;
       return r.year == now.year && r.month == now.month && r.day == now.day;
     }).length;
 

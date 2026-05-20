@@ -1,3 +1,4 @@
+import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/database_health.dart';
 import '../domain/entities/database_instance.dart';
 import '../domain/entities/table_stats.dart';
@@ -25,8 +26,10 @@ class WatchDatabaseHealthUseCase {
 
   final IDatabasesRepository _repository;
 
-  Stream<DatabaseHealth> execute(String instanceId) =>
-      _repository.watchHealth(instanceId);
+  Stream<DatabaseHealth> execute(
+    String instanceId, {
+    void Function(RetryState)? onRetry,
+  }) => _repository.watchHealth(instanceId, onRetry: onRetry);
 }
 
 class GetTableStatsUseCase {

@@ -60,14 +60,21 @@ class DashboardCubit extends Cubit<DashboardState> {
       return;
     }
 
+    final passboltId = _services
+        .firstWhere((s) => s.slug == 'passbolt', orElse: () => _services.first)
+        .id;
+    final chkmonitorId = _services
+        .firstWhere((s) => s.slug == 'chkmonitor', orElse: () => _services.last)
+        .id;
+
     _passboltSub = _watchMetrics
-        .execute(serviceId: 'svc-passbolt', limit: 12)
+        .execute(serviceId: passboltId, limit: 12)
         .listen((m) {
           _passboltMetrics = m;
           _emitLoaded();
         }, onError: (e) => emit(DashboardError(e.toString())));
     _chkmonitorSub = _watchMetrics
-        .execute(serviceId: 'svc-chkmonitor', limit: 12)
+        .execute(serviceId: chkmonitorId, limit: 12)
         .listen((m) {
           _chkmonitorMetrics = m;
           _emitLoaded();

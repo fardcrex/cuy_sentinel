@@ -1,25 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../widgets/alert_threshold_tile.dart';
 import '../alert_model.dart';
+import '../cubit/alerts_cubit.dart';
 import 'empty_state.dart';
 
 class AlertsSection extends StatelessWidget {
-  const AlertsSection({super.key, required this.alerts});
+  const AlertsSection({
+    super.key,
+    required this.alerts,
+    this.onViewAll,
+  });
 
   final List<AlertEventModel> alerts;
+  final VoidCallback? onViewAll;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Alertas activas',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w700),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Alertas activas',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            TextButton(
+              onPressed: onViewAll,
+              child: const Text('Ver todas'),
+            ),
+          ],
         ),
         const SizedBox(height: 14),
         if (alerts.isEmpty)
@@ -36,6 +53,8 @@ class AlertsSection extends StatelessWidget {
                 threshold: alert.threshold,
                 severity: alert.severity,
                 timestamp: alert.timestamp,
+                onResolve: () =>
+                    context.read<AlertsCubit>().resolveAlert(alert.id),
               ),
             );
           }),

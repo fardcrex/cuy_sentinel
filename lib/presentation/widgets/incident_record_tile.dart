@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import 'app_card.dart';
 
-enum IncidentType { down, recovered }
+enum IncidentType { down, recovered, degraded }
 
 class IncidentRecordTile extends StatelessWidget {
   const IncidentRecordTile({
@@ -23,13 +23,23 @@ class IncidentRecordTile extends StatelessWidget {
   final String duration;
   final String cause;
 
-  bool get isDown => type == IncidentType.down;
-
   @override
   Widget build(BuildContext context) {
-    final color = isDown ? AppColors.danger : AppColors.primary;
-    final icon = isDown ? Icons.arrow_downward_rounded : Icons.check_rounded;
-    final typeLabel = isDown ? 'Caída' : 'Recuperación';
+    final color = switch (type) {
+      IncidentType.down      => AppColors.danger,
+      IncidentType.recovered => AppColors.primary,
+      IncidentType.degraded  => AppColors.warning,
+    };
+    final icon = switch (type) {
+      IncidentType.down      => Icons.arrow_downward_rounded,
+      IncidentType.recovered => Icons.check_rounded,
+      IncidentType.degraded  => Icons.warning_amber_rounded,
+    };
+    final typeLabel = switch (type) {
+      IncidentType.down      => 'Caída',
+      IncidentType.recovered => 'Recuperación',
+      IncidentType.degraded  => 'Degradado',
+    };
 
     return AppCard(
       padding: const EdgeInsets.all(16),

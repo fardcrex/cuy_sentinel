@@ -1,3 +1,4 @@
+import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/service_event.dart';
 import '../domain/interfaces/i_monitoring_repository.dart';
 
@@ -17,5 +18,15 @@ class WatchActiveEventsUseCase {
 
   final IMonitoringRepository _repository;
 
-  Stream<List<ServiceEvent>> execute() => _repository.watchActiveEvents();
+  Stream<List<ServiceEvent>> execute({void Function(RetryState)? onRetry}) =>
+      _repository.watchActiveEvents(onRetry: onRetry);
+}
+
+class GetRecentServiceEventsUseCase {
+  const GetRecentServiceEventsUseCase(this._repository);
+
+  final IMonitoringRepository _repository;
+
+  Future<List<ServiceEvent>> execute({int limit = 30}) =>
+      _repository.getRecentServiceEvents(limit: limit);
 }

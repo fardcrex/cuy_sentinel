@@ -18,14 +18,14 @@
       "name": "PROD — Supabase",
       "request": "launch",
       "type": "dart",
-      "program": "lib/main_production.dart",
+      "program": "lib/main_phase1.dart",
       "args": ["--dart-define-from-file=envs/sentinel.phase1.json"]
     },
     {
       "name": "PROD — Supabase Web",
       "request": "launch",
       "type": "dart",
-      "program": "lib/main_production.dart",
+      "program": "lib/main_phase1.dart",
       "args": [
         "-d",
         "chrome",

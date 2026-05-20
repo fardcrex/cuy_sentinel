@@ -1,3 +1,4 @@
+import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/collector_run.dart';
 import '../domain/interfaces/i_monitoring_repository.dart';
 
@@ -15,5 +16,6 @@ class WatchLastCollectorRunUseCase {
 
   final IMonitoringRepository _repository;
 
-  Stream<CollectorRun?> execute() => _repository.watchLastCollectorRun();
+  Stream<CollectorRun?> execute({void Function(RetryState)? onRetry}) =>
+      _repository.watchLastCollectorRun(onRetry: onRetry);
 }

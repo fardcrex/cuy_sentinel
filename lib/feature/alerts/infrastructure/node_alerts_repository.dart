@@ -1,14 +1,10 @@
+import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/alert_event.dart';
 import '../domain/entities/alert_threshold.dart';
 import '../domain/interfaces/i_alerts_repository.dart';
 
 // Fase 2: implementar con Node.js API + Socket.IO
 class NodeAlertsRepository implements IAlertsRepository {
-  @override
-  Stream<List<AlertEvent>> watchActiveAlerts() => Stream.error(
-    UnimplementedError('NodeAlertsRepository.watchActiveAlerts'),
-  );
-
   @override
   Future<List<AlertThreshold>> getThresholds() =>
       throw UnimplementedError('NodeAlertsRepository.getThresholds');
@@ -20,4 +16,23 @@ class NodeAlertsRepository implements IAlertsRepository {
   @override
   Future<void> resolveAlert(String alertId) =>
       throw UnimplementedError('NodeAlertsRepository.resolveAlert');
+
+  @override
+  Stream<List<AlertEvent>> watchActiveAlerts({
+    void Function(RetryState)? onRetry,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<AlertEvent>> getAlertsSince(DateTime since) {
+    // TODO: implement getAlertsSince
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<AlertEvent> watchAlertInserts({void Function()? onSubscribed}) {
+    // TODO: implement watchAlertInserts
+    throw UnimplementedError();
+  }
 }

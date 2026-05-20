@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/widgets/reconnecting_banner.dart';
 import '../../feature/users/application/get_users_use_case.dart';
 import 'bloc/users_bloc.dart';
-import 'bloc/users_event.dart';
 import 'bloc/users_state.dart';
 import 'views/users_content_view.dart';
 import 'views/users_error_view.dart';
@@ -19,8 +19,9 @@ class UsersProviderPage extends StatelessWidget {
     return BlocProvider<UsersBloc>(
       create: (ctx) => UsersBloc(
         watchUsers: ctx.read<WatchPanelUsersUseCase>(),
-        getAccessLogs: ctx.read<GetAccessLogsUseCase>(),
-      )..add(UsersWatchRequested()),
+        watchAccessLogs: ctx.read<WatchAccessLogsUseCase>(),
+        watchPresence: ctx.read<WatchPresenceUseCase>(),
+      )..load(),
       child: const UsersPage(),
     );
   }
@@ -35,7 +36,14 @@ class UsersPage extends StatelessWidget {
       builder: (context, state) => switch (state) {
         UsersInitial() || UsersLoading() => const UsersLoadingView(),
         UsersError(:final message) => UsersErrorView(message: message),
-        UsersLoaded() => UsersContentView(state: state),
+        UsersLoaded(:final isReconnecting, :final reconnectingInSeconds) =>
+          Column(
+            children: [
+              if (isReconnecting)
+                ReconnectingBanner(secondsLeft: reconnectingInSeconds),
+              Expanded(child: UsersContentView(state: state)),
+            ],
+          ),
       },
     );
   }

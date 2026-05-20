@@ -5,6 +5,7 @@ class MonitoredService {
     required this.containerName,
     required this.hostIp,
     required this.snmpPort,
+    this.slug,
     this.description,
     this.enabled = true,
     required this.createdAt,
@@ -15,6 +16,7 @@ class MonitoredService {
   final String containerName;
   final String hostIp;
   final int snmpPort;
+  final String? slug;
   final String? description;
   final bool enabled;
   final DateTime createdAt;
@@ -26,6 +28,7 @@ class MonitoredService {
         containerName: json['container_name'] as String,
         hostIp: json['host_ip'] as String,
         snmpPort: json['snmp_port'] as int,
+        slug: json['slug'] as String?,
         description: json['description'] as String?,
         enabled: (json['enabled'] as bool?) ?? true,
         createdAt: DateTime.parse(json['created_at'] as String),

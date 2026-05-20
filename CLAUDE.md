@@ -8,6 +8,20 @@ Equipo: Jair Conislla Bocangel · Daniel Rojas Sanchez · Jheampierre Ralli Pera
 
 ---
 
+## Filosofía de ingeniería
+
+Este proyecto es universitario en contexto pero **no en estándares**. El objetivo
+es aprender las formas correctas de la industria, no simplificar porque "es de U".
+
+- Si hay una solución más correcta que la que Jair propone → implementarla completa
+- "Sobreingeniería" está justificada cuando representa buenas prácticas reales
+- Sealed classes > nullables semánticos. Tipos explícitos > convenciones implícitas
+- Nunca simplificar por contexto académico — traer siempre el estándar industrial
+- El objetivo es estar preparados para trabajo profesional, usando este proyecto
+  como campo de práctica real
+
+---
+
 ## Stack
 
 | Área             | Tecnología                                  |
@@ -91,13 +105,38 @@ Navegar: `context.go(AppRoutes.dashboard)` — nunca usar `Navigator` directamen
 
 ```sql
 users              -- auth (Supabase Fase 1 / propia Fase 2) + session_expires_at
+user_access_logs   -- registro de login/logout por usuario
 monitored_services -- Passbolt y ChkMonitor registrados
 metrics            -- CPU%, RAM, disco%, BW, uptime, status, latencia SNMP · cada 5 min
 service_events     -- historial de caídas, recuperaciones y degradaciones
+alert_thresholds   -- umbrales que disparan alertas (CPU, RAM, disco, latencia)
+alert_events       -- alertas disparadas cuando una métrica supera un umbral
 collector_runs     -- automonitoreo del agente Go (éxito/fallo, duración, versión)
 ```
 
-Ver `cuy_sentinel_go/database/schema.sql` para DDL completo con índices.
+Ver `cuy_sentinel_go/database/schema.sql` para DDL completo con índices y políticas RLS.
+
+### ⚠️ Configuración obligatoria en Supabase (Fase 1)
+
+El `schema.sql` incluye el bloque de **Row Level Security** que debe ejecutarse en el
+SQL Editor del dashboard de Supabase antes de usar el panel. Sin él, ninguna operación
+del panel Flutter funcionará (Supabase deniega todo por defecto cuando RLS está activo).
+
+Resumen de lo que configura:
+
+| Tabla              | Panel Flutter         | Colector Go (service_role) |
+| ------------------ | --------------------- | -------------------------- |
+| `users`            | SELECT + UPDATE propio | —                         |
+| `user_access_logs` | INSERT propio + SELECT | —                         |
+| `monitored_services` | SELECT             | INSERT/UPDATE             |
+| `metrics`          | SELECT                | INSERT                     |
+| `service_events`   | SELECT                | INSERT/UPDATE              |
+| `alert_thresholds` | SELECT                | INSERT/UPDATE              |
+| `alert_events`     | SELECT + UPDATE (resolver) | INSERT                |
+| `collector_runs`   | SELECT                | INSERT/UPDATE              |
+
+> El colector usa `service_role` (clave secreta) → bypasea RLS automáticamente,
+> no necesita políticas propias.
 
 ---
 
@@ -161,6 +200,28 @@ No modificar los tokens de `AppColors`. El sistema de diseño usa:
 - Navegación: siempre `context.go()` — nunca `Navigator.push/pushNamed`
 - Pantallas del shell: deben ser stateless cuando sea posible
 - Fotos del equipo: colocar en `assets/team/` con nombre `team_<nombre>.png`
+
+---
+
+## Revisión de decisiones técnicas
+
+Antes de implementar cualquier solución que Jair proponga, si existe un patrón
+o herramienta de industria más estándar para ese problema, mencionarlo
+brevemente con ventajas/desventajas antes de continuar. No bloquear la
+implementación — solo informar para que él decida con criterio.
+
+Contextos donde esto aplica con mayor frecuencia:
+
+| Problema | Solución típica de principiante | Solución de industria |
+|---|---|---|
+| Usuario online/presencia | DB heartbeat + `expires_at` | WebSocket Presence (Supabase Presence, Socket.IO, Phoenix) |
+| Caché de datos | Columna `expires_at` en DB | Redis con TTL nativo |
+| Trabajo en background | `Timer.periodic` en cliente | Cola de trabajos (BullMQ, Sidekiq, pg_boss) |
+| Notificaciones push | Polling periódico | FCM / APNs / WebPush |
+| Rate limiting | Contador en DB | Redis sliding window |
+| Búsqueda de texto | `LIKE '%query%'` en SQL | Full-text search (pg `tsvector`, Typesense, Meilisearch) |
+| Auth tokens | Token custom en tabla DB | JWT estándar / OAuth 2.0 |
+| Estado compartido entre tabs | `localStorage` polling | BroadcastChannel API / SharedWorker |
 
 ---
 

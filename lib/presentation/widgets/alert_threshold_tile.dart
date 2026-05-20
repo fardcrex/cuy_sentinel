@@ -14,6 +14,7 @@ class AlertThresholdTile extends StatelessWidget {
     required this.threshold,
     required this.severity,
     required this.timestamp,
+    this.onResolve,
   });
 
   final String service;
@@ -22,6 +23,7 @@ class AlertThresholdTile extends StatelessWidget {
   final String threshold;
   final AlertSeverity severity;
   final String timestamp;
+  final VoidCallback? onResolve;
 
   Color get _color => switch (severity) {
     AlertSeverity.nuclear => const Color(0xFFFF0040),
@@ -123,9 +125,41 @@ class AlertThresholdTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            timestamp,
-            style: const TextStyle(fontSize: 11, color: AppColors.textInactive),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                timestamp,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textInactive,
+                ),
+              ),
+              if (onResolve != null) ...[
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: onResolve,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.stroke.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Cerrar',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),

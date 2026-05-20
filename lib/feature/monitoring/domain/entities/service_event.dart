@@ -19,6 +19,7 @@ class ServiceEvent {
   const ServiceEvent({
     required this.id,
     required this.serviceId,
+    this.serviceName,
     required this.eventType,
     required this.startedAt,
     this.endedAt,
@@ -30,6 +31,7 @@ class ServiceEvent {
 
   final String id;
   final String serviceId;
+  final String? serviceName;
   final ServiceEventType eventType;
   final DateTime startedAt;
   final DateTime? endedAt;
@@ -46,6 +48,7 @@ class ServiceEvent {
   factory ServiceEvent.fromJson(Map<String, dynamic> json) => ServiceEvent(
     id: json['id'] as String,
     serviceId: json['service_id'] as String,
+    serviceName: (json['monitored_services'] as Map<String, dynamic>?)?['service_name'] as String?,
     eventType: ServiceEventType.fromString(json['event_type'] as String),
     startedAt: DateTime.parse(json['started_at'] as String),
     endedAt: json['ended_at'] != null

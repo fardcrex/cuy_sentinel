@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/responsive/app_breakpoints.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/reconnecting_banner.dart';
 import '../../../metrics/cubit/metrics_cubit.dart';
 import '../../../metrics/cubit/metrics_state.dart';
 import '../cubit/services_cubit.dart';
@@ -60,33 +61,42 @@ class ServicesTabView extends StatelessWidget {
 
         return SingleChildScrollView(
           physics: physics,
-          padding: EdgeInsets.all(padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ServicesBadge(label: summary.onlineLabel),
-              const SizedBox(height: 20),
-              if (isWide)
-                Row(
+              if (loaded.isReconnecting)
+                ReconnectingBanner(secondsLeft: loaded.reconnectingInSeconds),
+              Padding(
+                padding: EdgeInsets.all(padding),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    for (int i = 0; i < serviceModels.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 20),
-                      Expanded(child: ServiceCard(model: serviceModels[i])),
-                    ],
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    for (int i = 0; i < serviceModels.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 20),
-                      ServiceCard(model: serviceModels[i]),
-                    ],
+                    ServicesBadge(label: summary.onlineLabel),
+                    const SizedBox(height: 20),
+                    if (isWide)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (int i = 0; i < serviceModels.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 20),
+                            Expanded(child: ServiceCard(model: serviceModels[i])),
+                          ],
+                        ],
+                      )
+                    else
+                      Column(
+                        children: [
+                          for (int i = 0; i < serviceModels.length; i++) ...[
+                            if (i > 0) const SizedBox(height: 20),
+                            ServiceCard(model: serviceModels[i]),
+                          ],
+                        ],
+                      ),
+                    const SizedBox(height: 24),
+                    const InfrastructureCard(),
                   ],
                 ),
-              const SizedBox(height: 24),
-              const InfrastructureCard(),
+              ),
             ],
           ),
         );

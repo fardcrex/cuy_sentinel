@@ -6,8 +6,57 @@ import '../../core/assets/app_assets.dart';
 import '../../core/navigation/app_router.dart';
 import '../../core/responsive/app_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
+import '../../feature/databases/application/get_database_health_use_case.dart';
+import '../../feature/metrics/application/get_metrics_history_use_case.dart';
+import '../../feature/monitoring/application/get_collector_runs_use_case.dart';
+import '../../feature/monitoring/application/get_service_events_use_case.dart';
+import '../../feature/monitoring/application/get_services_use_case.dart';
 import '../auth/bloc/auth_bloc.dart';
+import '../metrics/cubit/metrics_cubit.dart';
+import '../services/databases/cubit/databases_cubit.dart';
+import '../services/monitored_services/cubit/services_cubit.dart';
 import 'app_card.dart';
+
+/// Punto de entrada del panel autenticado.
+/// Provee los cubits de dominio y delega el layout a [ResponsiveShell].
+class PanelShell extends StatelessWidget {
+  const PanelShell({
+    super.key,
+    required this.currentPath,
+    required this.child,
+  });
+
+  final String currentPath;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (ctx) => ServicesCubit(
+            getServices: ctx.read<GetServicesUseCase>(),
+            watchEvents: ctx.read<WatchActiveEventsUseCase>(),
+            watchRun: ctx.read<WatchLastCollectorRunUseCase>(),
+          )..load(),
+        ),
+        BlocProvider(
+          create: (ctx) => MetricsCubit(
+            getHistory: ctx.read<GetMetricsHistoryUseCase>(),
+            getServices: ctx.read<GetServicesUseCase>(),
+          )..init(),
+        ),
+        BlocProvider(
+          create: (ctx) => DatabasesCubit(
+            watchHealth: ctx.read<WatchDatabaseHealthUseCase>(),
+            getTableStats: ctx.read<GetTableStatsUseCase>(),
+          )..load(),
+        ),
+      ],
+      child: ResponsiveShell(currentPath: currentPath, child: child),
+    );
+  }
+}
 
 Future<void> _confirmLogout(BuildContext context) async {
   final confirmed = await showDialog<bool>(

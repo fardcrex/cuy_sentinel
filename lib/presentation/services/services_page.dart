@@ -1,18 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/responsive/app_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
-import '../../feature/databases/application/get_database_health_use_case.dart';
-import '../../feature/metrics/application/get_metrics_history_use_case.dart';
-import '../../feature/monitoring/application/get_collector_runs_use_case.dart';
-import '../../feature/monitoring/application/get_service_events_use_case.dart';
-import '../../feature/monitoring/application/get_services_use_case.dart';
-import '../metrics/cubit/metrics_cubit.dart';
 import '../widgets/screen_header.dart';
-import 'databases/cubit/databases_cubit.dart';
 import 'databases/views/databases_tab_view.dart';
-import 'monitored_services/cubit/services_cubit.dart';
 import 'monitored_services/views/services_tab_view.dart';
 
 // ── page ──────────────────────────────────────────────────────────────────────
@@ -21,31 +12,7 @@ class ServicesProviderPage extends StatelessWidget {
   const ServicesProviderPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<ServicesCubit>(
-          create: (ctx) => ServicesCubit(
-            getServices: ctx.read<GetServicesUseCase>(),
-            watchEvents: ctx.read<WatchActiveEventsUseCase>(),
-            watchRun: ctx.read<WatchLastCollectorRunUseCase>(),
-          )..load(),
-        ),
-        BlocProvider<MetricsCubit>(
-          create: (ctx) =>
-              MetricsCubit(getHistory: ctx.read<GetMetricsHistoryUseCase>())
-                ..init(),
-        ),
-        BlocProvider<DatabasesCubit>(
-          create: (ctx) => DatabasesCubit(
-            watchHealth: ctx.read<WatchDatabaseHealthUseCase>(),
-            getTableStats: ctx.read<GetTableStatsUseCase>(),
-          )..load(),
-        ),
-      ],
-      child: const ServicesPage(),
-    );
-  }
+  Widget build(BuildContext context) => const ServicesPage();
 }
 
 class ServicesPage extends StatefulWidget {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../feature/metrics/application/get_metrics_history_use_case.dart';
 import 'cubit/metrics_cubit.dart';
 import 'cubit/metrics_state.dart';
 import 'views/metrics_content_view.dart';
@@ -14,14 +13,7 @@ class MetricsProviderPage extends StatelessWidget {
   const MetricsProviderPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider<MetricsCubit>(
-      create: (ctx) =>
-          MetricsCubit(getHistory: ctx.read<GetMetricsHistoryUseCase>())
-            ..init(),
-      child: const MetricsPage(),
-    );
-  }
+  Widget build(BuildContext context) => const MetricsPage();
 }
 
 class MetricsPage extends StatelessWidget {

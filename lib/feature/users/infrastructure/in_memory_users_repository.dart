@@ -1,3 +1,4 @@
+import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/panel_user.dart';
 import '../domain/entities/user_access_log.dart';
 import '../domain/interfaces/i_users_repository.dart';
@@ -78,12 +79,36 @@ class InMemoryUsersRepository implements IUsersRepository {
   ];
 
   @override
-  Stream<List<PanelUser>> watchUsers() async* {
+  Stream<List<PanelUser>> watchUsers({
+    void Function(RetryState)? onRetry,
+  }) async* {
     while (true) {
       yield List.of(_users);
       await Future.delayed(const Duration(seconds: 15));
     }
   }
+
+  @override
+  Stream<List<UserAccessLog>> watchAccessLogs({
+    int limit = 50,
+    void Function(RetryState)? onRetry,
+  }) async* {
+    yield _logs.take(limit).toList();
+  }
+
+  @override
+  Stream<Set<String>> watchPresence() async* {
+    yield _users
+        .where((u) => u.sessionExpiresAt?.isAfter(DateTime.now()) ?? false)
+        .map((u) => u.id)
+        .toSet();
+  }
+
+  @override
+  Future<void> trackPresence(String userId) async {}
+
+  @override
+  Future<void> untrackPresence() async {}
 
   @override
   Future<List<PanelUser>> getUsers() async => List.of(_users);
@@ -102,4 +127,14 @@ class InMemoryUsersRepository implements IUsersRepository {
     int limit = 20,
   }) async =>
       _logs.where((l) => l.userId == userId).take(limit).toList();
+
+  @override
+  Future<void> logAccess({
+    required String userId,
+    required String displayName,
+    required UserAccessAction action,
+  }) async {}
+
+  @override
+  Future<void> updateSession(String userId, {required bool loggedIn}) async {}
 }

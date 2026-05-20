@@ -100,7 +100,7 @@ class UsersSessionModel {
 // ── extensions ────────────────────────────────────────────────────────────────
 
 extension UserModelX on PanelUser {
-  UserModel toModel(int index) => UserModel(
+  UserModel toModel(int index, {required bool isOnline}) => UserModel(
         name: displayName,
         role: _roleLabel(role),
         onlineStatus: isOnline ? UserOnlineStatus.online : UserOnlineStatus.offline,

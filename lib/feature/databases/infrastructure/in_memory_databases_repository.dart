@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/database_health.dart';
 import '../domain/entities/database_instance.dart';
 import '../domain/entities/table_stats.dart';
@@ -78,7 +79,10 @@ class InMemoryDatabasesRepository implements IDatabasesRepository {
       _buildHealth(instanceId, 0, math.Random(instanceId.hashCode));
 
   @override
-  Stream<DatabaseHealth> watchHealth(String instanceId) async* {
+  Stream<DatabaseHealth> watchHealth(
+    String instanceId, {
+    void Function(RetryState)? onRetry,
+  }) async* {
     final rng = math.Random(instanceId.hashCode);
     var tick = 0;
     while (true) {

@@ -88,8 +88,9 @@ class _CuySentinelAppState extends State<CuySentinelApp>
                 watchAlertInserts: ctx.read<WatchAlertInsertsUseCase>(),
                 getAlertsSince: ctx.read<GetAlertsSinceUseCase>(),
               );
-              if (ctx.read<AuthBloc>().state is AuthAuthenticated)
+              if (ctx.read<AuthBloc>().state is AuthAuthenticated) {
                 cubit.start();
+              }
               return cubit;
             },
           ),
@@ -108,8 +109,9 @@ class _CuySentinelAppState extends State<CuySentinelApp>
                   if (navCtx == null) return;
                   showAlertNotificationDialog(navCtx, state.alert);
                   final overlay = appNavigatorKey.currentState?.overlay;
-                  if (overlay != null)
+                  if (overlay != null) {
                     AlertToastStack.add(overlay, state.alert);
+                  }
                 },
               ),
               BlocListener<AuthBloc, AuthState>(

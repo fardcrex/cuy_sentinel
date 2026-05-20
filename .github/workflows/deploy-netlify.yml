@@ -1,0 +1,66 @@
+name: Deploy Flutter Web to Netlify
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: netlify-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Create compile-time environment file
+        run: |
+          mkdir -p envs
+          jq -n \
+            --arg supabaseUrl "$SUPABASE_URL" \
+            --arg supabaseAnonKey "$SUPABASE_ANON_KEY" \
+            --arg apiBaseUrl "$API_BASE_URL" \
+            '{
+              SUPABASE_URL: $supabaseUrl,
+              SUPABASE_ANON_KEY: $supabaseAnonKey,
+              API_BASE_URL: $apiBaseUrl,
+              API_SECRET: ""
+            }' > envs/sentinel.phase1.json
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build Flutter web
+        run: >
+          flutter build web
+          --target lib/main_phase1.dart
+          --dart-define-from-file=envs/sentinel.phase1.json
+
+      - name: Deploy to Netlify
+        run: >
+          npx --yes netlify-cli@latest deploy
+          --prod
+          --dir=build/web
+          --site="$NETLIFY_SITE_ID"
+          --auth="$NETLIFY_AUTH_TOKEN"
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}

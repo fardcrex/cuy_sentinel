@@ -73,9 +73,15 @@ jobs:
             exit 0
           fi
 
-          message=$(printf 'Cuy Sentinel deploy completed successfully.\n\nBranch: %s\nCommit: %s\nRun: %s/%s/actions/runs/%s' \
+          change="$(git log -1 --pretty=%s)"
+          author="$(git log -1 --pretty=%an)"
+          short_sha="$(git rev-parse --short HEAD)"
+
+          message=$(printf '✅ Cuy Sentinel ya está publicado 🚀\n\n📝 Cambio: %s\n👤 Autor: %s\n🌿 Rama: %s\n🔖 Commit: %s\n\n🔎 Ver ejecución:\n%s/%s/actions/runs/%s' \
+            "$change" \
+            "$author" \
             "$GITHUB_REF_NAME" \
-            "$GITHUB_SHA" \
+            "$short_sha" \
             "$GITHUB_SERVER_URL" \
             "$GITHUB_REPOSITORY" \
             "$GITHUB_RUN_ID")
@@ -101,9 +107,15 @@ jobs:
             exit 0
           fi
 
-          message=$(printf 'Cuy Sentinel deploy failed.\n\nBranch: %s\nCommit: %s\nRun: %s/%s/actions/runs/%s' \
+          change="$(git log -1 --pretty=%s)"
+          author="$(git log -1 --pretty=%an)"
+          short_sha="$(git rev-parse --short HEAD)"
+
+          message=$(printf '❌ No se pudo publicar Cuy Sentinel ⚠️\n\n📝 Cambio: %s\n👤 Autor: %s\n🌿 Rama: %s\n🔖 Commit: %s\n\n🔎 Revisar error:\n%s/%s/actions/runs/%s' \
+            "$change" \
+            "$author" \
             "$GITHUB_REF_NAME" \
-            "$GITHUB_SHA" \
+            "$short_sha" \
             "$GITHUB_SERVER_URL" \
             "$GITHUB_REPOSITORY" \
             "$GITHUB_RUN_ID")

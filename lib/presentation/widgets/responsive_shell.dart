@@ -191,13 +191,20 @@ class ResponsiveShell extends StatelessWidget {
                     ),
                     trailing: Padding(
                       padding: const EdgeInsets.only(bottom: 16),
-                      child: IconButton(
-                        tooltip: 'Cerrar sesión',
-                        icon: const Icon(
-                          Icons.logout_rounded,
-                          color: AppColors.textInactive,
-                        ),
-                        onPressed: () => _confirmLogout(context),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const _AppVersionLabel(compact: true),
+                          const SizedBox(height: 10),
+                          IconButton(
+                            tooltip: 'Cerrar sesión',
+                            icon: const Icon(
+                              Icons.logout_rounded,
+                              color: AppColors.textInactive,
+                            ),
+                            onPressed: () => _confirmLogout(context),
+                          ),
+                        ],
                       ),
                     ),
                     destinations: destinations
@@ -305,6 +312,8 @@ class _DesktopSidebar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          const Center(child: _AppVersionLabel()),
+          const SizedBox(height: 8),
           Builder(
             builder: (ctx) => SizedBox(
               width: double.infinity,
@@ -326,6 +335,28 @@ class _DesktopSidebar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AppVersionLabel extends StatelessWidget {
+  const _AppVersionLabel({this.compact = false});
+
+  static const _version = '0.1.0+1';
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = compact ? 'v0.1.0' : 'Versión $_version';
+
+    return Text(
+      label,
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: AppColors.textInactive,
+        fontWeight: FontWeight.w600,
       ),
     );
   }

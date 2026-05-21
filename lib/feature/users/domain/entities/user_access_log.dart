@@ -37,7 +37,7 @@ class UserAccessLog {
     userId: json['user_id'] as String,
     displayName: json['display_name'] as String,
     action: UserAccessAction.fromString(json['action'] as String),
-    timestamp: DateTime.parse(json['timestamp'] as String),
+    timestamp: DateTime.parse(json['timestamp'] as String).toLocal(),
     ipAddress: json['ip_address'] as String?,
   );
 

@@ -38,10 +38,10 @@ class AlertEvent {
     currentValue: (json['current_value'] as num).toDouble(),
     thresholdValue: (json['threshold_value'] as num).toDouble(),
     severity: AlertSeverity.fromString(json['severity'] as String),
-    triggeredAt: DateTime.parse(json['triggered_at'] as String),
+    triggeredAt: DateTime.parse(json['triggered_at'] as String).toLocal(),
     resolved: (json['resolved'] as bool?) ?? false,
     resolvedAt: json['resolved_at'] != null
-        ? DateTime.parse(json['resolved_at'] as String)
+        ? DateTime.parse(json['resolved_at'] as String).toLocal()
         : null,
   );
 

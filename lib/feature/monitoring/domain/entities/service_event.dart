@@ -50,9 +50,9 @@ class ServiceEvent {
     serviceId: json['service_id'] as String,
     serviceName: (json['monitored_services'] as Map<String, dynamic>?)?['service_name'] as String?,
     eventType: ServiceEventType.fromString(json['event_type'] as String),
-    startedAt: DateTime.parse(json['started_at'] as String),
+    startedAt: DateTime.parse(json['started_at'] as String).toLocal(),
     endedAt: json['ended_at'] != null
-        ? DateTime.parse(json['ended_at'] as String)
+        ? DateTime.parse(json['ended_at'] as String).toLocal()
         : null,
     durationSeconds: json['duration_s'] as int?,
     cause: json['cause'] as String?,

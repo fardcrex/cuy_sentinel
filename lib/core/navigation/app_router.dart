@@ -49,7 +49,8 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
     if (!isAuthenticated && !_publicRoutes.contains(loc)) {
       return AppRoutes.login;
     }
-    if (isAuthenticated && loc == AppRoutes.login) {
+    if (isAuthenticated &&
+        (loc == AppRoutes.login || loc == AppRoutes.welcome)) {
       return AppRoutes.dashboard;
     }
     return null;
@@ -98,7 +99,8 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
         ),
         GoRoute(
           path: AppRoutes.users,
-          pageBuilder: (context, state) => _buildPage(state, const UsersProviderPage()),
+          pageBuilder: (context, state) =>
+              _buildPage(state, const UsersProviderPage()),
         ),
       ],
     ),

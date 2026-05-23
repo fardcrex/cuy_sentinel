@@ -119,10 +119,16 @@ String _deviceKey(String label, String? platform) {
 // ── models ────────────────────────────────────────────────────────────────────
 
 class UserDeviceModel {
-  UserDeviceModel({required this.label, required this.isOnline, this.platform});
+  UserDeviceModel({
+    required this.label,
+    required this.isOnline,
+    this.isAway = false,
+    this.platform,
+  });
 
   final String label;
   final bool isOnline;
+  final bool isAway;
   final String? platform;
 }
 
@@ -199,9 +205,10 @@ extension UserModelX on PanelUser {
     List<UserPresence> presences = const [],
   }) {
     final presenceDevices = presences.where((p) => p.userId == id).toList();
-    final onlineDeviceKeys = presenceDevices
-        .map((p) => _deviceKey(p.deviceName, p.devicePlatform))
-        .toSet();
+    final presencesByDevice = {
+      for (final presence in presenceDevices)
+        _deviceKey(presence.deviceName, presence.devicePlatform): presence,
+    };
 
     final latestLogsByDevice = allLogs
         .where((l) => l.userId == id && l.deviceName != null)
@@ -218,9 +225,13 @@ extension UserModelX on PanelUser {
       for (final log in latestLogsByDevice.values)
         _deviceKey(log.deviceName!, log.devicePlatform): UserDeviceModel(
           label: _formatDeviceLabel(log.deviceName!, log.devicePlatform),
-          isOnline: onlineDeviceKeys.contains(
+          isOnline: presencesByDevice.containsKey(
             _deviceKey(log.deviceName!, log.devicePlatform),
           ),
+          isAway:
+              presencesByDevice[_deviceKey(log.deviceName!, log.devicePlatform)]
+                  ?.status ==
+              UserPresenceStatus.away,
           platform: _visualDevicePlatform(log.deviceName!, log.devicePlatform),
         ),
       for (final presence in presenceDevices)
@@ -233,6 +244,7 @@ extension UserModelX on PanelUser {
             presence.devicePlatform,
           ),
           isOnline: true,
+          isAway: presence.status == UserPresenceStatus.away,
           platform: _visualDevicePlatform(
             presence.deviceName,
             presence.devicePlatform,

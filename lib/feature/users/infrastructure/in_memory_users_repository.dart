@@ -204,6 +204,7 @@ class InMemoryUsersRepository implements IUsersRepository {
         userId: 'usr-jair',
         deviceName: 'Firefox · Linux',
         devicePlatform: 'firefox',
+        status: UserPresenceStatus.away,
       ),
       UserPresence(
         userId: 'usr-jair',
@@ -218,6 +219,7 @@ class InMemoryUsersRepository implements IUsersRepository {
     required String userId,
     required String deviceName,
     required String devicePlatform,
+    UserPresenceStatus status = UserPresenceStatus.active,
   }) async {}
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../feature/alerts/domain/entities/alert_event.dart';
 import '../../feature/alerts/domain/entities/alert_severity.dart';
@@ -7,15 +8,20 @@ import '../theme/app_colors.dart';
 
 const _nuclearColor = Color(0xFFFF0040);
 
-void showAlertNotificationDialog(BuildContext context, AlertEvent event) {
-  showGeneralDialog(
+Future<void> showAlertNotificationDialog(
+  BuildContext context,
+  AlertEvent event, {
+  ValueListenable<AlertEvent?>? eventListenable,
+}) {
+  return showGeneralDialog(
     context: context,
     useRootNavigator: true,
     barrierDismissible: true,
     barrierLabel: 'Cerrar',
     barrierColor: _barrierColor(event.severity),
     transitionDuration: const Duration(milliseconds: 320),
-    pageBuilder: (_, _, _) => _AlertDialogPage(event: event),
+    pageBuilder: (_, _, _) =>
+        _AlertDialogPage(initialEvent: event, eventListenable: eventListenable),
     transitionBuilder: (_, anim, _, child) => FadeTransition(
       opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
       child: ScaleTransition(
@@ -36,7 +42,28 @@ Color _barrierColor(AlertSeverity severity) => switch (severity) {
 };
 
 class _AlertDialogPage extends StatelessWidget {
-  const _AlertDialogPage({required this.event});
+  const _AlertDialogPage({required this.initialEvent, this.eventListenable});
+
+  final AlertEvent initialEvent;
+  final ValueListenable<AlertEvent?>? eventListenable;
+
+  @override
+  Widget build(BuildContext context) {
+    final listenable = eventListenable;
+    if (listenable == null) {
+      return _AlertDialogLayout(event: initialEvent);
+    }
+
+    return ValueListenableBuilder<AlertEvent?>(
+      valueListenable: listenable,
+      builder: (_, event, _) =>
+          _AlertDialogLayout(event: event ?? initialEvent),
+    );
+  }
+}
+
+class _AlertDialogLayout extends StatelessWidget {
+  const _AlertDialogLayout({required this.event});
 
   final AlertEvent event;
 

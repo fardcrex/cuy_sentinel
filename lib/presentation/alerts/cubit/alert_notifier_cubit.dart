@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../feature/alerts/application/get_alerts_use_case.dart';
@@ -17,6 +18,7 @@ class AlertNotifierCubit extends Cubit<AlertNotifierState> {
   final WatchAlertInsertsUseCase _watchAlertInserts;
   final GetAlertsSinceUseCase _getAlertsSince;
   StreamSubscription<AlertEvent>? _sub;
+  final currentAlert = ValueNotifier<AlertEvent?>(null);
 
   // Timestamp del último evento recibido. Se actualiza con cada INSERT que
   // llega. Al reconectar, el catchup busca alertas después de este instante.
@@ -25,15 +27,13 @@ class AlertNotifierCubit extends Cubit<AlertNotifierState> {
   void start() {
     if (_sub != null) return;
     _lastSeenAt = DateTime.now();
-    _sub = _watchAlertInserts.execute(
-      onSubscribed: _catchUpMissedAlerts,
-    ).listen(
-      (alert) {
-        _lastSeenAt = alert.triggeredAt;
-        emit(AlertNotifierNewAlert(alert));
-      },
-      onError: (_) {},
-    );
+    _sub = _watchAlertInserts
+        .execute(onSubscribed: _catchUpMissedAlerts)
+        .listen((alert) {
+          _lastSeenAt = alert.triggeredAt;
+          currentAlert.value = alert;
+          emit(AlertNotifierNewAlert(alert));
+        }, onError: (_) {});
   }
 
   // Busca alertas disparadas después de _lastSeenAt y las emite en orden
@@ -43,6 +43,7 @@ class AlertNotifierCubit extends Cubit<AlertNotifierState> {
     for (final alert in missed) {
       if (isClosed) return;
       _lastSeenAt = alert.triggeredAt;
+      currentAlert.value = alert;
       emit(AlertNotifierNewAlert(alert));
     }
   }
@@ -50,11 +51,13 @@ class AlertNotifierCubit extends Cubit<AlertNotifierState> {
   void stop() {
     _sub?.cancel();
     _sub = null;
+    currentAlert.value = null;
   }
 
   @override
   Future<void> close() {
     _sub?.cancel();
+    currentAlert.dispose();
     return super.close();
   }
 }

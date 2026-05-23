@@ -56,12 +56,16 @@ class TrackPresenceUseCase {
   final IUsersRepository _repository;
   final IDeviceInfoService _deviceInfo;
 
-  Future<void> execute(String userId) async {
+  Future<void> execute(
+    String userId, {
+    UserPresenceStatus status = UserPresenceStatus.active,
+  }) async {
     final device = await _deviceInfo.getDeviceInfo();
     await _repository.trackPresence(
       userId: userId,
       deviceName: device.deviceName,
       devicePlatform: device.devicePlatform,
+      status: status,
     );
   }
 }

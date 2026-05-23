@@ -43,6 +43,7 @@ abstract interface class IUsersRepository {
     required String userId,
     required String deviceName,
     required String devicePlatform,
+    UserPresenceStatus status,
   });
 
   /// Removes the current user from the presence channel.

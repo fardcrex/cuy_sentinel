@@ -23,6 +23,9 @@ class UsersContentView extends StatelessWidget {
     final currentUserId = authState is AuthAuthenticated
         ? authState.user.id
         : '';
+    final currentUserEmail = authState is AuthAuthenticated
+        ? authState.user.email
+        : '';
     final currentUserRole =
         state.users.where((u) => u.id == currentUserId).firstOrNull?.role ??
         UserRole.viewer;
@@ -52,6 +55,9 @@ class UsersContentView extends StatelessWidget {
             children: [
               ScreenHeader(
                 title: 'Usuarios',
+                titleTrailing: currentUserEmail.isEmpty
+                    ? null
+                    : _CurrentUserEmailPill(email: currentUserEmail),
                 subtitle:
                     'Sesiones activas y actividad reciente de acceso al panel',
                 trailing: UsersOnlineBadge(label: session.onlineLabel),
@@ -100,6 +106,33 @@ class UsersContentView extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _CurrentUserEmailPill extends StatelessWidget {
+  const _CurrentUserEmailPill({required this.email});
+
+  final String email;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 260),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Text(
+        email,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: Theme.of(context).colorScheme.secondary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

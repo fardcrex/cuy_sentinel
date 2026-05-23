@@ -10,6 +10,7 @@ import '../../../feature/auth/domain/entities/app_user.dart';
 import '../../../feature/users/application/get_users_use_case.dart';
 import '../../../feature/users/domain/entities/user_access_log.dart'
     show UserAccessAction;
+import '../../../feature/users/domain/entities/user_presence.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -39,6 +40,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLogoutRequested>(_onLogout);
     on<AuthPresenceResumed>(_onPresenceResumed);
     on<AuthPresencePaused>(_onPresencePaused);
+    on<AuthPresenceAway>(_onPresenceAway);
 
     if (initialSession != null) {
       unawaited(_trackPresence.execute(initialSession.id));
@@ -128,6 +130,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     if (state is AuthAuthenticated) {
       await _untrackPresence.execute();
+    }
+  }
+
+  Future<void> _onPresenceAway(
+    AuthPresenceAway event,
+    Emitter<AuthState> emit,
+  ) async {
+    final current = state;
+    if (current is AuthAuthenticated) {
+      await _trackPresence.execute(
+        current.user.id,
+        status: UserPresenceStatus.away,
+      );
     }
   }
 }

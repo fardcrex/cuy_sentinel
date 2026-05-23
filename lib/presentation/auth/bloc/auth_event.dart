@@ -25,3 +25,7 @@ class AuthPresenceResumed extends AuthEvent {
 class AuthPresencePaused extends AuthEvent {
   const AuthPresencePaused();
 }
+
+class AuthPresenceAway extends AuthEvent {
+  const AuthPresenceAway();
+}

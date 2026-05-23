@@ -48,6 +48,7 @@ class _FakeRepo implements IUsersRepository {
     required String userId,
     required String deviceName,
     required String devicePlatform,
+    UserPresenceStatus status = UserPresenceStatus.active,
   }) async {}
   @override
   Future<void> untrackPresence() async {}

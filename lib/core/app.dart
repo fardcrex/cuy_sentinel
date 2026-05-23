@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +35,7 @@ class _CuySentinelAppState extends State<CuySentinelApp>
     with WidgetsBindingObserver {
   late final AuthBloc _authBloc;
   late final GoRouter _router;
+  bool _alertDialogOpen = false;
 
   @override
   void initState() {
@@ -71,7 +73,9 @@ class _CuySentinelAppState extends State<CuySentinelApp>
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      _authBloc.add(const AuthPresencePaused());
+      _authBloc.add(
+        kIsWeb ? const AuthPresenceAway() : const AuthPresencePaused(),
+      );
     }
   }
 
@@ -121,11 +125,21 @@ class _CuySentinelAppState extends State<CuySentinelApp>
           builder: (ctx, child) => MultiBlocListener(
             listeners: [
               BlocListener<AlertNotifierCubit, AlertNotifierState>(
-                listener: (_, state) {
+                listener: (ctx, state) {
                   if (state is! AlertNotifierNewAlert) return;
                   final navCtx = appNavigatorKey.currentContext;
                   if (navCtx == null) return;
-                  showAlertNotificationDialog(navCtx, state.alert);
+                  if (!_alertDialogOpen) {
+                    _alertDialogOpen = true;
+                    final notifier = ctx.read<AlertNotifierCubit>();
+                    showAlertNotificationDialog(
+                      navCtx,
+                      state.alert,
+                      eventListenable: notifier.currentAlert,
+                    ).whenComplete(() {
+                      _alertDialogOpen = false;
+                    });
+                  }
                   final overlay = appNavigatorKey.currentState?.overlay;
                   if (overlay != null) {
                     AlertToastStack.add(overlay, state.alert);

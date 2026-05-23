@@ -292,17 +292,34 @@ class _DeviceGroup extends StatelessWidget {
                 children: [
                   Opacity(
                     opacity: d.isOnline ? 1 : 0.35,
-                    child: PlatformIcon(platform: d.platform, size: 14),
+                    child: PlatformIcon(
+                      platform: d.platform,
+                      size: 14,
+                      color: d.isAway ? AppColors.warning : AppColors.primary,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      d.label,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: d.isOnline
-                            ? AppColors.textSecondary
-                            : AppColors.textInactive,
-                      ),
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      children: [
+                        Text(
+                          d.label,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: d.isOnline
+                                    ? AppColors.textSecondary
+                                    : AppColors.textInactive,
+                              ),
+                        ),
+                        if (d.isAway)
+                          Text(
+                            'En segundo plano',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: AppColors.warning),
+                          ),
+                      ],
                     ),
                   ),
                 ],

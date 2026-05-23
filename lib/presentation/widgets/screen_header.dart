@@ -7,11 +7,13 @@ class ScreenHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
+    this.titleTrailing,
     this.trailing,
   });
 
   final String title;
   final String subtitle;
+  final Widget? titleTrailing;
   final Widget? trailing;
 
   @override
@@ -25,11 +27,19 @@ class ScreenHeader extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                ?titleTrailing,
+              ],
             ),
             const SizedBox(height: 6),
             Text(

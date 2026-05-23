@@ -3,39 +3,46 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 class PlatformIcon extends StatelessWidget {
-  const PlatformIcon({super.key, required this.platform, this.size = 16});
+  const PlatformIcon({
+    super.key,
+    required this.platform,
+    this.size = 16,
+    this.color = AppColors.primary,
+  });
 
   final String? platform;
   final double size;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     final bg = Theme.of(context).cardColor;
     return CustomPaint(
       size: Size(size, size),
-      painter: _painterFor(platform, bg),
+      painter: _painterFor(platform, bg, color),
     );
   }
 
-  CustomPainter _painterFor(String? platform, Color bg) => switch (platform) {
-    'web' => _WebPainter(bg),
-    'chrome' => _ChromePainter(bg),
-    'firefox' => _FirefoxPainter(bg),
-    'safari' => _SafariPainter(bg),
-    'edge' => _EdgePainter(bg),
-    'opera' => _OperaPainter(bg),
-    'samsung' => _SamsungInternetPainter(bg),
-    'android' => _AndroidPainter(bg),
-    'ios' => _IosPainter(bg),
-    'macos' => _MacOsPainter(bg),
-    'windows' => _WindowsPainter(bg),
-    'linux' => _LinuxPainter(bg),
-    _ => _UnknownPainter(bg),
-  };
+  CustomPainter _painterFor(String? platform, Color bg, Color fg) =>
+      switch (platform) {
+        'web' => _WebPainter(bg, fg),
+        'chrome' => _ChromePainter(bg, fg),
+        'firefox' => _FirefoxPainter(bg, fg),
+        'safari' => _SafariPainter(bg, fg),
+        'edge' => _EdgePainter(bg, fg),
+        'opera' => _OperaPainter(bg, fg),
+        'samsung' => _SamsungInternetPainter(bg, fg),
+        'android' => _AndroidPainter(bg, fg),
+        'ios' => _IosPainter(bg, fg),
+        'macos' => _MacOsPainter(bg, fg),
+        'windows' => _WindowsPainter(bg, fg),
+        'linux' => _LinuxPainter(bg, fg),
+        _ => _UnknownPainter(bg, fg),
+      };
 }
 
-Paint _fill() => Paint()
-  ..color = AppColors.primary
+Paint _fill(Color color) => Paint()
+  ..color = color
   ..style = PaintingStyle.fill;
 
 Paint _cut(Color bg) => Paint()
@@ -45,8 +52,9 @@ Paint _cut(Color bg) => Paint()
 // ── Web — globo con meridianos cortados ───────────────────────────────────────
 
 class _WebPainter extends CustomPainter {
-  const _WebPainter(this.bg);
+  const _WebPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -54,7 +62,7 @@ class _WebPainter extends CustomPainter {
     final c = Offset(s / 2, s / 2);
     final r = s / 2;
 
-    canvas.drawCircle(c, r, _fill());
+    canvas.drawCircle(c, r, _fill(fg));
 
     final cut = _cut(bg)
       ..style = PaintingStyle.stroke
@@ -69,20 +77,21 @@ class _WebPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_WebPainter old) => old.bg != bg;
+  bool shouldRepaint(_WebPainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── Chrome — círculo con centro cortado y tres segmentos ─────────────────────
 
 class _ChromePainter extends CustomPainter {
-  const _ChromePainter(this.bg);
+  const _ChromePainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
     final c = Offset(s / 2, s / 2);
-    final f = _fill();
+    final f = _fill(fg);
     final cut = _cut(bg)
       ..style = PaintingStyle.stroke
       ..strokeWidth = s * 0.08
@@ -108,19 +117,20 @@ class _ChromePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ChromePainter old) => old.bg != bg;
+  bool shouldRepaint(_ChromePainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── Firefox — llama envolviendo un centro cortado ────────────────────────────
 
 class _FirefoxPainter extends CustomPainter {
-  const _FirefoxPainter(this.bg);
+  const _FirefoxPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
-    final f = _fill();
+    final f = _fill(fg);
 
     final flame = Path()
       ..moveTo(s * 0.84, s * 0.20)
@@ -142,20 +152,21 @@ class _FirefoxPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_FirefoxPainter old) => old.bg != bg;
+  bool shouldRepaint(_FirefoxPainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── Safari — brújula con aguja cortada ───────────────────────────────────────
 
 class _SafariPainter extends CustomPainter {
-  const _SafariPainter(this.bg);
+  const _SafariPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
     final c = Offset(s / 2, s / 2);
-    final f = _fill();
+    final f = _fill(fg);
 
     canvas.drawCircle(c, s * 0.48, f);
     final cut = _cut(bg)
@@ -173,19 +184,20 @@ class _SafariPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SafariPainter old) => old.bg != bg;
+  bool shouldRepaint(_SafariPainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── Edge — ola circular estilizada ───────────────────────────────────────────
 
 class _EdgePainter extends CustomPainter {
-  const _EdgePainter(this.bg);
+  const _EdgePainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
-    final f = _fill();
+    final f = _fill(fg);
 
     final swirl = Path()
       ..moveTo(s * 0.91, s * 0.56)
@@ -201,21 +213,22 @@ class _EdgePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_EdgePainter old) => old.bg != bg;
+  bool shouldRepaint(_EdgePainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── Opera — aro ovalado ──────────────────────────────────────────────────────
 
 class _OperaPainter extends CustomPainter {
-  const _OperaPainter(this.bg);
+  const _OperaPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
     canvas.drawOval(
       Rect.fromLTWH(s * 0.14, s * 0.03, s * 0.72, s * 0.94),
-      _fill(),
+      _fill(fg),
     );
     canvas.drawOval(
       Rect.fromLTWH(s * 0.32, s * 0.20, s * 0.36, s * 0.60),
@@ -224,20 +237,21 @@ class _OperaPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_OperaPainter old) => old.bg != bg;
+  bool shouldRepaint(_OperaPainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── Samsung Internet — planeta con anillo ────────────────────────────────────
 
 class _SamsungInternetPainter extends CustomPainter {
-  const _SamsungInternetPainter(this.bg);
+  const _SamsungInternetPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
     final c = Offset(s / 2, s / 2);
-    canvas.drawCircle(c, s * 0.42, _fill());
+    canvas.drawCircle(c, s * 0.42, _fill(fg));
     final cut = _cut(bg)
       ..style = PaintingStyle.stroke
       ..strokeWidth = s * 0.10;
@@ -248,23 +262,25 @@ class _SamsungInternetPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SamsungInternetPainter old) => old.bg != bg;
+  bool shouldRepaint(_SamsungInternetPainter old) =>
+      old.bg != bg || old.fg != fg;
 }
 
 // ── Android — robot con antenas, ojos y brazos ───────────────────────────────
 
 class _AndroidPainter extends CustomPainter {
-  const _AndroidPainter(this.bg);
+  const _AndroidPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
-    final f = _fill();
+    final f = _fill(fg);
     final c = _cut(bg);
 
     final antennaPaint = Paint()
-      ..color = AppColors.primary
+      ..color = fg
       ..style = PaintingStyle.stroke
       ..strokeWidth = s * 0.1
       ..strokeCap = StrokeCap.round;
@@ -315,14 +331,15 @@ class _AndroidPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_AndroidPainter old) => old.bg != bg;
+  bool shouldRepaint(_AndroidPainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── iOS — manzana con mordisco ────────────────────────────────────────────────
 
 class _IosPainter extends CustomPainter {
-  const _IosPainter(this.bg);
+  const _IosPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -349,7 +366,7 @@ class _IosPainter extends CustomPainter {
 
     canvas.drawPath(
       Path.combine(PathOperation.difference, body, bite),
-      _fill(),
+      _fill(fg),
     );
 
     final leaf = Path()
@@ -357,23 +374,24 @@ class _IosPainter extends CustomPainter {
       ..cubicTo(s * 0.52, s * 0.10, s * 0.62, s * 0.04, s * 0.73, s * 0.04)
       ..cubicTo(s * 0.72, s * 0.14, s * 0.62, s * 0.22, s * 0.50, s * 0.20)
       ..close();
-    canvas.drawPath(leaf, _fill());
+    canvas.drawPath(leaf, _fill(fg));
   }
 
   @override
-  bool shouldRepaint(_IosPainter old) => old.bg != bg;
+  bool shouldRepaint(_IosPainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── macOS — monitor con pantalla cortada ─────────────────────────────────────
 
 class _MacOsPainter extends CustomPainter {
-  const _MacOsPainter(this.bg);
+  const _MacOsPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
-    final f = _fill();
+    final f = _fill(fg);
     final c = _cut(bg);
 
     canvas.drawRRect(
@@ -401,19 +419,20 @@ class _MacOsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_MacOsPainter old) => old.bg != bg;
+  bool shouldRepaint(_MacOsPainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── Windows — 4 polígonos en perspectiva ─────────────────────────────────────
 
 class _WindowsPainter extends CustomPainter {
-  const _WindowsPainter(this.bg);
+  const _WindowsPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
-    final f = _fill();
+    final f = _fill(fg);
 
     final left = s * 0.06;
     final midX = s * 0.47;
@@ -473,14 +492,15 @@ class _WindowsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_WindowsPainter old) => old.bg != bg;
+  bool shouldRepaint(_WindowsPainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── Linux — rectángulo teal con >_ cortado ────────────────────────────────────
 
 class _LinuxPainter extends CustomPainter {
-  const _LinuxPainter(this.bg);
+  const _LinuxPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -491,7 +511,7 @@ class _LinuxPainter extends CustomPainter {
         Rect.fromLTWH(0, 0, s, s),
         Radius.circular(s * 0.10),
       ),
-      _fill(),
+      _fill(fg),
     );
 
     final arrow = Path()
@@ -511,19 +531,20 @@ class _LinuxPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LinuxPainter old) => old.bg != bg;
+  bool shouldRepaint(_LinuxPainter old) => old.bg != bg || old.fg != fg;
 }
 
 // ── Unknown — círculo con 4 puntos cortados ───────────────────────────────────
 
 class _UnknownPainter extends CustomPainter {
-  const _UnknownPainter(this.bg);
+  const _UnknownPainter(this.bg, this.fg);
   final Color bg;
+  final Color fg;
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
-    canvas.drawCircle(Offset(s / 2, s / 2), s / 2, _fill());
+    canvas.drawCircle(Offset(s / 2, s / 2), s / 2, _fill(fg));
 
     final cut = _cut(bg);
     const offsets = [0.35, 0.65];
@@ -535,5 +556,5 @@ class _UnknownPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_UnknownPainter old) => old.bg != bg;
+  bool shouldRepaint(_UnknownPainter old) => old.bg != bg || old.fg != fg;
 }

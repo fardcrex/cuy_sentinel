@@ -56,6 +56,7 @@ class NodeUsersRepository implements IUsersRepository {
     required String userId,
     required String deviceName,
     required String devicePlatform,
+    UserPresenceStatus status = UserPresenceStatus.active,
   }) => throw UnimplementedError('NodeUsersRepository.trackPresence');
 
   @override

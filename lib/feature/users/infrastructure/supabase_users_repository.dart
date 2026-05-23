@@ -17,6 +17,7 @@ class SupabaseUsersRepository implements IUsersRepository {
   String? _trackedUserId;
   String? _trackedDeviceName;
   String? _trackedDevicePlatform;
+  UserPresenceStatus _trackedStatus = UserPresenceStatus.active;
   final _presenceListeners = <StreamController<List<UserPresence>>>{};
 
   @override
@@ -103,6 +104,7 @@ class SupabaseUsersRepository implements IUsersRepository {
       'user_id': userId,
       'device_name': deviceName,
       'device_platform': devicePlatform,
+      'status': _trackedStatus.toJson(),
     });
   }
 
@@ -136,6 +138,9 @@ class SupabaseUsersRepository implements IUsersRepository {
               userId: userId,
               deviceName: deviceName,
               devicePlatform: devicePlatform,
+              status: UserPresenceStatus.fromString(
+                payload['status'] as String? ?? '',
+              ),
             );
           })
           .nonNulls
@@ -146,10 +151,12 @@ class SupabaseUsersRepository implements IUsersRepository {
     required String userId,
     required String deviceName,
     required String devicePlatform,
+    UserPresenceStatus status = UserPresenceStatus.active,
   }) async {
     _trackedUserId = userId;
     _trackedDeviceName = deviceName;
     _trackedDevicePlatform = devicePlatform;
+    _trackedStatus = status;
     await _ensurePresenceChannel();
     await _trackCurrentPresence();
     _emitPresence();
@@ -160,6 +167,7 @@ class SupabaseUsersRepository implements IUsersRepository {
     _trackedUserId = null;
     _trackedDeviceName = null;
     _trackedDevicePlatform = null;
+    _trackedStatus = UserPresenceStatus.active;
     await _presenceChannel?.untrack();
     await _resetPresenceChannel();
     _emitPresence();

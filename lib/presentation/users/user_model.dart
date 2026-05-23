@@ -30,6 +30,14 @@ String _formatRelative(DateTime? dt) {
   return 'Hace ${diff.inDays} días';
 }
 
+String _formatDate(DateTime dt) {
+  const months = [
+    'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+    'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
+  ];
+  return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+}
+
 String _formatLogTimestamp(DateTime dt) {
   final now = DateTime.now();
   final isToday =
@@ -47,23 +55,46 @@ String _formatLogTimestamp(DateTime dt) {
   return '${dt.day} ${months[dt.month - 1]} $h:$m';
 }
 
+// Datos quemados de dispositivos — reemplazar cuando exista el endpoint.
+final _demoDevices = [
+  UserDeviceModel(label: 'Chrome · macOS', ip: '192.168.1.42'),
+  UserDeviceModel(label: 'Firefox · Win', ip: '10.0.0.5'),
+];
+
 // ── models ────────────────────────────────────────────────────────────────────
 
-/// UI representation of a [PanelUser] — feeds [UserListTile].
+class UserDeviceModel {
+  UserDeviceModel({required this.label, required this.ip});
+
+  final String label;
+  final String ip;
+}
+
+/// UI representation of a [PanelUser] — feeds [UserListTile] and [UserDetailCard].
 class UserModel {
   UserModel({
+    required this.userId,
     required this.name,
     required this.role,
+    required this.rawRole,
+    required this.email,
+    required this.createdAt,
     required this.onlineStatus,
     required this.lastSeen,
     required this.avatarColor,
+    required this.devices,
   });
 
+  final String userId;
   final String name;
   final String role;
+  final UserRole rawRole;
+  final String email;
+  final String createdAt;
   final UserOnlineStatus onlineStatus;
   final String lastSeen;
   final Color avatarColor;
+  final List<UserDeviceModel> devices;
 }
 
 /// UI representation of a [UserAccessLog] — feeds the access log rows.
@@ -102,11 +133,16 @@ class UsersSessionModel {
 
 extension UserModelX on PanelUser {
   UserModel toModel(int index, {required bool isOnline}) => UserModel(
+        userId: id,
         name: displayName,
         role: _roleLabel(role),
+        rawRole: role,
+        email: email,
+        createdAt: _formatDate(createdAt),
         onlineStatus: isOnline ? UserOnlineStatus.online : UserOnlineStatus.offline,
         lastSeen: _formatRelative(lastLogin),
         avatarColor: _avatarColors[index % _avatarColors.length],
+        devices: _demoDevices,
       );
 }
 

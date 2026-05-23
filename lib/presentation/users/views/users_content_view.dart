@@ -34,7 +34,6 @@ class UsersContentView extends StatelessWidget {
       state.users.length,
       (i) => state.users[i].toModel(
         i,
-        isOnline: state.isOnline(state.users[i].id),
         allLogs: state.accessLogs,
         presences: state.presences,
       ),

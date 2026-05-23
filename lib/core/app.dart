@@ -74,10 +74,18 @@ class _CuySentinelAppState extends State<CuySentinelApp>
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _authBloc.add(
-        kIsWeb ? const AuthPresenceAway() : const AuthPresencePaused(),
+        _usesBackgroundPresence
+            ? const AuthPresenceAway()
+            : const AuthPresencePaused(),
       );
     }
   }
+
+  bool get _usesBackgroundPresence =>
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.linux;
 
   @override
   void dispose() {

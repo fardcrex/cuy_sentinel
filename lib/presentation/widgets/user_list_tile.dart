@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 
-enum UserOnlineStatus { online, offline }
+enum UserOnlineStatus { online, away, offline }
 
 class UserListTile extends StatelessWidget {
   const UserListTile({
@@ -23,6 +23,20 @@ class UserListTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   bool get isOnline => onlineStatus == UserOnlineStatus.online;
+
+  bool get isAway => onlineStatus == UserOnlineStatus.away;
+
+  String get statusLabel => switch (onlineStatus) {
+    UserOnlineStatus.online => 'En línea',
+    UserOnlineStatus.away => 'Ausente',
+    UserOnlineStatus.offline => 'Desconectado',
+  };
+
+  Color get statusColor => switch (onlineStatus) {
+    UserOnlineStatus.online => AppColors.primary,
+    UserOnlineStatus.away => AppColors.warning,
+    UserOnlineStatus.offline => AppColors.textInactive,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -80,9 +94,7 @@ class UserListTile extends StatelessWidget {
                       width: 11,
                       height: 11,
                       decoration: BoxDecoration(
-                        color: isOnline
-                            ? AppColors.primary
-                            : AppColors.textInactive,
+                        color: statusColor,
                         shape: BoxShape.circle,
                         border: Border.all(color: AppColors.panel, width: 2),
                       ),
@@ -115,24 +127,22 @@ class UserListTile extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: isOnline
-                          ? AppColors.primary.withValues(alpha: 0.12)
+                      color: isOnline || isAway
+                          ? statusColor.withValues(alpha: 0.12)
                           : AppColors.stroke.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(
-                        color: isOnline
-                            ? AppColors.primary.withValues(alpha: 0.35)
+                        color: isOnline || isAway
+                            ? statusColor.withValues(alpha: 0.35)
                             : AppColors.stroke,
                       ),
                     ),
                     child: Text(
-                      isOnline ? 'En línea' : 'Desconectado',
+                      statusLabel,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: isOnline
-                            ? AppColors.primary
-                            : AppColors.textInactive,
+                        color: statusColor,
                       ),
                     ),
                   ),

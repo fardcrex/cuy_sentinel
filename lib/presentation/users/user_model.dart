@@ -200,7 +200,6 @@ class UsersSessionModel {
 extension UserModelX on PanelUser {
   UserModel toModel(
     int index, {
-    required bool isOnline,
     List<UserAccessLog> allLogs = const [],
     List<UserPresence> presences = const [],
   }) {
@@ -253,6 +252,12 @@ extension UserModelX on PanelUser {
     };
 
     final devices = devicesByKey.values.toList();
+    final hasActivePresence = presenceDevices.any(
+      (presence) => presence.status == UserPresenceStatus.active,
+    );
+    final hasAwayPresence = presenceDevices.any(
+      (presence) => presence.status == UserPresenceStatus.away,
+    );
 
     return UserModel(
       userId: id,
@@ -261,8 +266,10 @@ extension UserModelX on PanelUser {
       rawRole: role,
       email: email,
       createdAt: _formatDate(createdAt),
-      onlineStatus: isOnline
+      onlineStatus: hasActivePresence
           ? UserOnlineStatus.online
+          : hasAwayPresence
+          ? UserOnlineStatus.away
           : UserOnlineStatus.offline,
       lastSeen: _formatRelative(lastLogin),
       avatarColor: _avatarColors[index % _avatarColors.length],

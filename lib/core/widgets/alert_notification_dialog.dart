@@ -18,7 +18,7 @@ Future<void> showAlertNotificationDialog(
     useRootNavigator: true,
     barrierDismissible: true,
     barrierLabel: 'Cerrar',
-    barrierColor: _barrierColor(event.severity),
+    barrierColor: Colors.black.withValues(alpha: 0.72),
     transitionDuration: const Duration(milliseconds: 320),
     pageBuilder: (_, _, _) =>
         _AlertDialogPage(initialEvent: event, eventListenable: eventListenable),
@@ -34,12 +34,6 @@ Future<void> showAlertNotificationDialog(
     ),
   );
 }
-
-Color _barrierColor(AlertSeverity severity) => switch (severity) {
-  AlertSeverity.nuclear => Colors.black.withValues(alpha: 0.88),
-  AlertSeverity.critical => Colors.black.withValues(alpha: 0.72),
-  _ => Colors.black.withValues(alpha: 0.60),
-};
 
 class _AlertDialogPage extends StatelessWidget {
   const _AlertDialogPage({required this.initialEvent, this.eventListenable});

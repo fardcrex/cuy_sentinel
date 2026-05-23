@@ -6,6 +6,12 @@ import '../../widgets/platform_icon_painter.dart';
 import '../../widgets/user_list_tile.dart';
 import '../user_model.dart';
 
+Color _statusColor(UserOnlineStatus status) => switch (status) {
+  UserOnlineStatus.online => AppColors.primary,
+  UserOnlineStatus.away => AppColors.warning,
+  UserOnlineStatus.offline => AppColors.textInactive,
+};
+
 class UserDetailCard extends StatelessWidget {
   const UserDetailCard({
     super.key,
@@ -119,9 +125,7 @@ class _UserDetailHeader extends StatelessWidget {
                   width: 13,
                   height: 13,
                   decoration: BoxDecoration(
-                    color: model.onlineStatus == UserOnlineStatus.online
-                        ? AppColors.primary
-                        : AppColors.textInactive,
+                    color: _statusColor(model.onlineStatus),
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.panel, width: 2),
                   ),
@@ -148,9 +152,7 @@ class _UserDetailHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    _OnlineBadge(
-                      isOnline: model.onlineStatus == UserOnlineStatus.online,
-                    ),
+                    _OnlineBadge(status: model.onlineStatus),
                   ],
                 ),
               ],
@@ -315,7 +317,7 @@ class _DeviceGroup extends StatelessWidget {
                         ),
                         if (d.isAway)
                           Text(
-                            'En segundo plano',
+                            'Ausente',
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(color: AppColors.warning),
                           ),
@@ -423,31 +425,47 @@ class _DragHandle extends StatelessWidget {
 }
 
 class _OnlineBadge extends StatelessWidget {
-  const _OnlineBadge({required this.isOnline});
+  const _OnlineBadge({required this.status});
 
-  final bool isOnline;
+  final UserOnlineStatus status;
+
+  bool get isOnline => status == UserOnlineStatus.online;
+
+  bool get isAway => status == UserOnlineStatus.away;
+
+  String get label => switch (status) {
+    UserOnlineStatus.online => 'En línea',
+    UserOnlineStatus.away => 'Ausente',
+    UserOnlineStatus.offline => 'Desconectado',
+  };
+
+  Color get color => switch (status) {
+    UserOnlineStatus.online => AppColors.primary,
+    UserOnlineStatus.away => AppColors.warning,
+    UserOnlineStatus.offline => AppColors.textInactive,
+  };
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: isOnline
-            ? AppColors.primary.withValues(alpha: 0.12)
+        color: isOnline || isAway
+            ? color.withValues(alpha: 0.12)
             : AppColors.stroke.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: isOnline
-              ? AppColors.primary.withValues(alpha: 0.35)
+          color: isOnline || isAway
+              ? color.withValues(alpha: 0.35)
               : AppColors.stroke,
         ),
       ),
       child: Text(
-        isOnline ? 'En línea' : 'Desconectado',
+        label,
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: isOnline ? AppColors.primary : AppColors.textInactive,
+          color: color,
         ),
       ),
     );

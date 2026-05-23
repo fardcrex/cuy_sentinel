@@ -40,6 +40,24 @@ class PanelUser {
     return sessionExpiresAt!.isAfter(DateTime.now());
   }
 
+  PanelUser copyWith({
+    String? id,
+    String? email,
+    String? displayName,
+    UserRole? role,
+    DateTime? lastLogin,
+    DateTime? sessionExpiresAt,
+    DateTime? createdAt,
+  }) => PanelUser(
+    id: id ?? this.id,
+    email: email ?? this.email,
+    displayName: displayName ?? this.displayName,
+    role: role ?? this.role,
+    lastLogin: lastLogin ?? this.lastLogin,
+    sessionExpiresAt: sessionExpiresAt ?? this.sessionExpiresAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+
   factory PanelUser.fromJson(Map<String, dynamic> json) => PanelUser(
     id: json['id'] as String,
     email: json['email'] as String,

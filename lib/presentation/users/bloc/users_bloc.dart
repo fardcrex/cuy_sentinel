@@ -102,6 +102,13 @@ class UsersBloc extends Cubit<UsersState> {
     ));
   }
 
+  void changeRole(String userId, UserRole newRole) {
+    _users = _users
+        .map((u) => u.id == userId ? u.copyWith(role: newRole) : u)
+        .toList();
+    _emitLoaded();
+  }
+
   @override
   Future<void> close() async {
     await _usersSub?.cancel();

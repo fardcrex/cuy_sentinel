@@ -8,13 +8,23 @@ abstract final class AppToast {
   static OverlayEntry? _entry;
 
   static void success(BuildContext context, String message, {String? detail}) =>
-      _show(context, message: message, detail: detail, type: _ToastType.success);
+      _show(
+        context,
+        message: message,
+        detail: detail,
+        type: _ToastType.success,
+      );
 
   static void error(BuildContext context, String message, {String? detail}) =>
       _show(context, message: message, detail: detail, type: _ToastType.error);
 
   static void warning(BuildContext context, String message, {String? detail}) =>
-      _show(context, message: message, detail: detail, type: _ToastType.warning);
+      _show(
+        context,
+        message: message,
+        detail: detail,
+        type: _ToastType.warning,
+      );
 
   static void _show(
     BuildContext context, {
@@ -110,15 +120,21 @@ class _ToastOverlayState extends State<_ToastOverlay>
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 600;
 
-    final card = FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(
-        position: _slide,
-        child: _ToastCard(
-          message: widget.message,
-          detail: widget.detail,
-          type: widget.type,
-          onClose: _dismiss,
+    final card = Dismissible(
+      key: ValueKey('${widget.type}-${widget.message}-${widget.detail ?? ''}'),
+      direction: DismissDirection.startToEnd,
+      onDismissed: (_) => _dismiss(),
+      background: const _ToastDismissBackground(),
+      child: FadeTransition(
+        opacity: _fade,
+        child: SlideTransition(
+          position: _slide,
+          child: _ToastCard(
+            message: widget.message,
+            detail: widget.detail,
+            type: widget.type,
+            onClose: _dismiss,
+          ),
         ),
       ),
     );
@@ -162,16 +178,16 @@ class _ToastCard extends StatelessWidget {
   static const _textSecondary = AppColors.textSecondary;
 
   Color get _accentColor => switch (type) {
-        _ToastType.success => AppColors.primary,
-        _ToastType.error => AppColors.danger,
-        _ToastType.warning => AppColors.warning,
-      };
+    _ToastType.success => AppColors.primary,
+    _ToastType.error => AppColors.danger,
+    _ToastType.warning => AppColors.warning,
+  };
 
   IconData get _icon => switch (type) {
-        _ToastType.success => Icons.check_circle_rounded,
-        _ToastType.error => Icons.error_rounded,
-        _ToastType.warning => Icons.warning_amber_rounded,
-      };
+    _ToastType.success => Icons.check_circle_rounded,
+    _ToastType.error => Icons.error_rounded,
+    _ToastType.warning => Icons.warning_amber_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -251,16 +267,18 @@ class _ToastCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          GestureDetector(
-                            onTap: onClose,
-                            child: const Padding(
-                              padding: EdgeInsets.only(top: 1),
-                              child: Icon(
-                                Icons.close_rounded,
-                                size: 15,
-                                color: _textSecondary,
-                              ),
+                          IconButton(
+                            onPressed: onClose,
+                            icon: const Icon(Icons.close_rounded),
+                            color: _textSecondary,
+                            iconSize: 16,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 44,
+                              minHeight: 44,
                             ),
+                            visualDensity: VisualDensity.compact,
+                            tooltip: 'Cerrar notificación',
                           ),
                         ],
                       ),
@@ -271,6 +289,28 @@ class _ToastCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ToastDismissBackground extends StatelessWidget {
+  const _ToastDismissBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(left: 18),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: const Icon(
+        Icons.check_rounded,
+        color: AppColors.primary,
+        size: 22,
       ),
     );
   }

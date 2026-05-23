@@ -50,7 +50,7 @@ class _AlertDialogPage extends StatelessWidget {
         : Alignment.center;
 
     final maxHeight = event.severity == AlertSeverity.nuclear
-        ? screen.height * 0.52
+        ? screen.height * (isMobile ? 0.86 : 0.52)
         : screen.height * 0.32;
 
     final maxWidth = event.severity == AlertSeverity.nuclear
@@ -113,141 +113,206 @@ class _NuclearCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.panel,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _nuclearColor, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: _nuclearColor.withValues(alpha: 0.35),
-            blurRadius: 48,
-            spreadRadius: 4,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 560;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.panel,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _nuclearColor, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: _nuclearColor.withValues(alpha: 0.35),
+                blurRadius: 48,
+                spreadRadius: 4,
+              ),
+              const BoxShadow(
+                color: Colors.black,
+                blurRadius: 24,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
-          const BoxShadow(
-            color: Colors.black,
-            blurRadius: 24,
-            offset: Offset(0, 8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _NuclearHeader(onClose: () => _close(context)),
+                Flexible(
+                  child: isMobile
+                      ? _NuclearMobileBody(event: event)
+                      : _NuclearDesktopBody(event: event),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _close(BuildContext context) {
+    Navigator.of(context, rootNavigator: true).pop();
+  }
+}
+
+class _NuclearHeader extends StatelessWidget {
+  const _NuclearHeader({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: _nuclearColor.withValues(alpha: 0.14),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_rounded, color: _nuclearColor, size: 16),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'ALERTA NUCLEAR DETECTADA',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: _nuclearColor,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          _DialogCloseButton(onPressed: onClose),
+        ],
+      ),
+    );
+  }
+}
+
+class _NuclearDesktopBody extends StatelessWidget {
+  const _NuclearDesktopBody({required this.event});
+
+  final AlertEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 256,
+            child: Image.asset(
+              AppAssets.illustrationNuclear,
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.center,
+            ),
+          ),
+          Expanded(
+            child: _NuclearMessage(
+              event: event,
+              titleFontSize: 28,
+              bodyFontSize: 18,
+            ),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              color: _nuclearColor.withValues(alpha: 0.14),
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.warning_rounded,
-                    color: _nuclearColor,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'ALERTA NUCLEAR DETECTADA',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: _nuclearColor,
-                        letterSpacing: 1.6,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () =>
-                        Navigator.of(context, rootNavigator: true).pop(),
-                    child: const Icon(
-                      Icons.close_rounded,
-                      color: AppColors.textSecondary,
-                      size: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Body: imagen izquierda (altura libre), texto+botón derecha
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Columna izquierda — ilustración portrait 256×384
-                  SizedBox(
-                    width: 256,
+    );
+  }
+}
 
-                    child: Image.asset(
-                      AppAssets.illustrationNuclear,
-                      fit: BoxFit.fitWidth,
-                      alignment: Alignment.center,
-                    ),
-                  ),
-                  // Columna derecha — textos y botón
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'El servidor ${event.serviceName} ha recibido un ataque nuclear.',
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Sistemas comprometidos. Respuesta de emergencia requerida — evacúe el entorno inmediatamente.',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: AppColors.textSecondary,
-                              height: 1.5,
-                            ),
-                          ),
-                          const Spacer(),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              onPressed: () => Navigator.of(
-                                context,
-                                rootNavigator: true,
-                              ).pop(),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: _nuclearColor,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: const Text(
-                                'ENTENDIDO',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.4,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+class _NuclearMobileBody extends StatelessWidget {
+  const _NuclearMobileBody({required this.event});
+
+  final AlertEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 210,
+            child: Image.asset(
+              AppAssets.illustrationNuclear,
+              fit: BoxFit.contain,
+              alignment: Alignment.bottomCenter,
+            ),
+          ),
+          _NuclearMessage(event: event, titleFontSize: 22, bodyFontSize: 14),
+        ],
+      ),
+    );
+  }
+}
+
+class _NuclearMessage extends StatelessWidget {
+  const _NuclearMessage({
+    required this.event,
+    required this.titleFontSize,
+    required this.bodyFontSize,
+  });
+
+  final AlertEvent event;
+  final double titleFontSize;
+  final double bodyFontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'El servidor ${event.serviceName} ha recibido un ataque nuclear.',
+            style: TextStyle(
+              fontSize: titleFontSize,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+              height: 1.18,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Sistemas comprometidos. Respuesta de emergencia requerida — evacúe el entorno inmediatamente.',
+            style: TextStyle(
+              fontSize: bodyFontSize,
+              color: AppColors.textSecondary,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+              style: FilledButton.styleFrom(
+                backgroundColor: _nuclearColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'ENTENDIDO',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.4,
+                  fontSize: 12,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -326,13 +391,9 @@ class _SeverityCard extends StatelessWidget {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: () => Navigator.of(context, rootNavigator: true).pop(),
-                child: const Icon(
-                  Icons.close_rounded,
-                  color: AppColors.textSecondary,
-                  size: 18,
-                ),
+              _DialogCloseButton(
+                onPressed: () =>
+                    Navigator.of(context, rootNavigator: true).pop(),
               ),
             ],
           ),
@@ -429,13 +490,9 @@ class _InfoCard extends StatelessWidget {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: () => Navigator.of(context, rootNavigator: true).pop(),
-                child: const Icon(
-                  Icons.close_rounded,
-                  color: AppColors.textSecondary,
-                  size: 18,
-                ),
+              _DialogCloseButton(
+                onPressed: () =>
+                    Navigator.of(context, rootNavigator: true).pop(),
               ),
             ],
           ),
@@ -458,6 +515,26 @@ class _InfoCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DialogCloseButton extends StatelessWidget {
+  const _DialogCloseButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: const Icon(Icons.close_rounded),
+      color: AppColors.textSecondary,
+      iconSize: 18,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      visualDensity: VisualDensity.compact,
+      tooltip: 'Cerrar',
     );
   }
 }

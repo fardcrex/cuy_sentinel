@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/utils/app_toast.dart';
+import '../../core/widgets/reconnecting_banner.dart';
 import '../../feature/alerts/application/get_alerts_use_case.dart';
 import '../../feature/monitoring/application/get_service_events_use_case.dart';
 import 'cubit/alerts_cubit.dart';
@@ -8,7 +10,6 @@ import 'cubit/alerts_state.dart';
 import 'views/alerts_content_view.dart';
 import 'views/alerts_error_view.dart';
 import 'views/alerts_loading_view.dart';
-import '../../core/widgets/reconnecting_banner.dart';
 
 // ── page ──────────────────────────────────────────────────────────────────────
 
@@ -34,7 +35,25 @@ class AlertsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AlertsCubit, AlertsState>(
+    return BlocConsumer<AlertsCubit, AlertsState>(
+      listenWhen: (previous, current) {
+        final previousError = previous is AlertsLoaded
+            ? previous.resolveErrorMessage
+            : null;
+        final currentError = current is AlertsLoaded
+            ? current.resolveErrorMessage
+            : null;
+        return currentError != null && currentError != previousError;
+      },
+      listener: (context, state) {
+        if (state case AlertsLoaded(:final resolveErrorMessage?)) {
+          AppToast.error(
+            context,
+            'No se pudo cerrar la alerta.',
+            detail: resolveErrorMessage,
+          );
+        }
+      },
       builder: (context, state) => switch (state) {
         AlertsInitial() || AlertsLoading() => const AlertsLoadingView(),
         AlertsError(:final message) => AlertsErrorView(message: message),

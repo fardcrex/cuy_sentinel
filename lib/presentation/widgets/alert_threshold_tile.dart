@@ -14,6 +14,7 @@ class AlertThresholdTile extends StatelessWidget {
     required this.threshold,
     required this.severity,
     required this.timestamp,
+    this.isResolving = false,
     this.onResolve,
   });
 
@@ -23,6 +24,7 @@ class AlertThresholdTile extends StatelessWidget {
   final String threshold;
   final AlertSeverity severity;
   final String timestamp;
+  final bool isResolving;
   final VoidCallback? onResolve;
 
   Color get _color => switch (severity) {
@@ -138,23 +140,39 @@ class AlertThresholdTile extends StatelessWidget {
               if (onResolve != null) ...[
                 const SizedBox(height: 8),
                 GestureDetector(
-                  onTap: onResolve,
+                  onTap: isResolving ? null : onResolve,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
+                    constraints: const BoxConstraints(minHeight: 32),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
-                      color: AppColors.stroke.withValues(alpha: 0.5),
+                      color: isResolving
+                          ? AppColors.primary.withValues(alpha: 0.10)
+                          : AppColors.stroke.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(8),
+                      border: isResolving
+                          ? Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.28),
+                            )
+                          : null,
                     ),
-                    child: const Text(
-                      'Cerrar',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
+                    child: Center(
+                      child: isResolving
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : const Text(
+                              'Cerrar',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
                     ),
                   ),
                 ),

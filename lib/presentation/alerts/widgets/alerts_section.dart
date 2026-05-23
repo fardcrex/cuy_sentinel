@@ -10,10 +10,12 @@ class AlertsSection extends StatelessWidget {
   const AlertsSection({
     super.key,
     required this.alerts,
+    required this.isResolving,
     this.onViewAll,
   });
 
   final List<AlertEventModel> alerts;
+  final bool Function(String alertId) isResolving;
   final VoidCallback? onViewAll;
 
   @override
@@ -26,16 +28,12 @@ class AlertsSection extends StatelessWidget {
             Expanded(
               child: Text(
                 'Alertas activas',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
-            TextButton(
-              onPressed: onViewAll,
-              child: const Text('Ver todas'),
-            ),
+            TextButton(onPressed: onViewAll, child: const Text('Ver todas')),
           ],
         ),
         const SizedBox(height: 14),
@@ -45,7 +43,9 @@ class AlertsSection extends StatelessWidget {
           ...List.generate(alerts.length, (index) {
             final alert = alerts[index];
             return Padding(
-              padding: EdgeInsets.only(bottom: index < alerts.length - 1 ? 12 : 0),
+              padding: EdgeInsets.only(
+                bottom: index < alerts.length - 1 ? 12 : 0,
+              ),
               child: AlertThresholdTile(
                 service: alert.service,
                 metric: alert.metric,
@@ -53,6 +53,7 @@ class AlertsSection extends StatelessWidget {
                 threshold: alert.threshold,
                 severity: alert.severity,
                 timestamp: alert.timestamp,
+                isResolving: isResolving(alert.id),
                 onResolve: () =>
                     context.read<AlertsCubit>().resolveAlert(alert.id),
               ),

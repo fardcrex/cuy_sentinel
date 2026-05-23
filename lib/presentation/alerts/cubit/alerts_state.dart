@@ -16,28 +16,49 @@ final class AlertsLoaded extends AlertsState {
     required this.incidents,
     this.isReconnecting = false,
     this.reconnectingInSeconds,
+    this.resolvingAlertIds = const {},
+    this.resolveErrorsByAlertId = const {},
+    this.resolveErrorMessage,
   });
 
   final List<AlertEvent> activeAlerts;
   final List<AlertThreshold> thresholds;
   final List<ServiceEvent> incidents;
   final bool isReconnecting;
+
   /// Segundos restantes para el próximo reintento. null cuando no reconecta.
   final int? reconnectingInSeconds;
+  final Set<String> resolvingAlertIds;
+  final Map<String, String> resolveErrorsByAlertId;
+  final String? resolveErrorMessage;
 
   AlertsLoaded copyWith({
     bool? isReconnecting,
     int? reconnectingInSeconds,
     bool clearCountdown = false,
+    Set<String>? resolvingAlertIds,
+    Map<String, String>? resolveErrorsByAlertId,
+    String? resolveErrorMessage,
+    bool clearResolveError = false,
   }) => AlertsLoaded(
-        activeAlerts: activeAlerts,
-        thresholds: thresholds,
-        incidents: incidents,
-        isReconnecting: isReconnecting ?? this.isReconnecting,
-        reconnectingInSeconds: clearCountdown
-            ? null
-            : (reconnectingInSeconds ?? this.reconnectingInSeconds),
-      );
+    activeAlerts: activeAlerts,
+    thresholds: thresholds,
+    incidents: incidents,
+    isReconnecting: isReconnecting ?? this.isReconnecting,
+    reconnectingInSeconds: clearCountdown
+        ? null
+        : (reconnectingInSeconds ?? this.reconnectingInSeconds),
+    resolvingAlertIds: resolvingAlertIds ?? this.resolvingAlertIds,
+    resolveErrorsByAlertId:
+        resolveErrorsByAlertId ?? this.resolveErrorsByAlertId,
+    resolveErrorMessage: clearResolveError
+        ? null
+        : (resolveErrorMessage ?? this.resolveErrorMessage),
+  );
+
+  bool isResolving(String alertId) => resolvingAlertIds.contains(alertId);
+
+  String? resolveErrorFor(String alertId) => resolveErrorsByAlertId[alertId];
 
   int get criticalCount =>
       activeAlerts.where((a) => a.severity == AlertSeverity.critical).length;

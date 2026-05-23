@@ -80,6 +80,7 @@ class _AlertsContentViewState extends State<AlertsContentView> {
                         children: [
                           AlertsSection(
                             alerts: alertModels,
+                            isResolving: widget.state.isResolving,
                             onViewAll: _scrollToIncidents,
                           ),
                           const SizedBox(height: 24),
@@ -104,6 +105,7 @@ class _AlertsContentViewState extends State<AlertsContentView> {
                     const SizedBox(height: 24),
                     AlertsSection(
                       alerts: alertModels,
+                      isResolving: widget.state.isResolving,
                       onViewAll: _scrollToIncidents,
                     ),
                     const SizedBox(height: 24),

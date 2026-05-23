@@ -49,22 +49,21 @@ class AlertsCubit extends Cubit<AlertsState> {
       return;
     }
 
-    _sub = _watchAlerts.execute(
-      onRetry: (retryState) {
-        switch (retryState) {
-          case Retrying(:final backoff):
-            _startCountdown(backoff);
-          case Reconnected():
-            _stopCountdown();
-        }
-      },
-    ).listen(
-      (active) {
-        _active = active;
-        _emitLoaded();
-      },
-      onError: (e) => emit(AlertsError(e.toString())),
-    );
+    _sub = _watchAlerts
+        .execute(
+          onRetry: (retryState) {
+            switch (retryState) {
+              case Retrying(:final backoff):
+                _startCountdown(backoff);
+              case Reconnected():
+                _stopCountdown();
+            }
+          },
+        )
+        .listen((active) {
+          _active = active;
+          _emitLoaded();
+        }, onError: (e) => emit(AlertsError(e.toString())));
   }
 
   void _startCountdown(Duration backoff) {
@@ -90,17 +89,83 @@ class AlertsCubit extends Cubit<AlertsState> {
     final thresholds = _thresholds;
     final incidents = _incidents;
     if (thresholds == null || incidents == null) return;
-    emit(AlertsLoaded(
-      activeAlerts: _active,
-      thresholds: thresholds,
-      incidents: incidents,
-      isReconnecting: _isReconnecting,
-      reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
-    ));
+    final previous = state;
+    final resolvingAlertIds = previous is AlertsLoaded
+        ? previous.resolvingAlertIds
+        : const <String>{};
+    final resolveErrorsByAlertId = previous is AlertsLoaded
+        ? previous.resolveErrorsByAlertId
+        : const <String, String>{};
+
+    emit(
+      AlertsLoaded(
+        activeAlerts: _active,
+        thresholds: thresholds,
+        incidents: incidents,
+        isReconnecting: _isReconnecting,
+        reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
+        resolvingAlertIds: resolvingAlertIds
+            .where((id) => _active.any((alert) => alert.id == id))
+            .toSet(),
+        resolveErrorsByAlertId: Map.fromEntries(
+          resolveErrorsByAlertId.entries.where(
+            (entry) => _active.any((alert) => alert.id == entry.key),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> resolveAlert(String alertId) async {
-    await _resolveAlert.execute(alertId);
+    final current = state;
+    if (current is! AlertsLoaded || current.isResolving(alertId)) return;
+
+    emit(
+      current.copyWith(
+        resolvingAlertIds: {...current.resolvingAlertIds, alertId},
+        resolveErrorsByAlertId: Map.of(current.resolveErrorsByAlertId)
+          ..remove(alertId),
+        clearResolveError: true,
+      ),
+    );
+
+    try {
+      await _resolveAlert.execute(alertId);
+      final latest = state;
+      if (latest is AlertsLoaded) {
+        emit(
+          latest.copyWith(
+            resolvingAlertIds: {...latest.resolvingAlertIds}..remove(alertId),
+            resolveErrorsByAlertId: Map.of(latest.resolveErrorsByAlertId)
+              ..remove(alertId),
+            clearResolveError: true,
+          ),
+        );
+      }
+    } catch (e) {
+      final latest = state;
+      if (latest is AlertsLoaded) {
+        final message = _resolveErrorMessage(e);
+        emit(
+          latest.copyWith(
+            resolvingAlertIds: {...latest.resolvingAlertIds}..remove(alertId),
+            resolveErrorsByAlertId: {
+              ...latest.resolveErrorsByAlertId,
+              alertId: message,
+            },
+            resolveErrorMessage: message,
+          ),
+        );
+      }
+    }
+  }
+
+  String _resolveErrorMessage(Object error) {
+    final message = error.toString();
+    if (message.startsWith('Exception: ')) {
+      return message.replaceFirst('Exception: ', '');
+    }
+    return message;
   }
 
   @override

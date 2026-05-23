@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/responsive/app_breakpoints.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/reconnecting_banner.dart';
+import '../../../widgets/app_card.dart';
+import '../../../widgets/loading_skeleton.dart';
 import '../../../metrics/cubit/metrics_cubit.dart';
 import '../../../metrics/cubit/metrics_state.dart';
 import '../cubit/services_cubit.dart';
@@ -27,7 +29,7 @@ class ServicesTabView extends StatelessWidget {
         svcState is ServicesLoading ||
         mtrState is MetricsInitial ||
         mtrState is MetricsLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return ServicesTabLoadingSkeleton(physics: physics);
     }
     if (svcState is ServicesError) {
       return Center(
@@ -79,7 +81,9 @@ class ServicesTabView extends StatelessWidget {
                         children: [
                           for (int i = 0; i < serviceModels.length; i++) ...[
                             if (i > 0) const SizedBox(width: 20),
-                            Expanded(child: ServiceCard(model: serviceModels[i])),
+                            Expanded(
+                              child: ServiceCard(model: serviceModels[i]),
+                            ),
                           ],
                         ],
                       )
@@ -101,6 +105,208 @@ class ServicesTabView extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class ServicesTabLoadingSkeleton extends StatelessWidget {
+  const ServicesTabLoadingSkeleton({super.key, this.physics});
+
+  final ScrollPhysics? physics;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final padding = AppBreakpoints.horizontalPadding(width);
+        final isWide = width >= 900;
+
+        return LoadingSkeletonPulse(
+          child: SingleChildScrollView(
+            physics: physics,
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SkeletonBlock(width: 136, height: 38, radius: 14),
+                  const SizedBox(height: 20),
+                  if (isWide)
+                    const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _ServiceCardSkeleton()),
+                        SizedBox(width: 20),
+                        Expanded(child: _ServiceCardSkeleton()),
+                      ],
+                    )
+                  else
+                    const Column(
+                      children: [
+                        _ServiceCardSkeleton(),
+                        SizedBox(height: 20),
+                        _ServiceCardSkeleton(),
+                      ],
+                    ),
+                  const SizedBox(height: 24),
+                  const _InfrastructureSkeleton(),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ServiceCardSkeleton extends StatelessWidget {
+  const _ServiceCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ServiceHeroSkeleton(),
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, 18, 20, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonBlock(width: 150, height: 22),
+                      SizedBox(height: 8),
+                      SkeletonBlock(width: 120, height: 12),
+                      SizedBox(height: 6),
+                      SkeletonBlock(width: 100, height: 12),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 12),
+                SkeletonBlock(width: 86, height: 28, radius: 999),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _MetricChipSkeleton(),
+                _MetricChipSkeleton(width: 112),
+                _MetricChipSkeleton(width: 94),
+                _MetricChipSkeleton(width: 104),
+                _MetricChipSkeleton(width: 104),
+                _MetricChipSkeleton(width: 96),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, 18, 20, 20),
+            child: Column(
+              children: [
+                _ProgressSkeleton(),
+                SizedBox(height: 10),
+                _ProgressSkeleton(),
+                SizedBox(height: 10),
+                _ProgressSkeleton(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceHeroSkeleton extends StatelessWidget {
+  const _ServiceHeroSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 188,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSoft.withValues(alpha: 0.55),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(
+          bottom: BorderSide(color: AppColors.stroke.withValues(alpha: 0.6)),
+        ),
+      ),
+      child: const Center(
+        child: SkeletonBlock(width: 132, height: 132, radius: 66),
+      ),
+    );
+  }
+}
+
+class _MetricChipSkeleton extends StatelessWidget {
+  const _MetricChipSkeleton({this.width = 88});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonBlock(width: width, height: 48, radius: 14);
+  }
+}
+
+class _ProgressSkeleton extends StatelessWidget {
+  const _ProgressSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        SkeletonBlock(width: 44, height: 13),
+        SizedBox(width: 12),
+        Expanded(child: SkeletonBlock(width: double.infinity, height: 8)),
+        SizedBox(width: 12),
+        SkeletonBlock(width: 42, height: 13),
+      ],
+    );
+  }
+}
+
+class _InfrastructureSkeleton extends StatelessWidget {
+  const _InfrastructureSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppCard(
+      padding: EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SkeletonBlock(width: 20, height: 20, radius: 999),
+              SizedBox(width: 10),
+              SkeletonBlock(width: 190, height: 20),
+            ],
+          ),
+          SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 10,
+            children: [
+              SkeletonBlock(width: 150, height: 32, radius: 12),
+              SkeletonBlock(width: 138, height: 32, radius: 12),
+              SkeletonBlock(width: 108, height: 32, radius: 12),
+              SkeletonBlock(width: 154, height: 32, radius: 12),
+              SkeletonBlock(width: 122, height: 32, radius: 12),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

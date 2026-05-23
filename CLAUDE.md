@@ -225,6 +225,50 @@ Contextos donde esto aplica con mayor frecuencia:
 
 ---
 
+## Supabase Edge Functions
+
+### notify-alert — Notificación Telegram al dispararse una alerta
+
+**Ubicación:** `supabase/functions/notify-alert/index.ts`
+
+Recibe un Database Webhook de Supabase cuando se inserta una fila en `alert_events`
+y envía un mensaje a Telegram vía Bot API.
+
+#### Deploy (una vez por entorno)
+
+```sh
+# 1. Instalar CLI (macOS)
+brew install supabase/tap/supabase
+
+# 2. Login y link al proyecto Supabase
+supabase login
+supabase link --project-ref <PROJECT_REF>   # Project Settings → General → Reference ID
+
+# 3. Subir secrets
+supabase secrets set \
+  TELEGRAM_BOT_TOKEN=<token_del_bot> \
+  TELEGRAM_CHAT_ID=<chat_id> \
+  WEBHOOK_SECRET=<cadena_aleatoria_segura>
+
+# 4. Desplegar la función
+supabase functions deploy notify-alert --no-verify-jwt
+```
+
+#### Configurar el Database Webhook en el dashboard
+
+1. Supabase dashboard → **Database → Webhooks → Create a new hook**
+2. Nombre: `on_alert_insert`
+3. Table: `alert_events` · Events: **INSERT**
+4. Type: **Supabase Edge Functions**
+5. Edge Function: `notify-alert`
+6. HTTP Headers → Add: `x-webhook-secret` = `<la misma WEBHOOK_SECRET de arriba>`
+
+Con esto, cada INSERT en `alert_events` (ya sea del colector Go o de una función SQL)
+dispara la notificación a Telegram automáticamente, sin importar si el panel Flutter
+está abierto o no.
+
+---
+
 ## Etapas del proyecto
 
 | Etapa                            | Fecha        | Estado         |

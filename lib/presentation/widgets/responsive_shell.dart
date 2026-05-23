@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/assets/app_assets.dart';
 import '../../core/navigation/app_router.dart';
@@ -20,11 +23,7 @@ import 'app_card.dart';
 /// Punto de entrada del panel autenticado.
 /// Provee los cubits de dominio y delega el layout a [ResponsiveShell].
 class PanelShell extends StatelessWidget {
-  const PanelShell({
-    super.key,
-    required this.currentPath,
-    required this.child,
-  });
+  const PanelShell({super.key, required this.currentPath, required this.child});
 
   final String currentPath;
   final Widget child;
@@ -143,6 +142,8 @@ class ResponsiveShell extends StatelessWidget {
                 ],
               ),
               actions: [
+                const Center(child: _AppVersionLabel(compact: true)),
+                const SizedBox(width: 4),
                 IconButton(
                   tooltip: 'Cerrar sesión',
                   icon: const Icon(Icons.logout_rounded),
@@ -343,22 +344,88 @@ class _DesktopSidebar extends StatelessWidget {
 class _AppVersionLabel extends StatelessWidget {
   const _AppVersionLabel({this.compact = false});
 
-  static const _version = '0.1.0+1';
+  static final Future<_AppRuntimeInfo> _infoFuture = _AppRuntimeInfo.load();
 
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final label = compact ? 'v0.1.0' : 'Versión $_version';
-
-    return Text(
-      label,
-      textAlign: TextAlign.center,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: AppColors.textInactive,
-        fontWeight: FontWeight.w600,
-      ),
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: AppColors.textInactive,
+      fontWeight: FontWeight.w600,
     );
+
+    return FutureBuilder<_AppRuntimeInfo>(
+      future: _infoFuture,
+      builder: (context, snapshot) {
+        final info = snapshot.data;
+        final label = info == null
+            ? (compact ? 'v...' : 'Versión ...')
+            : compact
+            ? 'v${info.version}'
+            : 'Versión ${info.fullVersion} · ${info.platformLabel}';
+
+        return Text(label, textAlign: TextAlign.center, style: style);
+      },
+    );
+  }
+}
+
+class _AppRuntimeInfo {
+  const _AppRuntimeInfo({
+    required this.version,
+    required this.buildNumber,
+    required this.platformLabel,
+  });
+
+  final String version;
+  final String buildNumber;
+  final String platformLabel;
+
+  String get fullVersion => '$version+$buildNumber';
+
+  static Future<_AppRuntimeInfo> load() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    final platformLabel = await _resolvePlatformLabel();
+
+    return _AppRuntimeInfo(
+      version: packageInfo.version,
+      buildNumber: packageInfo.buildNumber,
+      platformLabel: platformLabel,
+    );
+  }
+
+  static Future<String> _resolvePlatformLabel() async {
+    final deviceInfo = DeviceInfoPlugin();
+
+    try {
+      if (kIsWeb) {
+        await deviceInfo.webBrowserInfo;
+        return 'Web';
+      }
+
+      switch (defaultTargetPlatform) {
+        case TargetPlatform.android:
+          await deviceInfo.androidInfo;
+          return 'Android';
+        case TargetPlatform.iOS:
+          await deviceInfo.iosInfo;
+          return 'iOS';
+        case TargetPlatform.macOS:
+          await deviceInfo.macOsInfo;
+          return 'macOS';
+        case TargetPlatform.windows:
+          await deviceInfo.windowsInfo;
+          return 'Windows';
+        case TargetPlatform.linux:
+          await deviceInfo.linuxInfo;
+          return 'Linux';
+        case TargetPlatform.fuchsia:
+          return 'Fuchsia';
+      }
+    } catch (_) {
+      return 'Plataforma desconocida';
+    }
   }
 }
 

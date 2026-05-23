@@ -6,7 +6,7 @@ import 'core/app.dart';
 import 'core/env/app_env.dart';
 import 'core/injection/envs/phase1_dependencies.dart';
 
-// Fase 1 — Supabase.
+// Fase 1 — Supabase completo.
 // flutter run --target lib/main_phase1_mix.dart \
 //             --dart-define-from-file=envs/sentinel.phase1.json
 void main() async {
@@ -16,5 +16,5 @@ void main() async {
     url: AppEnv.supabaseUrl,
     anonKey: AppEnv.supabaseAnonKey,
   );
-  runApp(CuySentinelApp(dependencies: buildPhase1DependenciesMix()));
+  runApp(CuySentinelApp(dependencies: buildPhase1Dependencies()));
 }

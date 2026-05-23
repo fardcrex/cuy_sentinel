@@ -1,5 +1,3 @@
-import 'package:cuy_sentinel/feature/metrics/infrastructure/in_memory_metrics_repository.dart';
-import 'package:cuy_sentinel/feature/monitoring/infrastructure/in_memory_monitoring_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../feature/alerts/infrastructure/supabase_alerts_repository.dart';
@@ -22,15 +20,5 @@ AppDependencies buildPhase1Dependencies() => AppDependencies(
   alertsRepository: SupabaseAlertsRepository(),
   usersRepository: SupabaseUsersRepository(),
   databasesRepository: SupabaseDatabasesRepository(),
-  onReconnect: _reconnectSupabase,
-);
-
-AppDependencies buildPhase1DependenciesMix() => AppDependencies(
-  authRepository: SupabaseAuthRepository(),
-  monitoringRepository: InMemoryMonitoringRepository(),
-  metricsRepository: InMemoryMetricsRepository(),
-  databasesRepository: SupabaseDatabasesRepository(),
-  alertsRepository: SupabaseAlertsRepository(),
-  usersRepository: SupabaseUsersRepository(),
   onReconnect: _reconnectSupabase,
 );

@@ -16,5 +16,5 @@ void main() async {
     url: AppEnv.supabaseUrl,
     anonKey: AppEnv.supabaseAnonKey,
   );
-  runApp(CuySentinelApp(dependencies: buildPhase1DependenciesMix()));
+  runApp(CuySentinelApp(dependencies: buildPhase1Dependencies()));
 }

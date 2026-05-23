@@ -24,7 +24,7 @@ Widget _buildCard({
     onlineStatus: UserOnlineStatus.online,
     lastSeen: 'Ahora',
     avatarColor: AppColors.primary,
-    devices: [UserDeviceModel(label: 'Chrome · macOS', ip: '10.0.0.1')],
+    devices: [UserDeviceModel(label: 'Chrome · macOS', platform: 'web')],
   );
 
   return MaterialApp(

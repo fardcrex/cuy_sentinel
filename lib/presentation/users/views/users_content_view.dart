@@ -33,6 +33,7 @@ class UsersContentView extends StatelessWidget {
       (i) => state.users[i].toModel(
         i,
         isOnline: state.isOnline(state.users[i].id),
+        allLogs: state.accessLogs,
       ),
     );
     final logModels = state.accessLogs.map((l) => l.toModel()).toList();

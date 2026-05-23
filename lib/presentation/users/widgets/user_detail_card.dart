@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../feature/users/domain/entities/panel_user.dart';
+import '../../widgets/platform_icon_painter.dart';
 import '../../widgets/user_list_tile.dart';
 import '../user_model.dart';
 
@@ -252,14 +253,7 @@ class _UserDetailDevicesSection extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
+                    PlatformIcon(platform: d.platform, size: 14),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -268,13 +262,6 @@ class _UserDetailDevicesSection extends StatelessWidget {
                               color: AppColors.textSecondary,
                             ),
                       ),
-                    ),
-                    Text(
-                      d.ip,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textInactive,
-                            fontFamily: 'monospace',
-                          ),
                     ),
                   ],
                 ),

@@ -55,19 +55,13 @@ String _formatLogTimestamp(DateTime dt) {
   return '${dt.day} ${months[dt.month - 1]} $h:$m';
 }
 
-// Datos quemados de dispositivos — reemplazar cuando exista el endpoint.
-final _demoDevices = [
-  UserDeviceModel(label: 'Chrome · macOS', ip: '192.168.1.42'),
-  UserDeviceModel(label: 'Firefox · Win', ip: '10.0.0.5'),
-];
-
 // ── models ────────────────────────────────────────────────────────────────────
 
 class UserDeviceModel {
-  UserDeviceModel({required this.label, required this.ip});
+  UserDeviceModel({required this.label, this.platform});
 
   final String label;
-  final String ip;
+  final String? platform;
 }
 
 /// UI representation of a [PanelUser] — feeds [UserListTile] and [UserDetailCard].
@@ -136,18 +130,38 @@ class UsersSessionModel {
 // ── extensions ────────────────────────────────────────────────────────────────
 
 extension UserModelX on PanelUser {
-  UserModel toModel(int index, {required bool isOnline}) => UserModel(
-        userId: id,
-        name: displayName,
-        role: _roleLabel(role),
-        rawRole: role,
-        email: email,
-        createdAt: _formatDate(createdAt),
-        onlineStatus: isOnline ? UserOnlineStatus.online : UserOnlineStatus.offline,
-        lastSeen: _formatRelative(lastLogin),
-        avatarColor: _avatarColors[index % _avatarColors.length],
-        devices: _demoDevices,
-      );
+  UserModel toModel(
+    int index, {
+    required bool isOnline,
+    List<UserAccessLog> allLogs = const [],
+  }) {
+    final devices = allLogs
+        .where((l) => l.userId == id && l.deviceName != null)
+        .fold<Map<String, UserAccessLog>>({}, (map, log) {
+          final key = log.deviceName!;
+          if (!map.containsKey(key) ||
+              log.timestamp.isAfter(map[key]!.timestamp)) {
+            map[key] = log;
+          }
+          return map;
+        })
+        .values
+        .map((l) => UserDeviceModel(label: l.deviceName!, platform: l.devicePlatform))
+        .toList();
+
+    return UserModel(
+      userId: id,
+      name: displayName,
+      role: _roleLabel(role),
+      rawRole: role,
+      email: email,
+      createdAt: _formatDate(createdAt),
+      onlineStatus: isOnline ? UserOnlineStatus.online : UserOnlineStatus.offline,
+      lastSeen: _formatRelative(lastLogin),
+      avatarColor: _avatarColors[index % _avatarColors.length],
+      devices: devices,
+    );
+  }
 }
 
 extension AccessLogModelX on UserAccessLog {

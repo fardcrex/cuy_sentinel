@@ -28,7 +28,7 @@ class InMemoryAuthRepository implements IAuthRepository {
     if (password != _password) {
       throw const InvalidCredentialsException();
     }
-    final user = AppUser(id: 'dev-001', email: email.trim());
+    final user = AppUser(id: 'usr-jair', email: email.trim());
     _current = user;
     _controller.add(user);
     return user;

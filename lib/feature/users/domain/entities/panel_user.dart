@@ -1,8 +1,10 @@
 enum UserRole {
+  master,
   admin,
   viewer;
 
   static UserRole fromString(String value) => switch (value) {
+    'master' => UserRole.master,
     'admin'  => UserRole.admin,
     'viewer' => UserRole.viewer,
     _        => UserRole.viewer,
@@ -27,13 +29,9 @@ class PanelUser {
   final String displayName;
   final UserRole role;
   final DateTime? lastLogin;
-
-  /// JWT expiry (Fase 2). In Fase 1 with Supabase Auth, use Supabase session.
   final DateTime? sessionExpiresAt;
-
   final DateTime createdAt;
 
-  /// A user is considered online if their session has not yet expired.
   bool get isOnline {
     if (sessionExpiresAt == null) return false;
     return sessionExpiresAt!.isAfter(DateTime.now());

@@ -15,7 +15,8 @@ const _avatarColors = [
 ];
 
 String _roleLabel(UserRole role) => switch (role) {
-      UserRole.admin => 'Administrador',
+      UserRole.master => 'Master',
+      UserRole.admin  => 'Administrador',
       UserRole.viewer => 'Visualizador',
     };
 

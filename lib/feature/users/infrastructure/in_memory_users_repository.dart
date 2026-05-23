@@ -11,7 +11,7 @@ class InMemoryUsersRepository implements IUsersRepository {
       id: 'usr-jair',
       email: 'jair@cuy-sentinel.local',
       displayName: 'Jair Conislla',
-      role: UserRole.admin,
+      role: UserRole.master,
       lastLogin: _now.subtract(const Duration(minutes: 12)),
       sessionExpiresAt: _now.add(const Duration(hours: 8)),
       createdAt: DateTime(2025, 3, 1),

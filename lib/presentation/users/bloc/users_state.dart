@@ -24,7 +24,8 @@ final class UsersLoaded extends UsersState {
 
   bool isOnline(String userId) => onlineIds.contains(userId);
   int get onlineCount => onlineIds.length;
-  int get adminCount => users.where((u) => u.role == UserRole.admin).length;
+  int get adminCount =>
+      users.where((u) => u.role == UserRole.admin || u.role == UserRole.master).length;
   int get viewerCount => users.where((u) => u.role == UserRole.viewer).length;
 }
 

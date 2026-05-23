@@ -14,13 +14,18 @@ class DashboardStatsGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
+        final isMobile = width < 600;
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: AppBreakpoints.metricsColumns(width),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: width >= 900 ? 1.6 : 1.35,
+          crossAxisCount: isMobile ? 2 : AppBreakpoints.metricsColumns(width),
+          crossAxisSpacing: isMobile ? 12 : 16,
+          mainAxisSpacing: isMobile ? 12 : 16,
+          childAspectRatio: width >= 900
+              ? 1.6
+              : isMobile
+              ? 0.95
+              : 1.35,
           children: cards
               .map(
                 (card) => StatOverviewCard(
@@ -30,6 +35,7 @@ class DashboardStatsGrid extends StatelessWidget {
                   icon: card.icon,
                   color: card.color,
                   sparkPoints: card.sparkPoints,
+                  compact: isMobile,
                 ),
               )
               .toList(),

@@ -222,17 +222,27 @@ extension UserModelX on PanelUser {
 
     final devicesByKey = {
       for (final log in latestLogsByDevice.values)
-        _deviceKey(log.deviceName!, log.devicePlatform): UserDeviceModel(
-          label: _formatDeviceLabel(log.deviceName!, log.devicePlatform),
-          isOnline: presencesByDevice.containsKey(
-            _deviceKey(log.deviceName!, log.devicePlatform),
+        if (log.action == UserAccessAction.login ||
+            presencesByDevice.containsKey(
+              _deviceKey(log.deviceName!, log.devicePlatform),
+            ))
+          _deviceKey(log.deviceName!, log.devicePlatform): UserDeviceModel(
+            label: _formatDeviceLabel(log.deviceName!, log.devicePlatform),
+            isOnline: presencesByDevice.containsKey(
+              _deviceKey(log.deviceName!, log.devicePlatform),
+            ),
+            isAway:
+                presencesByDevice[_deviceKey(
+                      log.deviceName!,
+                      log.devicePlatform,
+                    )]
+                    ?.status ==
+                UserPresenceStatus.away,
+            platform: _visualDevicePlatform(
+              log.deviceName!,
+              log.devicePlatform,
+            ),
           ),
-          isAway:
-              presencesByDevice[_deviceKey(log.deviceName!, log.devicePlatform)]
-                  ?.status ==
-              UserPresenceStatus.away,
-          platform: _visualDevicePlatform(log.deviceName!, log.devicePlatform),
-        ),
       for (final presence in presenceDevices)
         _deviceKey(
           presence.deviceName,

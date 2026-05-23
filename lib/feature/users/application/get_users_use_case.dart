@@ -1,3 +1,4 @@
+import '../../../core/services/device_info_service.dart';
 import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/panel_user.dart';
 import '../domain/entities/user_access_log.dart';
@@ -65,9 +66,10 @@ class UntrackPresenceUseCase {
 }
 
 class LogAccessUseCase {
-  const LogAccessUseCase(this._repository);
+  const LogAccessUseCase(this._repository, this._deviceInfo);
 
   final IUsersRepository _repository;
+  final IDeviceInfoService _deviceInfo;
 
   Future<void> execute({
     required String userId,
@@ -75,13 +77,18 @@ class LogAccessUseCase {
     required UserAccessAction action,
     required bool loggedIn,
   }) async {
-    final user = await _repository.getUserById(userId);
+    final (user, device) = await (
+      _repository.getUserById(userId),
+      _deviceInfo.getDeviceInfo(),
+    ).wait;
     final displayName = user?.displayName ?? fallbackName;
     await Future.wait([
       _repository.logAccess(
         userId: userId,
         displayName: displayName,
         action: action,
+        deviceName: device.deviceName,
+        devicePlatform: device.devicePlatform,
       ),
       _repository.updateSession(userId, loggedIn: loggedIn),
     ]);

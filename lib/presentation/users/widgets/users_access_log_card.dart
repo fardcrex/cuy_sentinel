@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/platform_icon_painter.dart';
 import '../user_model.dart';
 
 class UsersAccessLogCard extends StatelessWidget {
@@ -41,6 +42,8 @@ class UsersAccessLogCard extends StatelessWidget {
                   action: m.action,
                   timestamp: m.timestamp,
                   color: m.color,
+                  deviceLabel: m.deviceLabel,
+                  devicePlatform: m.devicePlatform,
                 ),
               );
             }),
@@ -57,12 +60,16 @@ class UsersLogEntry extends StatelessWidget {
     required this.action,
     required this.timestamp,
     required this.color,
+    this.deviceLabel,
+    this.devicePlatform,
   });
 
   final String user;
   final String action;
   final String timestamp;
   final Color color;
+  final String? deviceLabel;
+  final String? devicePlatform;
 
   @override
   Widget build(BuildContext context) {
@@ -75,33 +82,75 @@ class UsersLogEntry extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: user,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 6,
+            children: [
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: user,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' · $action',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ),
-                TextSpan(
-                  text: ' · $action',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              if (deviceLabel != null)
+                _DeviceChip(label: deviceLabel!, platform: devicePlatform),
+            ],
           ),
         ),
+        const SizedBox(width: 8),
         Text(
           timestamp,
           style: const TextStyle(color: AppColors.textInactive, fontSize: 11),
         ),
       ],
+    );
+  }
+}
+
+class _DeviceChip extends StatelessWidget {
+  const _DeviceChip({required this.label, required this.platform});
+
+  final String label;
+  final String? platform;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.darkPanel,
+        border: Border.all(color: AppColors.textInactive.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PlatformIcon(platform: platform, size: 12),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

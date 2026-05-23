@@ -104,12 +104,16 @@ class AccessLogModel {
     required this.action,
     required this.timestamp,
     required this.color,
+    this.deviceLabel,
+    this.devicePlatform,
   });
 
   final String user;
   final String action;
   final String timestamp;
   final Color color;
+  final String? deviceLabel;
+  final String? devicePlatform;
 }
 
 /// UI-ready stats for the session summary card and the online badge.
@@ -156,6 +160,8 @@ extension AccessLogModelX on UserAccessLog {
         color: action == UserAccessAction.login
             ? AppColors.primary
             : AppColors.textSecondary,
+        deviceLabel: deviceName,
+        devicePlatform: devicePlatform,
       );
 }
 

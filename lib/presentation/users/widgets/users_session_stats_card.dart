@@ -39,7 +39,7 @@ class UsersSessionStatsCard extends StatelessWidget {
           const SizedBox(height: 14),
           UsersStatRow(
             icon: Icons.admin_panel_settings_outlined,
-            label: 'Administradores',
+            label: 'Admin / Master',
             value: session.admins,
             color: AppColors.primaryBright,
           ),

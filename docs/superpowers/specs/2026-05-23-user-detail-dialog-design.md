@@ -7,19 +7,68 @@ Al hacer tap en un `UserListTile` de la pantalla de Usuarios, se abre un panel d
 detalle con la información completa del usuario. En mobile aparece como bottom sheet
 (deslizable desde abajo); en tablet/desktop aparece como dialog centrado.
 
+Un usuario admin o master puede promover a otro usuario a admin. Solo un master puede
+degradar un admin a viewer.
+
 ---
 
-## Modelo de datos
+## Jerarquía de roles
+
+```
+master  >  admin  >  viewer
+```
+
+| Rol | Puede "Hacer Admin" (viewer→admin) | Puede "Quitar Admin" (admin→viewer) |
+|-----|------------------------------------|--------------------------------------|
+| master | Sí | Sí |
+| admin | Sí | No |
+| viewer | No | No |
+
+Los botones de acción **nunca aparecen sobre uno mismo** (un usuario no puede
+cambiar su propio rol desde este dialog).
+
+---
+
+## Cambios en el dominio
+
+### `UserRole` — nuevo valor `master`
+
+```dart
+enum UserRole {
+  master,   // ← nuevo
+  admin,
+  viewer;
+}
+```
+
+`UserRole.fromString` debe mapear `'master'` → `UserRole.master`.
+
+### `AppUser` — añadir `role`
+
+`AppUser` actualmente solo tiene `id` y `email`. Se añade `role: UserRole` para que
+la sesión autenticada exponga el rol del usuario en sesión. Esto evita buscar al
+usuario logueado dentro de la lista `UsersLoaded.users`.
+
+### `UsersLoaded` — corrección de `adminCount`
+
+El getter `adminCount` actualmente cuenta solo `UserRole.admin`. Debe incluir también
+`UserRole.master` o bien exponer contadores separados según necesidad de la UI.
+
+---
+
+## Modelo de presentación
 
 ### Cambios en `UserModel`
 
-Se añaden tres campos:
+Se añaden cinco campos nuevos:
 
 | Campo | Tipo | Origen |
 |-------|------|--------|
 | `email` | `String` | `PanelUser.email` |
 | `createdAt` | `String` | `PanelUser.createdAt` formateado ("12 ene 2025") |
 | `devices` | `List<UserDeviceModel>` | quemado en `toModel()` hasta que exista el backend |
+| `rawRole` | `UserRole` | `PanelUser.role` — necesario para las reglas de botones |
+| `userId` | `String` | `PanelUser.id` — para comparar con el usuario en sesión |
 
 ### `UserDeviceModel` (nuevo, en `user_model.dart`)
 
@@ -40,19 +89,31 @@ cuando se implemente el endpoint de sesiones.
 ### Función de entrada
 
 ```
-showUserDetailSheet(BuildContext context, UserModel model)
+showUserDetailSheet(
+  BuildContext context,
+  UserModel model,
+  UserRole currentUserRole,
+)
 ```
 
-Lee `MediaQuery.of(context).size.width`:
-- `< 768` → `showModalBottomSheet`
-- `>= 768` → `showDialog`
+- Obtiene `currentUserRole` desde `context.read<AuthBloc>().state` (cast a
+  `AuthAuthenticated`).
+- Lee `MediaQuery.of(context).size.width`:
+  - `< 768` → `showModalBottomSheet`
+  - `>= 768` → `showDialog`
 
 Archivo: `lib/presentation/users/widgets/user_detail_sheet.dart`
 
 ### Widget de contenido compartido
 
 ```
-UserDetailCard(UserModel model, {required bool isBottomSheet})
+UserDetailCard({
+  required UserModel model,
+  required UserRole currentUserRole,
+  required bool isBottomSheet,
+  VoidCallback? onPromoteToAdmin,
+  VoidCallback? onDemoteToViewer,
+})
 ```
 
 `isBottomSheet` controla el border radius del contenedor:
@@ -64,9 +125,10 @@ Archivo: `lib/presentation/users/widgets/user_detail_card.dart`
 ### Árbol de componentes
 
 ```
-UsersList
-└── GestureDetector(onTap: showUserDetailSheet)
-    └── UserListTile  (sin modificaciones internas)
+UsersContentView
+└── UsersList(currentUserRole: UserRole)
+    └── GestureDetector(onTap: () => showUserDetailSheet(ctx, model, currentUserRole))
+        └── UserListTile  (sin modificaciones internas)
 
 showUserDetailSheet
     ├── mobile  → showModalBottomSheet → UserDetailCard(isBottomSheet: true)
@@ -75,8 +137,37 @@ showUserDetailSheet
 UserDetailCard
     ├── _UserDetailHeader   (avatar, nombre, badge online/offline)
     ├── _UserDetailInfoRow  (email, rol, registrado, último acceso)
-    └── _UserDetailDevices  (lista quemada: label + ip)
+    ├── _UserDetailDevices  (lista quemada: label + ip)
+    └── _UserDetailActions  (botones condicionales — ver reglas abajo)
 ```
+
+### Reglas de visibilidad de botones (en `_UserDetailActions`)
+
+```
+val isOwnProfile = model.userId == currentUserId
+val targetIsViewer = model.rawRole == UserRole.viewer
+val targetIsAdmin  = model.rawRole == UserRole.admin
+
+"Hacer Admin"  visible si: !isOwnProfile && (currentUserRole == admin || master) && targetIsViewer
+"Quitar Admin" visible si: !isOwnProfile && currentUserRole == master && targetIsAdmin
+```
+
+Si ningún botón es visible, `_UserDetailActions` no se renderiza (sin sección vacía).
+
+### Evento BLoC
+
+Se añade un nuevo evento en `UsersBloc`:
+
+```dart
+final class ChangeUserRole extends UsersEvent {
+  final String userId;
+  final UserRole newRole;
+}
+```
+
+El BLoC despacha este evento; la llamada al repositorio se implementa en un sprint
+posterior. Por ahora el BLoC puede emitir un estado de "sin implementar" o simplemente
+no hacer nada (el botón cierra el dialog).
 
 ---
 
@@ -114,17 +205,23 @@ UserDetailCard
 │                 Rol · badge online       │
 ├─────────────────────────────────────────┤
 │  [icon]  email@ejemplo.com              │
-│  [icon]  Administrador / Visualizador   │  ← info rows
+│  [icon]  Master / Admin / Visualizador  │  ← info rows
 │  [icon]  Registrado: 12 ene 2025        │
 │  [icon]  Último acceso: Hace 3 min      │
 ├─────────────────────────────────────────┤
 │  DISPOSITIVOS ACTIVOS                   │
 │  ● Chrome · macOS     192.168.1.42      │  ← devices (quemado)
 │  ● Firefox · Win      10.0.0.5          │
+├─────────────────────────────────────────┤
+│  [ Hacer Admin ]   (condicional)        │  ← actions (solo si aplica)
+│  [ Quitar Admin ]  (condicional)        │
 └─────────────────────────────────────────┘
 ```
 
-Íconos: `Icons.email_outlined`, `Icons.person_outline_rounded`,
+**Estilo del botón "Hacer Admin":** `FilledButton` con color `AppColors.primary`.
+**Estilo del botón "Quitar Admin":** `OutlinedButton` con color `AppColors.warning`.
+
+Íconos de info rows: `Icons.email_outlined`, `Icons.shield_outlined`,
 `Icons.calendar_today_outlined`, `Icons.access_time_rounded`,
 `Icons.devices_rounded`.
 
@@ -137,18 +234,26 @@ texto primario `AppColors.textPrimary`, secundario `AppColors.textSecondary`.
 
 | Acción | Archivo |
 |--------|---------|
-| Modificado | `lib/presentation/users/user_model.dart` |
-| Modificado | `lib/presentation/users/widgets/users_list.dart` |
+| Modificado | `lib/feature/users/domain/entities/panel_user.dart` — `UserRole.master` |
+| Modificado | `lib/feature/auth/domain/entities/app_user.dart` — añadir `role` |
+| Modificado | `lib/feature/auth/infrastructure/supabase_auth_repository.dart` — mapear `role` |
+| Modificado | `lib/feature/auth/infrastructure/in_memory_auth_repository.dart` — mapear `role` |
+| Modificado | `lib/presentation/auth/bloc/auth_state.dart` — `AppUser` tiene `role` |
+| Modificado | `lib/presentation/users/user_model.dart` — +email, +createdAt, +devices, +rawRole, +userId |
+| Modificado | `lib/presentation/users/views/users_content_view.dart` — pasar `currentUserRole` a `UsersList` |
+| Modificado | `lib/presentation/users/widgets/users_list.dart` — recibir `currentUserRole`, añadir tap |
+| Modificado | `lib/presentation/users/bloc/users_state.dart` — corregir `adminCount` con `master` |
+| Modificado | `lib/presentation/users/bloc/users_event.dart` — añadir `ChangeUserRole` |
 | Nuevo | `lib/presentation/users/widgets/user_detail_card.dart` |
 | Nuevo | `lib/presentation/users/widgets/user_detail_sheet.dart` |
 
-`UserListTile` no se modifica — el tap lo maneja `UsersList` con un
-`GestureDetector` envolviendo cada tile.
+`UserListTile` no se modifica — el tap lo maneja `UsersList`.
 
 ---
 
 ## Fuera de alcance (este sprint)
 
-- Acciones sobre el usuario (cambiar rol, forzar logout)
-- Datos reales de dispositivos/sesiones activas desde el backend
+- Persistencia real del cambio de rol en Supabase / backend
+- Datos reales de dispositivos/sesiones activas
 - Historial de accesos dentro del dialog
+- Forzar logout desde el dialog

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/responsive/app_breakpoints.dart';
+import '../../../feature/users/domain/entities/panel_user.dart';
+import '../../auth/bloc/auth_bloc.dart';
 import '../../widgets/screen_header.dart';
 import '../bloc/users_state.dart';
 import '../user_model.dart';
@@ -16,6 +19,15 @@ class UsersContentView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final currentUserId =
+        authState is AuthAuthenticated ? authState.user.id : '';
+    final currentUserRole = state.users
+            .where((u) => u.id == currentUserId)
+            .firstOrNull
+            ?.role ??
+        UserRole.viewer;
+
     final userModels = List.generate(
       state.users.length,
       (i) => state.users[i].toModel(
@@ -50,7 +62,11 @@ class UsersContentView extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: 3,
-                      child: UsersList(users: userModels),
+                      child: UsersList(
+                        users: userModels,
+                        currentUserRole: currentUserRole,
+                        currentUserId: currentUserId,
+                      ),
                     ),
                     const SizedBox(width: 20),
                     Expanded(
@@ -70,7 +86,11 @@ class UsersContentView extends StatelessWidget {
                   children: [
                     UsersSessionStatsCard(session: session),
                     const SizedBox(height: 20),
-                    UsersList(users: userModels),
+                    UsersList(
+                      users: userModels,
+                      currentUserRole: currentUserRole,
+                      currentUserId: currentUserId,
+                    ),
                     const SizedBox(height: 20),
                     UsersAccessLogCard(logs: logModels),
                   ],

@@ -1,3 +1,4 @@
+import '../../../core/services/device_info_service.dart';
 import '../../../feature/alerts/infrastructure/in_memory_alerts_repository.dart';
 import '../../../feature/auth/infrastructure/in_memory_auth_repository.dart';
 import '../../../feature/databases/infrastructure/in_memory_databases_repository.dart';
@@ -16,4 +17,5 @@ AppDependencies buildDemoDependencies() => AppDependencies(
   alertsRepository: InMemoryAlertsRepository(),
   usersRepository: InMemoryUsersRepository(),
   databasesRepository: InMemoryDatabasesRepository(),
+  deviceInfoService: InMemoryDeviceInfoService(),
 );

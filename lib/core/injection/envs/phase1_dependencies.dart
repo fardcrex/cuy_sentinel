@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/services/device_info_service.dart';
 import '../../../feature/alerts/infrastructure/supabase_alerts_repository.dart';
 import '../../../feature/auth/infrastructure/supabase_auth_repository.dart';
 import '../../../feature/databases/infrastructure/supabase_databases_repository.dart';
@@ -20,5 +21,6 @@ AppDependencies buildPhase1Dependencies() => AppDependencies(
   alertsRepository: SupabaseAlertsRepository(),
   usersRepository: SupabaseUsersRepository(),
   databasesRepository: SupabaseDatabasesRepository(),
+  deviceInfoService: DeviceInfoService(),
   onReconnect: _reconnectSupabase,
 );

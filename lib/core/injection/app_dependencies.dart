@@ -1,3 +1,4 @@
+import '../../core/services/device_info_service.dart';
 import '../../feature/alerts/domain/interfaces/i_alerts_repository.dart';
 import '../../feature/auth/domain/interfaces/i_auth_repository.dart';
 import '../../feature/databases/domain/interfaces/i_databases_repository.dart';
@@ -13,6 +14,7 @@ class AppDependencies {
     required this.alertsRepository,
     required this.usersRepository,
     required this.databasesRepository,
+    required this.deviceInfoService,
     this.onReconnect,
   });
 
@@ -22,5 +24,6 @@ class AppDependencies {
   final IAlertsRepository alertsRepository;
   final IUsersRepository usersRepository;
   final IDatabasesRepository databasesRepository;
+  final IDeviceInfoService deviceInfoService;
   final void Function()? onReconnect;
 }

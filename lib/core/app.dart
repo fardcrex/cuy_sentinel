@@ -44,7 +44,7 @@ class _CuySentinelAppState extends State<CuySentinelApp>
       signIn: SignInUseCase(authRepo),
       signOut: SignOutUseCase(authRepo),
       watchSession: WatchSessionUseCase(authRepo),
-      logAccess: LogAccessUseCase(usersRepo),
+      logAccess: LogAccessUseCase(usersRepo, widget.dependencies.deviceInfoService),
       trackPresence: TrackPresenceUseCase(usersRepo),
       untrackPresence: UntrackPresenceUseCase(usersRepo),
       initialSession: authRepo.currentSession(),
@@ -75,7 +75,7 @@ class _CuySentinelAppState extends State<CuySentinelApp>
         ...MonitoringModule.repositoryProviders(deps.monitoringRepository),
         ...MetricsModule.repositoryProviders(deps.metricsRepository),
         ...AlertsModule.repositoryProviders(deps.alertsRepository),
-        ...UsersModule.repositoryProviders(deps.usersRepository),
+        ...UsersModule.repositoryProviders(deps.usersRepository, deps.deviceInfoService),
         ...DatabasesModule.repositoryProviders(deps.databasesRepository),
       ],
       child: MultiBlocProvider(

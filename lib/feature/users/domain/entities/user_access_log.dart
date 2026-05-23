@@ -11,8 +11,6 @@ enum UserAccessAction {
   String toJson() => name;
 }
 
-/// A single login/logout event. Stored in an access_logs table in Fase 2;
-/// in Fase 1 it can be derived from Supabase Auth audit logs.
 class UserAccessLog {
   const UserAccessLog({
     required this.id,
@@ -21,6 +19,8 @@ class UserAccessLog {
     required this.action,
     required this.timestamp,
     this.ipAddress,
+    this.deviceName,
+    this.devicePlatform,
   });
 
   final String id;
@@ -28,9 +28,9 @@ class UserAccessLog {
   final String displayName;
   final UserAccessAction action;
   final DateTime timestamp;
-
-  /// Optional: captured from request headers by the API (Fase 2).
   final String? ipAddress;
+  final String? deviceName;
+  final String? devicePlatform;
 
   factory UserAccessLog.fromJson(Map<String, dynamic> json) => UserAccessLog(
     id: json['id'] as String,
@@ -39,6 +39,8 @@ class UserAccessLog {
     action: UserAccessAction.fromString(json['action'] as String),
     timestamp: DateTime.parse(json['timestamp'] as String).toLocal(),
     ipAddress: json['ip_address'] as String?,
+    deviceName: json['device_name'] as String?,
+    devicePlatform: json['device_platform'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -48,5 +50,7 @@ class UserAccessLog {
     'action': action.toJson(),
     'timestamp': timestamp.toIso8601String(),
     'ip_address': ipAddress,
+    'device_name': deviceName,
+    'device_platform': devicePlatform,
   };
 }

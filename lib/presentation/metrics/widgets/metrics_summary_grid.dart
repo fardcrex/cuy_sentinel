@@ -15,16 +15,22 @@ class MetricsSummaryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cols = AppBreakpoints.metricsColumns(constraints.maxWidth);
+        final width = constraints.maxWidth;
+        final isMobile = width < 600;
+        final cols = isMobile ? 2 : AppBreakpoints.metricsColumns(width);
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: cols,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: constraints.maxWidth >= 900 ? 1.5 : 1.3,
+          crossAxisSpacing: isMobile ? 12 : 16,
+          mainAxisSpacing: isMobile ? 12 : 16,
+          childAspectRatio: width >= 900
+              ? 1.5
+              : isMobile
+              ? 0.9
+              : 1.3,
           children: cards
-              .map((card) => MetricSummaryCard(model: card))
+              .map((card) => MetricSummaryCard(model: card, compact: isMobile))
               .toList(),
         );
       },
@@ -33,24 +39,30 @@ class MetricsSummaryGrid extends StatelessWidget {
 }
 
 class MetricSummaryCard extends StatelessWidget {
-  const MetricSummaryCard({super.key, required this.model});
+  const MetricSummaryCard({
+    super.key,
+    required this.model,
+    this.compact = false,
+  });
 
   final MetricSummaryCardModel model;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      padding: EdgeInsets.all(compact ? 14 : 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: compact ? 32 : 36,
+                height: compact ? 32 : 36,
                 decoration: BoxDecoration(
                   color: model.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(compact ? 9 : 10),
                 ),
                 child: Icon(model.icon, color: model.color, size: 18),
               ),
@@ -61,21 +73,27 @@ class MetricSummaryCard extends StatelessWidget {
           const Spacer(),
           Text(
             model.title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(color: AppColors.textSecondary),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: compact ? 12 : null,
+              height: compact ? 1.1 : null,
+            ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: compact ? 6 : 8),
           MetricServiceValueRow(
             name: 'Passbolt',
             value: model.passboltValue,
             color: model.color,
+            compact: compact,
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: compact ? 4 : 6),
           MetricServiceValueRow(
             name: 'ChkMonitor',
             value: model.chkmonitorValue,
             color: model.color.withValues(alpha: 0.7),
+            compact: compact,
           ),
         ],
       ),
@@ -89,11 +107,13 @@ class MetricServiceValueRow extends StatelessWidget {
     required this.name,
     required this.value,
     required this.color,
+    this.compact = false,
   });
 
   final String name;
   final Widget value;
   final Color color;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -108,19 +128,27 @@ class MetricServiceValueRow extends StatelessWidget {
         Expanded(
           child: Text(
             name,
-            style: const TextStyle(
-              fontSize: 12,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: compact ? 11 : 12,
               color: AppColors.textSecondary,
             ),
           ),
         ),
-        DefaultTextStyle(
-          style: TextStyle(
-            fontSize: 13,
-            color: color,
-            fontWeight: FontWeight.w700,
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: DefaultTextStyle(
+              style: TextStyle(
+                fontSize: compact ? 12 : 13,
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
+              child: value,
+            ),
           ),
-          child: value,
         ),
       ],
     );

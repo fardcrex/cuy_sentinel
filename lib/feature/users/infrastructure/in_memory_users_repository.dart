@@ -42,7 +42,8 @@ class InMemoryUsersRepository implements IUsersRepository {
       displayName: 'Jair Conislla',
       action: UserAccessAction.login,
       timestamp: _now.subtract(const Duration(minutes: 12)),
-      ipAddress: '192.168.1.5',
+      deviceName: 'Chrome 124 · macOS Sonoma',
+      devicePlatform: 'web',
     ),
     UserAccessLog(
       id: 'log-002',
@@ -50,7 +51,8 @@ class InMemoryUsersRepository implements IUsersRepository {
       displayName: 'Daniel Rojas',
       action: UserAccessAction.logout,
       timestamp: _now.subtract(const Duration(hours: 1, minutes: 30)),
-      ipAddress: '192.168.1.8',
+      deviceName: 'Pixel 7 · Android 14',
+      devicePlatform: 'android',
     ),
     UserAccessLog(
       id: 'log-003',
@@ -58,7 +60,8 @@ class InMemoryUsersRepository implements IUsersRepository {
       displayName: 'Daniel Rojas',
       action: UserAccessAction.login,
       timestamp: _now.subtract(const Duration(hours: 3, minutes: 40)),
-      ipAddress: '192.168.1.8',
+      deviceName: 'Pixel 7 · Android 14',
+      devicePlatform: 'android',
     ),
     UserAccessLog(
       id: 'log-004',
@@ -66,7 +69,8 @@ class InMemoryUsersRepository implements IUsersRepository {
       displayName: 'Jheampierre Ralli',
       action: UserAccessAction.logout,
       timestamp: _now.subtract(const Duration(days: 1, hours: 2)),
-      ipAddress: '192.168.1.12',
+      deviceName: 'iPhone 15 · iOS 17.4',
+      devicePlatform: 'ios',
     ),
     UserAccessLog(
       id: 'log-005',
@@ -74,7 +78,8 @@ class InMemoryUsersRepository implements IUsersRepository {
       displayName: 'Jheampierre Ralli',
       action: UserAccessAction.login,
       timestamp: _now.subtract(const Duration(days: 1, hours: 3, minutes: 15)),
-      ipAddress: '192.168.1.12',
+      deviceName: 'iPhone 15 · iOS 17.4',
+      devicePlatform: 'ios',
     ),
   ];
 
@@ -133,6 +138,8 @@ class InMemoryUsersRepository implements IUsersRepository {
     required String userId,
     required String displayName,
     required UserAccessAction action,
+    String? deviceName,
+    String? devicePlatform,
   }) async {}
 
   @override

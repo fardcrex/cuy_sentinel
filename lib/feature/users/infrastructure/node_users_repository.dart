@@ -33,6 +33,8 @@ class NodeUsersRepository implements IUsersRepository {
     required String userId,
     required String displayName,
     required UserAccessAction action,
+    String? deviceName,
+    String? devicePlatform,
   }) => throw UnimplementedError('NodeUsersRepository.logAccess');
 
   @override

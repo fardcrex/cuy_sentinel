@@ -24,11 +24,12 @@ abstract interface class IUsersRepository {
     int limit = 20,
   });
 
-  /// Inserts a login or logout entry into user_access_logs.
   Future<void> logAccess({
     required String userId,
     required String displayName,
     required UserAccessAction action,
+    String? deviceName,
+    String? devicePlatform,
   });
 
   /// Updates last_login on login. Presence (isOnline) is managed by the

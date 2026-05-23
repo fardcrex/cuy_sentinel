@@ -178,12 +178,16 @@ class SupabaseUsersRepository implements IUsersRepository {
     required String userId,
     required String displayName,
     required UserAccessAction action,
+    String? deviceName,
+    String? devicePlatform,
   }) async {
     await _client.from('user_access_logs').insert({
       'user_id': userId,
       'display_name': displayName,
       'action': action.toJson(),
       'timestamp': DateTime.now().toUtc().toIso8601String(),
+      'device_name': deviceName,
+      'device_platform': devicePlatform,
     });
   }
 

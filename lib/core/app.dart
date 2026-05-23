@@ -44,8 +44,14 @@ class _CuySentinelAppState extends State<CuySentinelApp>
       signIn: SignInUseCase(authRepo),
       signOut: SignOutUseCase(authRepo),
       watchSession: WatchSessionUseCase(authRepo),
-      logAccess: LogAccessUseCase(usersRepo, widget.dependencies.deviceInfoService),
-      trackPresence: TrackPresenceUseCase(usersRepo),
+      logAccess: LogAccessUseCase(
+        usersRepo,
+        widget.dependencies.deviceInfoService,
+      ),
+      trackPresence: TrackPresenceUseCase(
+        usersRepo,
+        widget.dependencies.deviceInfoService,
+      ),
       untrackPresence: UntrackPresenceUseCase(usersRepo),
       initialSession: authRepo.currentSession(),
     )..add(const AuthStarted());
@@ -57,6 +63,15 @@ class _CuySentinelAppState extends State<CuySentinelApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       widget.dependencies.onReconnect?.call();
+      _authBloc.add(const AuthPresenceResumed());
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _authBloc.add(const AuthPresencePaused());
     }
   }
 
@@ -75,7 +90,10 @@ class _CuySentinelAppState extends State<CuySentinelApp>
         ...MonitoringModule.repositoryProviders(deps.monitoringRepository),
         ...MetricsModule.repositoryProviders(deps.metricsRepository),
         ...AlertsModule.repositoryProviders(deps.alertsRepository),
-        ...UsersModule.repositoryProviders(deps.usersRepository, deps.deviceInfoService),
+        ...UsersModule.repositoryProviders(
+          deps.usersRepository,
+          deps.deviceInfoService,
+        ),
         ...DatabasesModule.repositoryProviders(deps.databasesRepository),
       ],
       child: MultiBlocProvider(

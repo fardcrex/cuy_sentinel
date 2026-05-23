@@ -2,6 +2,7 @@ import '../../../core/services/device_info_service.dart';
 import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/panel_user.dart';
 import '../domain/entities/user_access_log.dart';
+import '../domain/entities/user_presence.dart';
 import '../domain/interfaces/i_users_repository.dart';
 
 class WatchPanelUsersUseCase {
@@ -46,15 +47,23 @@ class WatchPresenceUseCase {
 
   final IUsersRepository _repository;
 
-  Stream<Set<String>> execute() => _repository.watchPresence();
+  Stream<List<UserPresence>> execute() => _repository.watchPresence();
 }
 
 class TrackPresenceUseCase {
-  const TrackPresenceUseCase(this._repository);
+  const TrackPresenceUseCase(this._repository, this._deviceInfo);
 
   final IUsersRepository _repository;
+  final IDeviceInfoService _deviceInfo;
 
-  Future<void> execute(String userId) => _repository.trackPresence(userId);
+  Future<void> execute(String userId) async {
+    final device = await _deviceInfo.getDeviceInfo();
+    await _repository.trackPresence(
+      userId: userId,
+      deviceName: device.deviceName,
+      devicePlatform: device.devicePlatform,
+    );
+  }
 }
 
 class UntrackPresenceUseCase {

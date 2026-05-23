@@ -28,7 +28,7 @@ abstract final class UsersModule {
       create: (_) => WatchPresenceUseCase(repo),
     ),
     RepositoryProvider<TrackPresenceUseCase>(
-      create: (_) => TrackPresenceUseCase(repo),
+      create: (_) => TrackPresenceUseCase(repo, deviceInfo),
     ),
     RepositoryProvider<UntrackPresenceUseCase>(
       create: (_) => UntrackPresenceUseCase(repo),

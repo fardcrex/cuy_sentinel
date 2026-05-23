@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/panel_user.dart';
 import '../domain/entities/user_access_log.dart';
+import '../domain/entities/user_presence.dart';
 import '../domain/interfaces/i_users_repository.dart';
 
 class SupabaseUsersRepository implements IUsersRepository {
@@ -14,12 +15,13 @@ class SupabaseUsersRepository implements IUsersRepository {
   supabase.RealtimeChannel? _presenceChannel;
   Future<void>? _presenceSetup;
   String? _trackedUserId;
-  final _presenceListeners = <StreamController<Set<String>>>{};
+  String? _trackedDeviceName;
+  String? _trackedDevicePlatform;
+  final _presenceListeners = <StreamController<List<UserPresence>>>{};
 
   @override
-  Stream<List<PanelUser>> watchUsers({
-    void Function(RetryState)? onRetry,
-  }) => retryStream(
+  Stream<List<PanelUser>> watchUsers({void Function(RetryState)? onRetry}) =>
+      retryStream(
         () => _client
             .from('users')
             .stream(primaryKey: ['id'])
@@ -33,19 +35,20 @@ class SupabaseUsersRepository implements IUsersRepository {
     int limit = 50,
     void Function(RetryState)? onRetry,
   }) => retryStream(
-        () => _client
-            .from('user_access_logs')
-            .stream(primaryKey: ['id'])
-            .order('timestamp', ascending: false)
-            .map((rows) => rows.take(limit).map(UserAccessLog.fromJson).toList()),
-        onRetry: onRetry,
-      );
+    () => _client
+        .from('user_access_logs')
+        .stream(primaryKey: ['id'])
+        .order('timestamp', ascending: false)
+        .map((rows) => rows.take(limit).map(UserAccessLog.fromJson).toList()),
+    onRetry: onRetry,
+  );
 
   @override
-  Stream<Set<String>> watchPresence() => retryStream(_buildPresenceStream);
+  Stream<List<UserPresence>> watchPresence() =>
+      retryStream(_buildPresenceStream);
 
-  Stream<Set<String>> _buildPresenceStream() async* {
-    final ctrl = StreamController<Set<String>>();
+  Stream<List<UserPresence>> _buildPresenceStream() async* {
+    final ctrl = StreamController<List<UserPresence>>();
     _presenceListeners.add(ctrl);
 
     ctrl.onCancel = () async {
@@ -53,7 +56,7 @@ class SupabaseUsersRepository implements IUsersRepository {
     };
 
     await _ensurePresenceChannel();
-    yield _extractOnlineIds();
+    yield _extractPresences();
     yield* ctrl.stream;
   }
 
@@ -69,7 +72,7 @@ class SupabaseUsersRepository implements IUsersRepository {
     _presenceChannel!.subscribe((status, _) async {
       if (status == supabase.RealtimeSubscribeStatus.subscribed) {
         final uid = _trackedUserId;
-        if (uid != null) await _presenceChannel?.track({'user_id': uid});
+        if (uid != null) await _trackCurrentPresence();
         _emitPresence();
         if (!completer.isCompleted) completer.complete();
       } else if (status == supabase.RealtimeSubscribeStatus.channelError ||
@@ -91,10 +94,22 @@ class SupabaseUsersRepository implements IUsersRepository {
     if (channel != null) await _client.removeChannel(channel);
   }
 
+  Future<void> _trackCurrentPresence() async {
+    final userId = _trackedUserId;
+    final deviceName = _trackedDeviceName;
+    final devicePlatform = _trackedDevicePlatform;
+    if (userId == null || deviceName == null || devicePlatform == null) return;
+    await _presenceChannel?.track({
+      'user_id': userId,
+      'device_name': deviceName,
+      'device_platform': devicePlatform,
+    });
+  }
+
   void _emitPresence() {
-    final ids = _extractOnlineIds();
+    final presences = _extractPresences();
     for (final listener in List.of(_presenceListeners)) {
-      if (!listener.isClosed) listener.add(ids);
+      if (!listener.isClosed) listener.add(presences);
     }
   }
 
@@ -104,26 +119,47 @@ class SupabaseUsersRepository implements IUsersRepository {
     }
   }
 
-  // presenceState() → List<SinglePresenceState>
-  // each SinglePresenceState has presences: List<Presence>
-  // each Presence has payload: Map<String, dynamic>
-  Set<String> _extractOnlineIds() => (_presenceChannel?.presenceState() ?? [])
-      .expand((s) => s.presences)
-      .map((p) => p.payload['user_id'] as String? ?? '')
-      .where((id) => id.isNotEmpty)
-      .toSet();
+  List<UserPresence> _extractPresences() =>
+      (_presenceChannel?.presenceState() ?? [])
+          .expand((s) => s.presences)
+          .map((p) {
+            final payload = p.payload;
+            final userId = payload['user_id'] as String? ?? '';
+            final deviceName = payload['device_name'] as String? ?? '';
+            final devicePlatform = payload['device_platform'] as String? ?? '';
+            if (userId.isEmpty ||
+                deviceName.isEmpty ||
+                devicePlatform.isEmpty) {
+              return null;
+            }
+            return UserPresence(
+              userId: userId,
+              deviceName: deviceName,
+              devicePlatform: devicePlatform,
+            );
+          })
+          .nonNulls
+          .toList();
 
   @override
-  Future<void> trackPresence(String userId) async {
+  Future<void> trackPresence({
+    required String userId,
+    required String deviceName,
+    required String devicePlatform,
+  }) async {
     _trackedUserId = userId;
+    _trackedDeviceName = deviceName;
+    _trackedDevicePlatform = devicePlatform;
     await _ensurePresenceChannel();
-    await _presenceChannel?.track({'user_id': userId});
+    await _trackCurrentPresence();
     _emitPresence();
   }
 
   @override
   Future<void> untrackPresence() async {
     _trackedUserId = null;
+    _trackedDeviceName = null;
+    _trackedDevicePlatform = null;
     await _presenceChannel?.untrack();
     await _resetPresenceChannel();
     _emitPresence();
@@ -131,20 +167,13 @@ class SupabaseUsersRepository implements IUsersRepository {
 
   @override
   Future<List<PanelUser>> getUsers() async {
-    final rows = await _client
-        .from('users')
-        .select()
-        .order('display_name');
+    final rows = await _client.from('users').select().order('display_name');
     return rows.map(PanelUser.fromJson).toList();
   }
 
   @override
   Future<PanelUser?> getUserById(String id) async {
-    final rows = await _client
-        .from('users')
-        .select()
-        .eq('id', id)
-        .limit(1);
+    final rows = await _client.from('users').select().eq('id', id).limit(1);
     if (rows.isEmpty) return null;
     return PanelUser.fromJson(rows.first);
   }
@@ -194,8 +223,9 @@ class SupabaseUsersRepository implements IUsersRepository {
   @override
   Future<void> updateSession(String userId, {required bool loggedIn}) async {
     if (!loggedIn) return;
-    await _client.from('users').update({
-      'last_login': DateTime.now().toUtc().toIso8601String(),
-    }).eq('id', userId);
+    await _client
+        .from('users')
+        .update({'last_login': DateTime.now().toUtc().toIso8601String()})
+        .eq('id', userId);
   }
 }

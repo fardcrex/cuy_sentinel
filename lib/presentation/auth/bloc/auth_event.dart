@@ -17,3 +17,11 @@ class AuthLoginRequested extends AuthEvent {
 class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
+
+class AuthPresenceResumed extends AuthEvent {
+  const AuthPresenceResumed();
+}
+
+class AuthPresencePaused extends AuthEvent {
+  const AuthPresencePaused();
+}

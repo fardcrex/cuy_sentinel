@@ -1,6 +1,7 @@
 import '../../../../core/utils/stream_retry.dart';
 import '../entities/panel_user.dart';
 import '../entities/user_access_log.dart';
+import '../entities/user_presence.dart';
 
 abstract interface class IUsersRepository {
   /// Real-time stream — emits when a user's online status or session changes.
@@ -12,9 +13,9 @@ abstract interface class IUsersRepository {
     void Function(RetryState)? onRetry,
   });
 
-  /// Real-time stream — emits the set of user IDs currently online via
-  /// WebSocket presence. No DB writes involved.
-  Stream<Set<String>> watchPresence();
+  /// Real-time stream — emits active user-device connections via WebSocket
+  /// presence. No DB writes involved.
+  Stream<List<UserPresence>> watchPresence();
 
   Future<List<PanelUser>> getUsers();
   Future<PanelUser?> getUserById(String id);
@@ -38,7 +39,11 @@ abstract interface class IUsersRepository {
 
   /// Announces the current user as present on the shared presence channel.
   /// Must be called after login.
-  Future<void> trackPresence(String userId);
+  Future<void> trackPresence({
+    required String userId,
+    required String deviceName,
+    required String devicePlatform,
+  });
 
   /// Removes the current user from the presence channel.
   /// Must be called before logout.

@@ -20,12 +20,11 @@ class UsersContentView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
-    final currentUserId =
-        authState is AuthAuthenticated ? authState.user.id : '';
-    final currentUserRole = state.users
-            .where((u) => u.id == currentUserId)
-            .firstOrNull
-            ?.role ??
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : '';
+    final currentUserRole =
+        state.users.where((u) => u.id == currentUserId).firstOrNull?.role ??
         UserRole.viewer;
 
     final userModels = List.generate(
@@ -34,6 +33,7 @@ class UsersContentView extends StatelessWidget {
         i,
         isOnline: state.isOnline(state.users[i].id),
         allLogs: state.accessLogs,
+        presences: state.presences,
       ),
     );
     final logModels = state.accessLogs.map((l) => l.toModel()).toList();

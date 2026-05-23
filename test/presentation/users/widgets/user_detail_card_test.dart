@@ -24,7 +24,9 @@ Widget _buildCard({
     onlineStatus: UserOnlineStatus.online,
     lastSeen: 'Ahora',
     avatarColor: AppColors.primary,
-    devices: [UserDeviceModel(label: 'Chrome · macOS', platform: 'web')],
+    devices: [
+      UserDeviceModel(label: 'Chrome · macOS', isOnline: true, platform: 'web'),
+    ],
   );
 
   return MaterialApp(
@@ -44,71 +46,87 @@ Widget _buildCard({
 void main() {
   group('UserDetailCard', () {
     testWidgets('muestra el nombre del usuario', (tester) async {
-      await tester.pumpWidget(_buildCard(
-        currentUserRole: UserRole.viewer,
-        targetRole: UserRole.viewer,
-      ));
+      await tester.pumpWidget(
+        _buildCard(
+          currentUserRole: UserRole.viewer,
+          targetRole: UserRole.viewer,
+        ),
+      );
       expect(find.text('Ana García'), findsOneWidget);
     });
 
     testWidgets('muestra el email del usuario', (tester) async {
-      await tester.pumpWidget(_buildCard(
-        currentUserRole: UserRole.viewer,
-        targetRole: UserRole.viewer,
-      ));
+      await tester.pumpWidget(
+        _buildCard(
+          currentUserRole: UserRole.viewer,
+          targetRole: UserRole.viewer,
+        ),
+      );
       expect(find.text('ana@test.com'), findsOneWidget);
     });
 
     testWidgets('admin ve botón Hacer Admin sobre viewer', (tester) async {
-      await tester.pumpWidget(_buildCard(
-        currentUserRole: UserRole.admin,
-        targetRole: UserRole.viewer,
-      ));
+      await tester.pumpWidget(
+        _buildCard(
+          currentUserRole: UserRole.admin,
+          targetRole: UserRole.viewer,
+        ),
+      );
       expect(find.text('Hacer Admin'), findsOneWidget);
     });
 
     testWidgets('viewer NO ve botón Hacer Admin sobre viewer', (tester) async {
-      await tester.pumpWidget(_buildCard(
-        currentUserRole: UserRole.viewer,
-        targetRole: UserRole.viewer,
-      ));
+      await tester.pumpWidget(
+        _buildCard(
+          currentUserRole: UserRole.viewer,
+          targetRole: UserRole.viewer,
+        ),
+      );
       expect(find.text('Hacer Admin'), findsNothing);
     });
 
     testWidgets('master ve botón Quitar Admin sobre admin', (tester) async {
-      await tester.pumpWidget(_buildCard(
-        currentUserRole: UserRole.master,
-        targetRole: UserRole.admin,
-      ));
+      await tester.pumpWidget(
+        _buildCard(
+          currentUserRole: UserRole.master,
+          targetRole: UserRole.admin,
+        ),
+      );
       expect(find.text('Quitar Admin'), findsOneWidget);
     });
 
     testWidgets('admin NO ve botón Quitar Admin sobre admin', (tester) async {
-      await tester.pumpWidget(_buildCard(
-        currentUserRole: UserRole.admin,
-        targetRole: UserRole.admin,
-      ));
+      await tester.pumpWidget(
+        _buildCard(currentUserRole: UserRole.admin, targetRole: UserRole.admin),
+      );
       expect(find.text('Quitar Admin'), findsNothing);
     });
 
     testWidgets('no muestra acciones sobre perfil propio', (tester) async {
-      await tester.pumpWidget(_buildCard(
-        currentUserRole: UserRole.master,
-        targetRole: UserRole.viewer,
-        currentUserId: 'mismo-usuario',
-        targetUserId: 'mismo-usuario',
-      ));
+      await tester.pumpWidget(
+        _buildCard(
+          currentUserRole: UserRole.master,
+          targetRole: UserRole.viewer,
+          currentUserId: 'mismo-usuario',
+          targetUserId: 'mismo-usuario',
+        ),
+      );
       expect(find.text('Hacer Admin'), findsNothing);
       expect(find.text('Quitar Admin'), findsNothing);
     });
 
-    testWidgets('master ve Hacer Admin Y Quitar Admin según el rol del target', (tester) async {
-      await tester.pumpWidget(_buildCard(
-        currentUserRole: UserRole.master,
-        targetRole: UserRole.viewer,
-      ));
-      expect(find.text('Hacer Admin'), findsOneWidget);
-      expect(find.text('Quitar Admin'), findsNothing);
-    });
+    testWidgets(
+      'master ve Hacer Admin Y Quitar Admin según el rol del target',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildCard(
+            currentUserRole: UserRole.master,
+            targetRole: UserRole.viewer,
+          ),
+        );
+        expect(find.text('Hacer Admin'), findsOneWidget);
+        expect(find.text('Quitar Admin'), findsNothing);
+      },
+    );
   });
 }

@@ -25,31 +25,32 @@ class DeviceInfoService implements IDeviceInfoService {
 
   Future<({String deviceName, String devicePlatform})> _webInfo() async {
     final info = await _plugin.webBrowserInfo;
-    final browser = _capitalize(info.browserName.name);
+    final browserKey = _browserPlatformKey(info.browserName.name);
+    final browser = _browserLabel(browserKey);
     final os = _osFromUserAgent(info.userAgent ?? '');
-    return (deviceName: '$browser · $os', devicePlatform: 'web');
+    return (deviceName: '$browser · $os', devicePlatform: browserKey);
   }
 
   Future<({String deviceName, String devicePlatform})> _androidInfo() async {
     final info = await _plugin.androidInfo;
-    return (
-      deviceName: '${info.model} · Android ${info.version.release}',
-      devicePlatform: 'android',
-    );
+    return (deviceName: info.model, devicePlatform: 'android');
   }
 
   Future<({String deviceName, String devicePlatform})> _iosInfo() async {
     final info = await _plugin.iosInfo;
-    return (
-      deviceName: '${info.model} · iOS ${info.systemVersion}',
-      devicePlatform: 'ios',
-    );
+    final modelName = info.modelName.trim().isNotEmpty
+        ? info.modelName
+        : info.model;
+    return (deviceName: modelName, devicePlatform: 'ios');
   }
 
   Future<({String deviceName, String devicePlatform})> _macOsInfo() async {
     final info = await _plugin.macOsInfo;
+    final modelName = info.modelName.trim().isNotEmpty
+        ? info.modelName
+        : info.model;
     return (
-      deviceName: '${info.computerName} · macOS ${info.majorVersion}.${info.minorVersion}',
+      deviceName: '${info.computerName} · $modelName',
       devicePlatform: 'macos',
     );
   }
@@ -67,8 +68,25 @@ class DeviceInfoService implements IDeviceInfoService {
     return (deviceName: info.prettyName, devicePlatform: 'linux');
   }
 
-  String _capitalize(String s) =>
-      s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
+  String _browserPlatformKey(String browserName) => switch (browserName) {
+    'chrome' => 'chrome',
+    'firefox' => 'firefox',
+    'safari' || 'mobileSafari' => 'safari',
+    'edge' => 'edge',
+    'opera' => 'opera',
+    'samsungInternet' => 'samsung',
+    _ => 'web',
+  };
+
+  String _browserLabel(String browserKey) => switch (browserKey) {
+    'chrome' => 'Chrome',
+    'firefox' => 'Firefox',
+    'safari' => 'Safari',
+    'edge' => 'Edge',
+    'opera' => 'Opera',
+    'samsung' => 'Samsung Internet',
+    _ => 'Navegador',
+  };
 
   String _osFromUserAgent(String ua) {
     if (ua.contains('Mac OS X')) return 'macOS';
@@ -83,5 +101,5 @@ class DeviceInfoService implements IDeviceInfoService {
 class InMemoryDeviceInfoService implements IDeviceInfoService {
   @override
   Future<({String deviceName, String devicePlatform})> getDeviceInfo() async =>
-      (deviceName: 'Chrome 124 · macOS Sonoma', devicePlatform: 'web');
+      (deviceName: 'Chrome · macOS', devicePlatform: 'chrome');
 }

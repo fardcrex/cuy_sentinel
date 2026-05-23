@@ -1,14 +1,14 @@
 import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/panel_user.dart';
 import '../domain/entities/user_access_log.dart';
+import '../domain/entities/user_presence.dart';
 import '../domain/interfaces/i_users_repository.dart';
 
 // Fase 2: implementar con Node.js API + Socket.IO
 class NodeUsersRepository implements IUsersRepository {
   @override
-  Stream<List<PanelUser>> watchUsers({
-    void Function(RetryState)? onRetry,
-  }) => Stream.error(UnimplementedError('NodeUsersRepository.watchUsers'));
+  Stream<List<PanelUser>> watchUsers({void Function(RetryState)? onRetry}) =>
+      Stream.error(UnimplementedError('NodeUsersRepository.watchUsers'));
 
   @override
   Future<List<PanelUser>> getUsers() =>
@@ -48,12 +48,15 @@ class NodeUsersRepository implements IUsersRepository {
   }) => Stream.error(UnimplementedError('NodeUsersRepository.watchAccessLogs'));
 
   @override
-  Stream<Set<String>> watchPresence() =>
+  Stream<List<UserPresence>> watchPresence() =>
       Stream.error(UnimplementedError('NodeUsersRepository.watchPresence'));
 
   @override
-  Future<void> trackPresence(String userId) =>
-      throw UnimplementedError('NodeUsersRepository.trackPresence');
+  Future<void> trackPresence({
+    required String userId,
+    required String deviceName,
+    required String devicePlatform,
+  }) => throw UnimplementedError('NodeUsersRepository.trackPresence');
 
   @override
   Future<void> untrackPresence() =>

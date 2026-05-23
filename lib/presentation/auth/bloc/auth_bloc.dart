@@ -8,7 +8,8 @@ import '../../../feature/auth/application/watch_session_use_case.dart';
 import '../../../feature/auth/domain/auth_exception.dart';
 import '../../../feature/auth/domain/entities/app_user.dart';
 import '../../../feature/users/application/get_users_use_case.dart';
-import '../../../feature/users/domain/entities/user_access_log.dart' show UserAccessAction;
+import '../../../feature/users/domain/entities/user_access_log.dart'
+    show UserAccessAction;
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -22,22 +23,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required TrackPresenceUseCase trackPresence,
     required UntrackPresenceUseCase untrackPresence,
     required AppUser? initialSession,
-  })  : _signIn = signIn,
-        _signOut = signOut,
-        _watchSession = watchSession,
-        _logAccess = logAccess,
-        _trackPresence = trackPresence,
-        _untrackPresence = untrackPresence,
-        super(
-          initialSession != null
-              ? AuthAuthenticated(initialSession)
-              : const AuthUnauthenticated(),
-        ) {
+  }) : _signIn = signIn,
+       _signOut = signOut,
+       _watchSession = watchSession,
+       _logAccess = logAccess,
+       _trackPresence = trackPresence,
+       _untrackPresence = untrackPresence,
+       super(
+         initialSession != null
+             ? AuthAuthenticated(initialSession)
+             : const AuthUnauthenticated(),
+       ) {
     on<AuthStarted>(_onStarted);
     on<AuthLoginRequested>(_onLogin);
     on<AuthLogoutRequested>(_onLogout);
+    on<AuthPresenceResumed>(_onPresenceResumed);
+    on<AuthPresencePaused>(_onPresencePaused);
 
-    if (initialSession != null) unawaited(_trackPresence.execute(initialSession.id));
+    if (initialSession != null) {
+      unawaited(_trackPresence.execute(initialSession.id));
+    }
   }
 
   final SignInUseCase _signIn;
@@ -47,10 +52,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final TrackPresenceUseCase _trackPresence;
   final UntrackPresenceUseCase _untrackPresence;
 
-  Future<void> _onStarted(
-    AuthStarted event,
-    Emitter<AuthState> emit,
-  ) async {
+  Future<void> _onStarted(AuthStarted event, Emitter<AuthState> emit) async {
     await emit.forEach(
       _watchSession.execute(),
       onData: (user) {
@@ -75,12 +77,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
       );
-      unawaited(_logAccess.execute(
-        userId: user.id,
-        fallbackName: user.email,
-        action: UserAccessAction.login,
-        loggedIn: true,
-      ));
+      unawaited(
+        _logAccess.execute(
+          userId: user.id,
+          fallbackName: user.email,
+          action: UserAccessAction.login,
+          loggedIn: true,
+        ),
+      );
       unawaited(_trackPresence.execute(user.id));
       emit(AuthAuthenticated(user));
     } on AuthException catch (e) {
@@ -106,5 +110,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
     await _signOut.execute();
     emit(const AuthUnauthenticated());
+  }
+
+  Future<void> _onPresenceResumed(
+    AuthPresenceResumed event,
+    Emitter<AuthState> emit,
+  ) async {
+    final current = state;
+    if (current is AuthAuthenticated) {
+      await _trackPresence.execute(current.user.id);
+    }
+  }
+
+  Future<void> _onPresencePaused(
+    AuthPresencePaused event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state is AuthAuthenticated) {
+      await _untrackPresence.execute();
+    }
   }
 }

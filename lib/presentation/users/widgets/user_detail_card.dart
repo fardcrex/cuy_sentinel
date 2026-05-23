@@ -28,7 +28,8 @@ class UserDetailCard extends StatelessWidget {
 
   bool get _showPromote =>
       !_isOwnProfile &&
-      (currentUserRole == UserRole.admin || currentUserRole == UserRole.master) &&
+      (currentUserRole == UserRole.admin ||
+          currentUserRole == UserRole.master) &&
       model.rawRole == UserRole.viewer;
 
   bool get _showDemote =>
@@ -143,8 +144,8 @@ class _UserDetailHeader extends StatelessWidget {
                     Text(
                       model.role,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     _OnlineBadge(
@@ -208,9 +209,9 @@ class _InfoRow extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
           ),
         ),
       ],
@@ -227,48 +228,88 @@ class _UserDetailDevicesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onlineDevices = devices.where((d) => d.isOnline).toList();
+    final offlineDevices = devices.where((d) => !d.isOnline).toList();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'DISPOSITIVOS ACTIVOS',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.textInactive,
-                  letterSpacing: 0.8,
-                ),
+          _DeviceGroup(
+            title: 'DISPOSITIVOS ONLINE',
+            emptyText: 'Sin dispositivos online',
+            devices: onlineDevices,
           ),
-          const SizedBox(height: 10),
-          if (devices.isEmpty)
-            Text(
-              'Sin dispositivos activos',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textInactive,
-                  ),
-            )
-          else
-            ...devices.map(
-              (d) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    PlatformIcon(platform: d.platform, size: 14),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        d.label,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          const SizedBox(height: 14),
+          _DeviceGroup(
+            title: 'DISPOSITIVOS OFFLINE',
+            emptyText: 'Sin dispositivos offline',
+            devices: offlineDevices,
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _DeviceGroup extends StatelessWidget {
+  const _DeviceGroup({
+    required this.title,
+    required this.emptyText,
+    required this.devices,
+  });
+
+  final String title;
+  final String emptyText;
+  final List<UserDeviceModel> devices;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: AppColors.textInactive,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (devices.isEmpty)
+          Text(
+            emptyText,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textInactive),
+          )
+        else
+          ...devices.map(
+            (d) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Opacity(
+                    opacity: d.isOnline ? 1 : 0.35,
+                    child: PlatformIcon(platform: d.platform, size: 14),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      d.label,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: d.isOnline
+                            ? AppColors.textSecondary
+                            : AppColors.textInactive,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

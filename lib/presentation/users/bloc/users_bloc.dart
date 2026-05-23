@@ -6,6 +6,7 @@ import '../../../core/utils/stream_retry.dart';
 import '../../../feature/users/application/get_users_use_case.dart';
 import '../../../feature/users/domain/entities/panel_user.dart';
 import '../../../feature/users/domain/entities/user_access_log.dart';
+import '../../../feature/users/domain/entities/user_presence.dart';
 import 'users_state.dart';
 
 class UsersBloc extends Cubit<UsersState> {
@@ -13,10 +14,10 @@ class UsersBloc extends Cubit<UsersState> {
     required WatchPanelUsersUseCase watchUsers,
     required WatchAccessLogsUseCase watchAccessLogs,
     required WatchPresenceUseCase watchPresence,
-  })  : _watchUsers = watchUsers,
-        _watchAccessLogs = watchAccessLogs,
-        _watchPresence = watchPresence,
-        super(UsersInitial());
+  }) : _watchUsers = watchUsers,
+       _watchAccessLogs = watchAccessLogs,
+       _watchPresence = watchPresence,
+       super(UsersInitial());
 
   final WatchPanelUsersUseCase _watchUsers;
   final WatchAccessLogsUseCase _watchAccessLogs;
@@ -24,12 +25,12 @@ class UsersBloc extends Cubit<UsersState> {
 
   StreamSubscription<List<PanelUser>>? _usersSub;
   StreamSubscription<List<UserAccessLog>>? _logsSub;
-  StreamSubscription<Set<String>>? _presenceSub;
+  StreamSubscription<List<UserPresence>>? _presenceSub;
   Timer? _countdownTimer;
 
   List<PanelUser> _users = [];
   List<UserAccessLog> _logs = [];
-  Set<String> _onlineIds = {};
+  List<UserPresence> _presences = [];
   bool _isReconnecting = false;
   int _secondsLeft = 0;
   bool _usersReady = false;
@@ -37,30 +38,21 @@ class UsersBloc extends Cubit<UsersState> {
   void load() {
     emit(UsersLoading());
 
-    _usersSub = _watchUsers.execute(onRetry: _onRetry).listen(
-      (u) {
-        _users = u;
-        _usersReady = true;
-        _emitLoaded();
-      },
-      onError: (Object e, StackTrace s) => emit(UsersError(e.toString())),
-    );
+    _usersSub = _watchUsers.execute(onRetry: _onRetry).listen((u) {
+      _users = u;
+      _usersReady = true;
+      _emitLoaded();
+    }, onError: (Object e, StackTrace s) => emit(UsersError(e.toString())));
 
-    _logsSub = _watchAccessLogs.execute(onRetry: _onRetry).listen(
-      (l) {
-        _logs = l;
-        _emitLoaded();
-      },
-      onError: (Object e, StackTrace s) => emit(UsersError(e.toString())),
-    );
+    _logsSub = _watchAccessLogs.execute(onRetry: _onRetry).listen((l) {
+      _logs = l;
+      _emitLoaded();
+    }, onError: (Object e, StackTrace s) => emit(UsersError(e.toString())));
 
-    _presenceSub = _watchPresence.execute().listen(
-      (ids) {
-        _onlineIds = ids;
-        _emitLoaded();
-      },
-      onError: (Object e, StackTrace s) => emit(UsersError(e.toString())),
-    );
+    _presenceSub = _watchPresence.execute().listen((presences) {
+      _presences = presences;
+      _emitLoaded();
+    }, onError: (Object e, StackTrace s) => emit(UsersError(e.toString())));
   }
 
   void _onRetry(RetryState retryState) {
@@ -93,13 +85,15 @@ class UsersBloc extends Cubit<UsersState> {
 
   void _emitLoaded() {
     if (!_usersReady || isClosed) return;
-    emit(UsersLoaded(
-      users: _users,
-      accessLogs: _logs,
-      onlineIds: _onlineIds,
-      isReconnecting: _isReconnecting,
-      reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
-    ));
+    emit(
+      UsersLoaded(
+        users: _users,
+        accessLogs: _logs,
+        presences: _presences,
+        isReconnecting: _isReconnecting,
+        reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
+      ),
+    );
   }
 
   void changeRole(String userId, UserRole newRole) {

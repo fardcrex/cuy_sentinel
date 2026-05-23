@@ -36,19 +36,17 @@ class UsersList extends StatelessWidget {
         final m = users[i];
         return Padding(
           padding: EdgeInsets.only(bottom: i < users.length - 1 ? 12 : 0),
-          child: GestureDetector(
+          child: UserListTile(
+            name: m.name,
+            role: m.role,
+            onlineStatus: m.onlineStatus,
+            lastSeen: m.lastSeen,
+            avatarColor: m.avatarColor,
             onTap: () => showUserDetailSheet(
               context: context,
               model: m,
               currentUserRole: currentUserRole,
               currentUserId: currentUserId,
-            ),
-            child: UserListTile(
-              name: m.name,
-              role: m.role,
-              onlineStatus: m.onlineStatus,
-              lastSeen: m.lastSeen,
-              avatarColor: m.avatarColor,
             ),
           ),
         );

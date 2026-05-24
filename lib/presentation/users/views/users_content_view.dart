@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/responsive/app_breakpoints.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../feature/users/domain/entities/panel_user.dart';
 import '../../auth/bloc/auth_bloc.dart';
+import '../../widgets/nav_style_cubit.dart';
 import '../../widgets/screen_header.dart';
 import '../bloc/users_state.dart';
 import '../user_model.dart';
@@ -101,6 +103,70 @@ class UsersContentView extends StatelessWidget {
                     UsersAccessLogCard(logs: logModels),
                   ],
                 ),
+              const SizedBox(height: 32),
+              const _NavStyleToggle(),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _NavStyleToggle extends StatelessWidget {
+  const _NavStyleToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NavStyleCubit, NavGlassStyle>(
+      builder: (context, style) {
+        final isTeal = style == NavGlassStyle.teal;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            color: AppColors.panel,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.stroke),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.blur_on_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Estilo de navegación',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isTeal ? 'Teal glass' : 'Dark glass',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: isTeal,
+                activeThumbColor: AppColors.primary,
+                onChanged: (_) => context.read<NavStyleCubit>().toggle(),
+              ),
             ],
           ),
         );

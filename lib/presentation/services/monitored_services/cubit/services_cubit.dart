@@ -16,10 +16,10 @@ class ServicesCubit extends Cubit<ServicesState> {
     required GetServicesUseCase getServices,
     required WatchActiveEventsUseCase watchEvents,
     required WatchLastCollectorRunUseCase watchRun,
-  })  : _getServices = getServices,
-        _watchEvents = watchEvents,
-        _watchRun = watchRun,
-        super(ServicesInitial());
+  }) : _getServices = getServices,
+       _watchEvents = watchEvents,
+       _watchRun = watchRun,
+       super(ServicesInitial());
 
   final GetServicesUseCase _getServices;
   final WatchActiveEventsUseCase _watchEvents;
@@ -32,31 +32,49 @@ class ServicesCubit extends Cubit<ServicesState> {
   List<MonitoredService> _services = [];
   List<ServiceEvent> _activeEvents = [];
   CollectorRun? _lastRun;
+  bool _isActive = false;
   bool _isReconnecting = false;
   int _secondsLeft = 0;
 
-  Future<void> load() async {
-    emit(ServicesLoading());
-    try {
-      _services = await _getServices.execute();
-      _emitLoaded();
+  Future<void> load() => activate();
 
-      _eventsSub = _watchEvents.execute(
-        onRetry: _onRetry,
-      ).listen((events) {
-        _activeEvents = events;
-        _emitLoaded();
-      });
+  Future<void> activate() async {
+    _isActive = true;
+    if (_eventsSub != null || _runSub != null) return;
 
-      _runSub = _watchRun.execute(
-        onRetry: _onRetry,
-      ).listen((run) {
-        _lastRun = run;
+    if (_services.isEmpty) {
+      emit(ServicesLoading());
+      try {
+        _services = await _getServices.execute();
         _emitLoaded();
-      });
-    } catch (e) {
-      emit(ServicesError(e.toString()));
+      } catch (e) {
+        emit(ServicesError(e.toString()));
+        return;
+      }
+      if (!_isActive || isClosed) return;
     }
+
+    _eventsSub = _watchEvents.execute(onRetry: _onRetry).listen((events) {
+      if (!_isActive) return;
+      _activeEvents = events;
+      _emitLoaded();
+    });
+
+    _runSub = _watchRun.execute(onRetry: _onRetry).listen((run) {
+      if (!_isActive) return;
+      _lastRun = run;
+      _emitLoaded();
+    });
+    _emitLoaded();
+  }
+
+  Future<void> deactivate() async {
+    _isActive = false;
+    await _eventsSub?.cancel();
+    await _runSub?.cancel();
+    _eventsSub = null;
+    _runSub = null;
+    _stopCountdown();
   }
 
   void _onRetry(RetryState retryState) {
@@ -89,19 +107,20 @@ class ServicesCubit extends Cubit<ServicesState> {
 
   void _emitLoaded() {
     if (_services.isEmpty && state is! ServicesLoaded) return;
-    emit(ServicesLoaded(
-      services: _services,
-      activeEvents: _activeEvents,
-      lastRun: _lastRun,
-      isReconnecting: _isReconnecting,
-      reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
-    ));
+    emit(
+      ServicesLoaded(
+        services: _services,
+        activeEvents: _activeEvents,
+        lastRun: _lastRun,
+        isReconnecting: _isReconnecting,
+        reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
+      ),
+    );
   }
 
   @override
-  Future<void> close() {
-    _eventsSub?.cancel();
-    _runSub?.cancel();
+  Future<void> close() async {
+    await deactivate();
     _countdownTimer?.cancel();
     return super.close();
   }

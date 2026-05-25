@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/widgets/reconnecting_banner.dart';
-import '../../feature/users/application/get_users_use_case.dart';
 import 'bloc/users_bloc.dart';
 import 'bloc/users_state.dart';
 import 'views/users_content_view.dart';
@@ -15,16 +14,7 @@ class UsersProviderPage extends StatelessWidget {
   const UsersProviderPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider<UsersBloc>(
-      create: (ctx) => UsersBloc(
-        watchUsers: ctx.read<WatchPanelUsersUseCase>(),
-        watchAccessLogs: ctx.read<WatchAccessLogsUseCase>(),
-        watchPresence: ctx.read<WatchPresenceUseCase>(),
-      )..load(),
-      child: const UsersPage(),
-    );
-  }
+  Widget build(BuildContext context) => const UsersPage();
 }
 
 class UsersPage extends StatelessWidget {

@@ -3,10 +3,56 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 const _glyphs = [
-  '0', '1', '0', '1', '0', '1',
-  '/', r'\', '|', '+', '*', '#',
-  '!', '?', '~', ':', '=', '^',
-  'A', 'F', 'E', '3', '7', 'B',
+  '0',
+  '1',
+  '0',
+  '1',
+  '0',
+  '1',
+  '/',
+  r'\',
+  '|',
+  r'$',
+  '&',
+  '#',
+  '!',
+  '?',
+  '~',
+  ':',
+  '=',
+  '^',
+  'A',
+  'F',
+  'E',
+  '3',
+  '7',
+  'B',
+  'ア',
+  'ァ',
+  'イ',
+  'ィ',
+  'ウ',
+  'ヴ',
+  'エ',
+  'カ',
+  'キ',
+  'ク',
+  'ケ',
+  'コ',
+  'サ',
+  'シ',
+  'ス',
+  'セ',
+  'ソ',
+  'タ',
+  'チ',
+  'ツ',
+  'テ',
+  'ナ',
+  'ニ',
+  'ヌ',
+  'ネ',
+  'ノ',
 ];
 
 class LoginMatrixBackgroundPainter extends CustomPainter {
@@ -55,7 +101,7 @@ class LoginMatrixBackgroundPainter extends CustomPainter {
       final travel = (progress * speed + phase) % 1.0;
 
       final baseX = (index + 0.5) * size.width / columnCount;
-      final drift = math.sin((progress * math.pi * 2) + index * 0.7) * 8;
+      final drift = math.sin((progress * math.pi * 3.5) + index * 0.7) * 8;
       final x = baseX + drift;
       final streamLength = 10 + (_noise(seed * 53) * 9).floor();
       final headY = travel * (size.height + 240) - 240;
@@ -64,10 +110,7 @@ class LoginMatrixBackgroundPainter extends CustomPainter {
         final y = headY - (segment * segSpacing);
         if (y < -20 || y > size.height + 20) continue;
 
-        final tailFade = math.pow(
-          1.0 - segment / streamLength,
-          1.6,
-        ).toDouble();
+        final tailFade = math.pow(1.0 - segment / streamLength, 1.6).toDouble();
         final segFlipSpeed = 4.0 + _noise((seed * 83) + segment * 19) * 20.0;
         final segTick = (progress * segFlipSpeed).floor();
         final charIdx =
@@ -89,9 +132,11 @@ class LoginMatrixBackgroundPainter extends CustomPainter {
             const Color(0xFFFFE0E0),
             math.pow(headFraction, 2.2).toDouble(),
           )!;
-          opacity = (math.pow(headFraction, 1.4) * 0.92 + 0.06)
-              .toDouble()
-              .clamp(0.06, 0.92) *
+          opacity =
+              (math.pow(headFraction, 1.4) * 0.92 + 0.06).toDouble().clamp(
+                0.06,
+                0.92,
+              ) *
               depthOpacity;
         } else {
           glyphColor = Color.lerp(
@@ -99,7 +144,8 @@ class LoginMatrixBackgroundPainter extends CustomPainter {
             accentToneColor,
             blendFactor.clamp(0.0, 1.0),
           )!;
-          opacity = (tailFade * 0.62 + _noise(seed * 43) * 0.08).clamp(0.04, 0.65) *
+          opacity =
+              (tailFade * 0.62 + _noise(seed * 43) * 0.08).clamp(0.04, 0.65) *
               depthOpacity;
         }
 
@@ -118,10 +164,7 @@ class LoginMatrixBackgroundPainter extends CustomPainter {
         textPainter.layout();
         textPainter.paint(
           canvas,
-          Offset(
-            x - (textPainter.width / 2),
-            y - (textPainter.height / 2),
-          ),
+          Offset(x - (textPainter.width / 2), y - (textPainter.height / 2)),
         );
       }
     }

@@ -14,14 +14,17 @@ class UsersBloc extends Cubit<UsersState> {
     required WatchPanelUsersUseCase watchUsers,
     required WatchAccessLogsUseCase watchAccessLogs,
     required WatchPresenceUseCase watchPresence,
+    required ChangeUserRoleUseCase changeUserRole,
   }) : _watchUsers = watchUsers,
        _watchAccessLogs = watchAccessLogs,
        _watchPresence = watchPresence,
+       _changeUserRole = changeUserRole,
        super(UsersInitial());
 
   final WatchPanelUsersUseCase _watchUsers;
   final WatchAccessLogsUseCase _watchAccessLogs;
   final WatchPresenceUseCase _watchPresence;
+  final ChangeUserRoleUseCase _changeUserRole;
 
   StreamSubscription<List<PanelUser>>? _usersSub;
   StreamSubscription<List<UserAccessLog>>? _logsSub;
@@ -31,28 +34,52 @@ class UsersBloc extends Cubit<UsersState> {
   List<PanelUser> _users = [];
   List<UserAccessLog> _logs = [];
   List<UserPresence> _presences = [];
+  bool _isActive = false;
   bool _isReconnecting = false;
   int _secondsLeft = 0;
   bool _usersReady = false;
 
-  void load() {
-    emit(UsersLoading());
+  Future<void> load() => activate();
+
+  Future<void> activate() async {
+    _isActive = true;
+    if (_usersSub != null || _logsSub != null || _presenceSub != null) {
+      return;
+    }
+
+    if (!_usersReady) {
+      emit(UsersLoading());
+    }
 
     _usersSub = _watchUsers.execute(onRetry: _onRetry).listen((u) {
+      if (!_isActive) return;
       _users = u;
       _usersReady = true;
       _emitLoaded();
     }, onError: (Object e, StackTrace s) => emit(UsersError(e.toString())));
 
     _logsSub = _watchAccessLogs.execute(onRetry: _onRetry).listen((l) {
+      if (!_isActive) return;
       _logs = l;
       _emitLoaded();
     }, onError: (Object e, StackTrace s) => emit(UsersError(e.toString())));
 
     _presenceSub = _watchPresence.execute().listen((presences) {
+      if (!_isActive) return;
       _presences = presences;
       _emitLoaded();
     }, onError: (Object e, StackTrace s) => emit(UsersError(e.toString())));
+  }
+
+  Future<void> deactivate() async {
+    _isActive = false;
+    await _usersSub?.cancel();
+    await _logsSub?.cancel();
+    await _presenceSub?.cancel();
+    _usersSub = null;
+    _logsSub = null;
+    _presenceSub = null;
+    _stopCountdown();
   }
 
   void _onRetry(RetryState retryState) {
@@ -96,7 +123,12 @@ class UsersBloc extends Cubit<UsersState> {
     );
   }
 
-  void changeRole(String userId, UserRole newRole) {
+  Future<void> changeRole(String userId, UserRole newRole) async {
+    await _changeUserRole.execute(userId: userId, role: newRole);
+    _replaceUserRole(userId, newRole);
+  }
+
+  void _replaceUserRole(String userId, UserRole newRole) {
     _users = _users
         .map((u) => u.id == userId ? u.copyWith(role: newRole) : u)
         .toList();
@@ -105,9 +137,7 @@ class UsersBloc extends Cubit<UsersState> {
 
   @override
   Future<void> close() async {
-    await _usersSub?.cancel();
-    await _logsSub?.cancel();
-    await _presenceSub?.cancel();
+    await deactivate();
     _countdownTimer?.cancel();
     return super.close();
   }

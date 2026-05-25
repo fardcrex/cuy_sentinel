@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/responsive/app_breakpoints.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../feature/users/domain/entities/panel_user.dart';
 import '../bloc/users_bloc.dart';
 import '../bloc/users_state.dart';
@@ -18,12 +19,51 @@ void showUserDetailSheet({
   // puedan acceder a él aunque el context original ya no esté en el árbol.
   final bloc = context.read<UsersBloc>();
 
-  void promoteToAdmin() => bloc.changeRole(model.userId, UserRole.admin);
-  void demoteToViewer() => bloc.changeRole(model.userId, UserRole.viewer);
+  if (model.rawRole == UserRole.master && currentUserRole != UserRole.master) {
+    return;
+  }
+
+  Future<void> promoteToAdmin() async {
+    try {
+      await bloc.changeRole(model.userId, UserRole.admin);
+      if (context.mounted) {
+        AppToast.success(context, 'Usuario promovido a admin.');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppToast.error(
+          context,
+          'No se pudo promover el usuario.',
+          detail: _cleanError(e),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> demoteToViewer() async {
+    try {
+      await bloc.changeRole(model.userId, UserRole.viewer);
+      if (context.mounted) {
+        AppToast.success(context, 'Usuario despromovido a visualizador.');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppToast.error(
+          context,
+          'No se pudo despromover el usuario.',
+          detail: _cleanError(e),
+        );
+      }
+      rethrow;
+    }
+  }
 
   final isMobile = AppBreakpoints.isMobile(MediaQuery.of(context).size.width);
 
   if (isMobile) {
+    final bottomOffset = MediaQuery.of(context).padding.bottom;
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -32,14 +72,17 @@ void showUserDetailSheet({
       barrierColor: Colors.black54,
       builder: (_) => BlocProvider.value(
         value: bloc,
-        child: _ReactiveUserDetailCard(
-          initialModel: model,
-          targetUserId: model.userId,
-          currentUserRole: currentUserRole,
-          currentUserId: currentUserId,
-          isBottomSheet: true,
-          onPromoteToAdmin: promoteToAdmin,
-          onDemoteToViewer: demoteToViewer,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomOffset),
+          child: _ReactiveUserDetailCard(
+            initialModel: model,
+            targetUserId: model.userId,
+            currentUserRole: currentUserRole,
+            currentUserId: currentUserId,
+            isBottomSheet: true,
+            onPromoteToAdmin: promoteToAdmin,
+            onDemoteToViewer: demoteToViewer,
+          ),
         ),
       ),
     );
@@ -86,8 +129,8 @@ class _ReactiveUserDetailCard extends StatelessWidget {
   final UserRole currentUserRole;
   final String currentUserId;
   final bool isBottomSheet;
-  final VoidCallback? onPromoteToAdmin;
-  final VoidCallback? onDemoteToViewer;
+  final Future<void> Function()? onPromoteToAdmin;
+  final Future<void> Function()? onDemoteToViewer;
 
   @override
   Widget build(BuildContext context) {
@@ -128,4 +171,11 @@ class _ReactiveUserDetailCard extends StatelessWidget {
       role: currentUser?.role ?? currentUserRole,
     );
   }
+}
+
+String _cleanError(Object error) {
+  final message = error.toString();
+  return message.startsWith('Exception: ')
+      ? message.replaceFirst('Exception: ', '')
+      : message;
 }

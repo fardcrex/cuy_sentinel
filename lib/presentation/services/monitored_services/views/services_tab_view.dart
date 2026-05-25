@@ -59,6 +59,7 @@ class ServicesTabView extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final padding = AppBreakpoints.horizontalPadding(width);
+        final bottomPadding = MediaQuery.of(context).padding.bottom;
         final isWide = width >= 900;
 
         return SingleChildScrollView(
@@ -69,7 +70,12 @@ class ServicesTabView extends StatelessWidget {
               if (loaded.isReconnecting)
                 ReconnectingBanner(secondsLeft: loaded.reconnectingInSeconds),
               Padding(
-                padding: EdgeInsets.all(padding),
+                padding: EdgeInsets.fromLTRB(
+                  padding,
+                  padding,
+                  padding,
+                  padding + bottomPadding,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -120,13 +126,19 @@ class ServicesTabLoadingSkeleton extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final padding = AppBreakpoints.horizontalPadding(width);
+        final bottomPadding = MediaQuery.of(context).padding.bottom;
         final isWide = width >= 900;
 
         return LoadingSkeletonPulse(
           child: SingleChildScrollView(
             physics: physics,
             child: Padding(
-              padding: EdgeInsets.all(padding),
+              padding: EdgeInsets.fromLTRB(
+                padding,
+                padding,
+                padding,
+                padding + bottomPadding,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

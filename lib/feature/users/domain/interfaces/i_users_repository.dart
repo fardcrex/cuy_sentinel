@@ -37,6 +37,10 @@ abstract interface class IUsersRepository {
   /// WebSocket channel, not by session_expires_at.
   Future<void> updateSession(String userId, {required bool loggedIn});
 
+  /// Updates the panel role for a user. Authorization is enforced by the
+  /// backing store/API through RLS or server-side checks.
+  Future<void> updateUserRole(String userId, UserRole role);
+
   /// Announces the current user as present on the shared presence channel.
   /// Must be called after login.
   Future<void> trackPresence({

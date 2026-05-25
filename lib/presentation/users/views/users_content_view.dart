@@ -31,26 +31,47 @@ class UsersContentView extends StatelessWidget {
     final currentUserRole =
         state.users.where((u) => u.id == currentUserId).firstOrNull?.role ??
         UserRole.viewer;
+    final visibleUsers = currentUserRole == UserRole.master
+        ? state.users
+        : state.users.where((u) => u.role != UserRole.master).toList();
+    final visibleUserIds = visibleUsers.map((u) => u.id).toSet();
+    final visibleState = UsersLoaded(
+      users: visibleUsers,
+      accessLogs: state.accessLogs
+          .where((log) => visibleUserIds.contains(log.userId))
+          .toList(),
+      presences: state.presences
+          .where((presence) => visibleUserIds.contains(presence.userId))
+          .toList(),
+      isReconnecting: state.isReconnecting,
+      reconnectingInSeconds: state.reconnectingInSeconds,
+    );
 
     final userModels = List.generate(
-      state.users.length,
-      (i) => state.users[i].toModel(
+      visibleState.users.length,
+      (i) => visibleState.users[i].toModel(
         i,
-        allLogs: state.accessLogs,
-        presences: state.presences,
+        allLogs: visibleState.accessLogs,
+        presences: visibleState.presences,
       ),
     );
-    final logModels = state.accessLogs.map((l) => l.toModel()).toList();
-    final session = state.toSessionModel();
+    final logModels = visibleState.accessLogs.map((l) => l.toModel()).toList();
+    final session = visibleState.toSessionModel();
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final padding = AppBreakpoints.horizontalPadding(width);
+        final bottomPadding = MediaQuery.of(context).padding.bottom;
         final isWide = AppBreakpoints.isDesktop(width);
 
         return SingleChildScrollView(
-          padding: EdgeInsets.all(padding),
+          padding: EdgeInsets.fromLTRB(
+            padding,
+            padding,
+            padding,
+            padding + bottomPadding,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

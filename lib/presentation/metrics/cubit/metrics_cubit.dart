@@ -18,8 +18,13 @@ class MetricsCubit extends Cubit<MetricsState> {
   MetricsRange _range = MetricsRange.h1;
   String? _passboltId;
   String? _chkmonitorId;
+  bool _initialized = false;
 
-  Future<void> init() async {
+  Future<void> init() => activate();
+
+  Future<void> activate() async {
+    if (_initialized && state is MetricsLoaded) return;
+
     final services = await _getServices.execute();
     _passboltId = services
         .firstWhere((s) => s.slug == 'passbolt', orElse: () => services.first)
@@ -27,8 +32,11 @@ class MetricsCubit extends Cubit<MetricsState> {
     _chkmonitorId = services
         .firstWhere((s) => s.slug == 'chkmonitor', orElse: () => services.last)
         .id;
+    _initialized = true;
     _load(_range);
   }
+
+  Future<void> deactivate() async {}
 
   void changeRange(MetricsRange range) {
     if (_range == range) return;
@@ -49,8 +57,16 @@ class MetricsCubit extends Cubit<MetricsState> {
       final from = to.subtract(range.duration);
 
       final results = await Future.wait([
-        _getHistory.execute(serviceId: _passboltId ?? 'svc-passbolt', from: from, to: to),
-        _getHistory.execute(serviceId: _chkmonitorId ?? 'svc-chkmonitor', from: from, to: to),
+        _getHistory.execute(
+          serviceId: _passboltId ?? 'svc-passbolt',
+          from: from,
+          to: to,
+        ),
+        _getHistory.execute(
+          serviceId: _chkmonitorId ?? 'svc-chkmonitor',
+          from: from,
+          to: to,
+        ),
       ]);
 
       final passbolt = [...results[0]]
@@ -58,13 +74,15 @@ class MetricsCubit extends Cubit<MetricsState> {
       final chkmonitor = [...results[1]]
         ..sort((a, b) => a.collectedAt.compareTo(b.collectedAt));
 
-      emit(MetricsLoaded(
-        passboltMetrics: passbolt,
-        chkmonitorMetrics: chkmonitor,
-        range: range,
-        queryFrom: from,
-        queryTo: to,
-      ));
+      emit(
+        MetricsLoaded(
+          passboltMetrics: passbolt,
+          chkmonitorMetrics: chkmonitor,
+          range: range,
+          queryFrom: from,
+          queryTo: to,
+        ),
+      );
     } catch (e) {
       emit(MetricsError(message: e.toString()));
     }

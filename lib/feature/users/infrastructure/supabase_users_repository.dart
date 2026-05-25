@@ -236,4 +236,19 @@ class SupabaseUsersRepository implements IUsersRepository {
         .update({'last_login': DateTime.now().toUtc().toIso8601String()})
         .eq('id', userId);
   }
+
+  @override
+  Future<void> updateUserRole(String userId, UserRole role) async {
+    final rows = await _client
+        .from('users')
+        .update({'role': role.toJson()})
+        .eq('id', userId)
+        .select('id');
+
+    if (rows.isEmpty) {
+      throw Exception(
+        'No tienes permisos para modificar el rol de este usuario.',
+      );
+    }
+  }
 }

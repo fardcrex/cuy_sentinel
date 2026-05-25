@@ -45,6 +45,9 @@ class Metric {
     return ramUsageMb! / ramTotalMb! * 100;
   }
 
+  factory Metric.fromDynamic(dynamic data) =>
+      Metric.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory Metric.fromJson(Map<String, dynamic> json) => Metric(
     id: json['id'] as String,
     serviceId: json['service_id'] as String,

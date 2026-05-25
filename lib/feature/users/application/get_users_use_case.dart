@@ -22,6 +22,14 @@ class GetPanelUsersUseCase {
   Future<List<PanelUser>> execute() => _repository.getUsers();
 }
 
+class GetPanelUserByIdUseCase {
+  const GetPanelUserByIdUseCase(this._repository);
+
+  final IUsersRepository _repository;
+
+  Future<PanelUser?> execute(String id) => _repository.getUserById(id);
+}
+
 class GetAccessLogsUseCase {
   const GetAccessLogsUseCase(this._repository);
 
@@ -76,6 +84,15 @@ class UntrackPresenceUseCase {
   final IUsersRepository _repository;
 
   Future<void> execute() => _repository.untrackPresence();
+}
+
+class ChangeUserRoleUseCase {
+  const ChangeUserRoleUseCase(this._repository);
+
+  final IUsersRepository _repository;
+
+  Future<void> execute({required String userId, required UserRole role}) =>
+      _repository.updateUserRole(userId, role);
 }
 
 class LogAccessUseCase {

@@ -26,6 +26,9 @@ class AlertThreshold {
   final AlertSeverity severity;
   final bool enabled;
 
+  factory AlertThreshold.fromDynamic(dynamic data) =>
+      AlertThreshold.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory AlertThreshold.fromJson(Map<String, dynamic> json) => AlertThreshold(
     id: json['id'] as String,
     serviceId: json['service_id'] as String?,

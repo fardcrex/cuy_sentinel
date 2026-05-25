@@ -17,14 +17,14 @@ class SupabaseAlertsRepository implements IAlertsRepository {
   Stream<List<AlertEvent>> watchActiveAlerts({
     void Function(RetryState)? onRetry,
   }) => retryStream(
-        () => _client
-            .from('alert_events')
-            .stream(primaryKey: ['id'])
-            .eq('resolved', false)
-            .order('triggered_at', ascending: false)
-            .map((rows) => rows.map(AlertEvent.fromJson).toList()),
-        onRetry: onRetry,
-      );
+    () => _client
+        .from('alert_events')
+        .stream(primaryKey: ['id'])
+        .eq('resolved', false)
+        .order('triggered_at', ascending: false)
+        .map((rows) => rows.map(AlertEvent.fromJson).toList()),
+    onRetry: onRetry,
+  );
 
   @override
   Stream<AlertEvent> watchAlertInserts({void Function()? onSubscribed}) =>
@@ -96,12 +96,17 @@ class SupabaseAlertsRepository implements IAlertsRepository {
 
   @override
   Future<void> resolveAlert(String alertId) async {
-    await _client
+    final rows = await _client
         .from('alert_events')
         .update({
           'resolved': true,
           'resolved_at': DateTime.now().toUtc().toIso8601String(),
         })
-        .eq('id', alertId);
+        .eq('id', alertId)
+        .select('id');
+
+    if (rows.isEmpty) {
+      throw Exception('No tienes permisos para cerrar esta alerta.');
+    }
   }
 }

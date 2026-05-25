@@ -1,23 +1,31 @@
+import 'dart:async';
+
+import 'package:cuy_sentinel/feature/databases/application/get_database_health_use_case.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/assets/app_assets.dart';
 import '../../core/navigation/app_router.dart';
 import '../../core/responsive/app_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
-import '../../feature/databases/application/get_database_health_use_case.dart';
+import '../../feature/alerts/application/get_alerts_use_case.dart';
+import '../../feature/metrics/application/get_latest_metrics_use_case.dart';
 import '../../feature/metrics/application/get_metrics_history_use_case.dart';
 import '../../feature/monitoring/application/get_collector_runs_use_case.dart';
 import '../../feature/monitoring/application/get_service_events_use_case.dart';
 import '../../feature/monitoring/application/get_services_use_case.dart';
+import '../../feature/users/application/get_users_use_case.dart';
+import '../alerts/cubit/alerts_cubit.dart';
 import '../auth/bloc/auth_bloc.dart';
+import '../dashboard/cubit/dashboard_cubit.dart';
 import '../metrics/cubit/metrics_cubit.dart';
 import '../services/databases/cubit/databases_cubit.dart';
 import '../services/monitored_services/cubit/services_cubit.dart';
+import '../users/bloc/users_bloc.dart';
 import 'app_card.dart';
 import 'glass_nav_bar.dart';
 import 'glass_nav_rail.dart';
@@ -40,25 +48,129 @@ class PanelShell extends StatelessWidget {
             getServices: ctx.read<GetServicesUseCase>(),
             watchEvents: ctx.read<WatchActiveEventsUseCase>(),
             watchRun: ctx.read<WatchLastCollectorRunUseCase>(),
-          )..load(),
+          ),
         ),
         BlocProvider(
           create: (ctx) => MetricsCubit(
             getHistory: ctx.read<GetMetricsHistoryUseCase>(),
             getServices: ctx.read<GetServicesUseCase>(),
-          )..init(),
+          ),
         ),
         BlocProvider(
           create: (ctx) => DatabasesCubit(
             watchHealth: ctx.read<WatchDatabaseHealthUseCase>(),
             getTableStats: ctx.read<GetTableStatsUseCase>(),
-          )..load(),
+          ),
+        ),
+        BlocProvider(
+          create: (ctx) => DashboardCubit(
+            watchMetrics: ctx.read<WatchLatestMetricsUseCase>(),
+            watchAlerts: ctx.read<WatchActiveAlertsUseCase>(),
+            getCollectorRuns: ctx.read<GetCollectorRunsUseCase>(),
+            watchLastCollectorRun: ctx.read<WatchLastCollectorRunUseCase>(),
+            getServices: ctx.read<GetServicesUseCase>(),
+            getServiceEvents: ctx.read<GetServiceEventsUseCase>(),
+          ),
+        ),
+        BlocProvider(
+          create: (ctx) => AlertsCubit(
+            watchAlerts: ctx.read<WatchActiveAlertsUseCase>(),
+            getIncidents: ctx.read<GetRecentServiceEventsUseCase>(),
+            getThresholds: ctx.read<GetAlertThresholdsUseCase>(),
+            resolveAlert: ctx.read<ResolveAlertUseCase>(),
+          ),
+        ),
+        BlocProvider(
+          create: (ctx) => UsersBloc(
+            watchUsers: ctx.read<WatchPanelUsersUseCase>(),
+            watchAccessLogs: ctx.read<WatchAccessLogsUseCase>(),
+            watchPresence: ctx.read<WatchPresenceUseCase>(),
+            changeUserRole: ctx.read<ChangeUserRoleUseCase>(),
+          ),
         ),
         BlocProvider(create: (_) => NavStyleCubit()),
       ],
-      child: ResponsiveShell(currentPath: currentPath, child: child),
+      child: _ShellRouteLifecycle(
+        currentPath: currentPath,
+        child: ResponsiveShell(currentPath: currentPath, child: child),
+      ),
     );
   }
+}
+
+class _ShellRouteLifecycle extends StatefulWidget {
+  const _ShellRouteLifecycle({required this.currentPath, required this.child});
+
+  final String currentPath;
+  final Widget child;
+
+  @override
+  State<_ShellRouteLifecycle> createState() => _ShellRouteLifecycleState();
+}
+
+class _ShellRouteLifecycleState extends State<_ShellRouteLifecycle> {
+  String? _activePath;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncRouteActivity();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ShellRouteLifecycle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentPath != widget.currentPath) {
+      _syncRouteActivity();
+    }
+  }
+
+  void _syncRouteActivity() {
+    if (_activePath == widget.currentPath) return;
+    _activePath = widget.currentPath;
+
+    final dashboard = context.read<DashboardCubit>();
+    final services = context.read<ServicesCubit>();
+    final metrics = context.read<MetricsCubit>();
+    final databases = context.read<DatabasesCubit>();
+    final alerts = context.read<AlertsCubit>();
+    final users = context.read<UsersBloc>();
+
+    if (widget.currentPath == AppRoutes.dashboard) {
+      unawaited(dashboard.activate());
+    } else {
+      unawaited(dashboard.deactivate());
+    }
+
+    if (widget.currentPath == AppRoutes.services) {
+      unawaited(services.activate());
+      unawaited(databases.activate());
+    } else {
+      unawaited(services.deactivate());
+      unawaited(databases.deactivate());
+    }
+
+    if (widget.currentPath == AppRoutes.metrics) {
+      unawaited(metrics.activate());
+    } else {
+      unawaited(metrics.deactivate());
+    }
+
+    if (widget.currentPath == AppRoutes.alerts) {
+      unawaited(alerts.activate());
+    } else {
+      unawaited(alerts.deactivate());
+    }
+
+    if (widget.currentPath == AppRoutes.users) {
+      unawaited(users.activate());
+    } else {
+      unawaited(users.deactivate());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 Future<void> _confirmLogout(BuildContext context) async {
@@ -237,10 +349,17 @@ class _MobileShell extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          Padding(
-            padding: EdgeInsets.only(bottom: totalBottomOffset),
-            child: child,
+          Positioned.fill(
+            child: MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                padding: MediaQuery.of(
+                  context,
+                ).padding.copyWith(bottom: totalBottomOffset),
+              ),
+              child: child,
+            ),
           ),
+
           Positioned(
             left: _navHorizontal,
             right: _navHorizontal,

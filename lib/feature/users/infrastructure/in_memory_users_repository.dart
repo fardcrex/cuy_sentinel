@@ -7,7 +7,7 @@ import '../domain/interfaces/i_users_repository.dart';
 class InMemoryUsersRepository implements IUsersRepository {
   static final _now = DateTime.now();
 
-  static final _users = [
+  static var _users = [
     PanelUser(
       id: 'usr-jair',
       email: 'jair@cuy-sentinel.local',
@@ -253,4 +253,11 @@ class InMemoryUsersRepository implements IUsersRepository {
 
   @override
   Future<void> updateSession(String userId, {required bool loggedIn}) async {}
+
+  @override
+  Future<void> updateUserRole(String userId, UserRole role) async {
+    _users = _users
+        .map((user) => user.id == userId ? user.copyWith(role: role) : user)
+        .toList();
+  }
 }

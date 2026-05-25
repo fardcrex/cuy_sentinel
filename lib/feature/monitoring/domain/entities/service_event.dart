@@ -45,6 +45,9 @@ class ServiceEvent {
 
   bool get isActive => endedAt == null && !resolved;
 
+  factory ServiceEvent.fromDynamic(dynamic data) =>
+      ServiceEvent.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory ServiceEvent.fromJson(Map<String, dynamic> json) => ServiceEvent(
     id: json['id'] as String,
     serviceId: json['service_id'] as String,

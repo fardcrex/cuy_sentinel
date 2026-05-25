@@ -27,7 +27,7 @@ class GlassNavBar extends StatelessWidget {
   final NavGlassStyle style;
 
   Color get _bgColor => style == NavGlassStyle.dark
-      ? const Color(0xCC08111A) // darkPanel 80%
+      ? const Color.fromARGB(0, 8, 17, 26) // darkPanel 80%
       : AppColors.primary.withValues(alpha: 0.10);
 
   Color get _borderColor => style == NavGlassStyle.dark
@@ -118,8 +118,7 @@ class _GlassNavItem extends StatelessWidget {
               style: TextStyle(
                 color: color,
                 fontSize: 10,
-                fontWeight:
-                    isSelected ? FontWeight.w700 : FontWeight.w400,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                 letterSpacing: isSelected ? 0.1 : 0,
               ),
               child: Text(label),

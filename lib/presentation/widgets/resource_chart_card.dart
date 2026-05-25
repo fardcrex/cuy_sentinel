@@ -47,40 +47,80 @@ class _ResourceChartCardState extends State<ResourceChartCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Uso de recursos',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              for (var i = 0; i < _services.length; i++) ...[
-                if (i > 0) const SizedBox(width: 8),
-                _Chip(
-                  label: _services[i],
-                  selected: i == _serviceIndex,
-                  onTap: () => setState(() => _serviceIndex = i),
-                ),
-              ],
-              const Spacer(),
-              for (var i = 0; i < _metrics.length; i++) ...[
-                if (i > 0) const SizedBox(width: 6),
-                _Chip(
-                  label: _metrics[i],
-                  selected: i == _metricIndex,
-                  color: _colors[i],
-                  onTap: () => setState(() => _metricIndex = i),
-                ),
-              ],
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 390;
+              final title = Text(
+                'Uso de recursos',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              );
+              final serviceChips = [
+                for (var i = 0; i < _services.length; i++)
+                  _Chip(
+                    label: _services[i],
+                    selected: i == _serviceIndex,
+                    onTap: () => setState(() => _serviceIndex = i),
+                  ),
+              ];
+              final metricChips = [
+                for (var i = 0; i < _metrics.length; i++)
+                  _Chip(
+                    label: _metrics[i],
+                    selected: i == _metricIndex,
+                    color: _colors[i],
+                    onTap: () => setState(() => _metricIndex = i),
+                  ),
+              ];
+
+              if (isCompact) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          title,
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: serviceChips,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        for (var i = 0; i < metricChips.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          metricChips[i],
+                        ],
+                      ],
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [Expanded(child: title)]),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Wrap(spacing: 8, runSpacing: 8, children: serviceChips),
+                      const Spacer(),
+                      Wrap(spacing: 6, runSpacing: 8, children: metricChips),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 18),
           MetricChartPlaceholder(points: points, lineColor: color, height: 180),
@@ -163,24 +203,33 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = color ?? AppColors.primary;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: selected ? accent.withValues(alpha: 0.16) : AppColors.panel,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? accent.withValues(alpha: 0.5) : AppColors.stroke,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          constraints: const BoxConstraints(minHeight: 36),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? accent.withValues(alpha: 0.16) : AppColors.panel,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? accent.withValues(alpha: 0.5)
+                  : AppColors.stroke,
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: selected ? accent : AppColors.textSecondary,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? accent : AppColors.textSecondary,
+            ),
           ),
         ),
       ),

@@ -3,8 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/utils/app_toast.dart';
 import '../../core/widgets/reconnecting_banner.dart';
-import '../../feature/alerts/application/get_alerts_use_case.dart';
-import '../../feature/monitoring/application/get_service_events_use_case.dart';
 import 'cubit/alerts_cubit.dart';
 import 'cubit/alerts_state.dart';
 import 'views/alerts_content_view.dart';
@@ -17,17 +15,7 @@ class AlertsProviderPage extends StatelessWidget {
   const AlertsProviderPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider<AlertsCubit>(
-      create: (ctx) => AlertsCubit(
-        watchAlerts: ctx.read<WatchActiveAlertsUseCase>(),
-        getIncidents: ctx.read<GetRecentServiceEventsUseCase>(),
-        getThresholds: ctx.read<GetAlertThresholdsUseCase>(),
-        resolveAlert: ctx.read<ResolveAlertUseCase>(),
-      )..init(),
-      child: const AlertsPage(),
-    );
-  }
+  Widget build(BuildContext context) => const AlertsPage();
 }
 
 class AlertsPage extends StatelessWidget {
@@ -43,7 +31,14 @@ class AlertsPage extends StatelessWidget {
         final currentError = current is AlertsLoaded
             ? current.resolveErrorMessage
             : null;
-        return currentError != null && currentError != previousError;
+        final previousSuccess = previous is AlertsLoaded
+            ? previous.resolveSuccessMessage
+            : null;
+        final currentSuccess = current is AlertsLoaded
+            ? current.resolveSuccessMessage
+            : null;
+        return (currentError != null && currentError != previousError) ||
+            (currentSuccess != null && currentSuccess != previousSuccess);
       },
       listener: (context, state) {
         if (state case AlertsLoaded(:final resolveErrorMessage?)) {
@@ -52,6 +47,11 @@ class AlertsPage extends StatelessWidget {
             'No se pudo cerrar la alerta.',
             detail: resolveErrorMessage,
           );
+          context.read<AlertsCubit>().clearResolveFeedback();
+        }
+        if (state case AlertsLoaded(:final resolveSuccessMessage?)) {
+          AppToast.success(context, resolveSuccessMessage);
+          context.read<AlertsCubit>().clearResolveFeedback();
         }
       },
       builder: (context, state) => switch (state) {

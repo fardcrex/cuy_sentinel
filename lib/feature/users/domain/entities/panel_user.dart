@@ -58,6 +58,9 @@ class PanelUser {
     createdAt: createdAt ?? this.createdAt,
   );
 
+  factory PanelUser.fromDynamic(dynamic data) =>
+      PanelUser.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory PanelUser.fromJson(Map<String, dynamic> json) => PanelUser(
     id: json['id'] as String,
     email: json['email'] as String,

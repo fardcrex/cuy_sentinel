@@ -24,6 +24,9 @@ class CollectorRun {
 
   bool get isRunning => finishedAt == null;
 
+  factory CollectorRun.fromDynamic(dynamic data) =>
+      CollectorRun.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory CollectorRun.fromJson(Map<String, dynamic> json) => CollectorRun(
     id: json['id'] as String,
     startedAt: DateTime.parse(json['started_at'] as String),

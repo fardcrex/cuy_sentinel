@@ -39,6 +39,9 @@ class DatabaseHealth {
 
   final DateTime collectedAt;
 
+  factory DatabaseHealth.fromDynamic(dynamic data) =>
+      DatabaseHealth.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory DatabaseHealth.fromJson(Map<String, dynamic> json) => DatabaseHealth(
     instanceId: json['instance_id'] as String,
     latencyMs: json['latency_ms'] as int,

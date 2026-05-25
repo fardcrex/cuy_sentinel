@@ -16,6 +16,8 @@ class DashboardStatsGrid extends StatelessWidget {
         final width = constraints.maxWidth;
         final isMobile = width < 600;
         return GridView.count(
+          padding: EdgeInsets.zero,
+          primary: false,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: isMobile ? 2 : AppBreakpoints.metricsColumns(width),

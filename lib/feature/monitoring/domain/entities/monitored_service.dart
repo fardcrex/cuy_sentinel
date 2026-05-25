@@ -21,6 +21,9 @@ class MonitoredService {
   final bool enabled;
   final DateTime createdAt;
 
+  factory MonitoredService.fromDynamic(dynamic data) =>
+      MonitoredService.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory MonitoredService.fromJson(Map<String, dynamic> json) =>
       MonitoredService(
         id: json['id'] as String,

@@ -17,8 +17,11 @@ final class AlertsLoaded extends AlertsState {
     this.isReconnecting = false,
     this.reconnectingInSeconds,
     this.resolvingAlertIds = const {},
+    this.resolvedAlertIds = const {},
+    this.dismissingAlertIds = const {},
     this.resolveErrorsByAlertId = const {},
     this.resolveErrorMessage,
+    this.resolveSuccessMessage,
   });
 
   final List<AlertEvent> activeAlerts;
@@ -29,17 +32,24 @@ final class AlertsLoaded extends AlertsState {
   /// Segundos restantes para el próximo reintento. null cuando no reconecta.
   final int? reconnectingInSeconds;
   final Set<String> resolvingAlertIds;
+  final Set<String> resolvedAlertIds;
+  final Set<String> dismissingAlertIds;
   final Map<String, String> resolveErrorsByAlertId;
   final String? resolveErrorMessage;
+  final String? resolveSuccessMessage;
 
   AlertsLoaded copyWith({
     bool? isReconnecting,
     int? reconnectingInSeconds,
     bool clearCountdown = false,
     Set<String>? resolvingAlertIds,
+    Set<String>? resolvedAlertIds,
+    Set<String>? dismissingAlertIds,
     Map<String, String>? resolveErrorsByAlertId,
     String? resolveErrorMessage,
     bool clearResolveError = false,
+    String? resolveSuccessMessage,
+    bool clearResolveSuccess = false,
   }) => AlertsLoaded(
     activeAlerts: activeAlerts,
     thresholds: thresholds,
@@ -49,14 +59,23 @@ final class AlertsLoaded extends AlertsState {
         ? null
         : (reconnectingInSeconds ?? this.reconnectingInSeconds),
     resolvingAlertIds: resolvingAlertIds ?? this.resolvingAlertIds,
+    resolvedAlertIds: resolvedAlertIds ?? this.resolvedAlertIds,
+    dismissingAlertIds: dismissingAlertIds ?? this.dismissingAlertIds,
     resolveErrorsByAlertId:
         resolveErrorsByAlertId ?? this.resolveErrorsByAlertId,
     resolveErrorMessage: clearResolveError
         ? null
         : (resolveErrorMessage ?? this.resolveErrorMessage),
+    resolveSuccessMessage: clearResolveSuccess
+        ? null
+        : (resolveSuccessMessage ?? this.resolveSuccessMessage),
   );
 
   bool isResolving(String alertId) => resolvingAlertIds.contains(alertId);
+
+  bool isResolved(String alertId) => resolvedAlertIds.contains(alertId);
+
+  bool isDismissing(String alertId) => dismissingAlertIds.contains(alertId);
 
   String? resolveErrorFor(String alertId) => resolveErrorsByAlertId[alertId];
 

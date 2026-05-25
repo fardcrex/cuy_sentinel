@@ -42,6 +42,10 @@ class DashboardCubit extends Cubit<DashboardState> {
   StreamSubscription<List<AlertEvent>>? _alertsSub;
   StreamSubscription<CollectorRun?>? _collectorRunSub;
 
+  bool _isActive = false;
+  bool _passboltReady = false;
+  bool _chkmonitorReady = false;
+
   List<Metric> _passboltMetrics = [];
   List<Metric> _chkmonitorMetrics = [];
   List<AlertEvent> _activeAlerts = [];
@@ -49,15 +53,28 @@ class DashboardCubit extends Cubit<DashboardState> {
   List<MonitoredService> _services = [];
   List<ServiceEvent> _recentEvents = [];
 
-  Future<void> init() async {
-    emit(DashboardLoading());
-    try {
-      _collectorRuns = await _getCollectorRuns.execute(limit: 150);
-      _services = await _getServices.execute();
-      _recentEvents = await _loadRecentEvents(_services);
-    } catch (e) {
-      emit(DashboardError(e.toString()));
+  Future<void> init() => activate();
+
+  Future<void> activate() async {
+    _isActive = true;
+    if (_passboltSub != null ||
+        _chkmonitorSub != null ||
+        _alertsSub != null ||
+        _collectorRunSub != null) {
       return;
+    }
+
+    if (_services.isEmpty) {
+      emit(DashboardLoading());
+      try {
+        _collectorRuns = await _getCollectorRuns.execute(limit: 150);
+        _services = await _getServices.execute();
+        _recentEvents = await _loadRecentEvents(_services);
+      } catch (e) {
+        emit(DashboardError(e.toString()));
+        return;
+      }
+      if (!_isActive || isClosed) return;
     }
 
     final passboltId = _services
@@ -70,20 +87,26 @@ class DashboardCubit extends Cubit<DashboardState> {
     _passboltSub = _watchMetrics
         .execute(serviceId: passboltId, limit: 12)
         .listen((m) {
+          if (!_isActive) return;
           _passboltMetrics = m;
+          _passboltReady = true;
           _emitLoaded();
         }, onError: (e) => emit(DashboardError(e.toString())));
     _chkmonitorSub = _watchMetrics
         .execute(serviceId: chkmonitorId, limit: 12)
         .listen((m) {
+          if (!_isActive) return;
           _chkmonitorMetrics = m;
+          _chkmonitorReady = true;
           _emitLoaded();
         }, onError: (e) => emit(DashboardError(e.toString())));
     _alertsSub = _watchAlerts.execute().listen((a) {
+      if (!_isActive) return;
       _activeAlerts = a;
       _emitLoaded();
     }, onError: (e) => emit(DashboardError(e.toString())));
     _collectorRunSub = _watchLastCollectorRun.execute().listen((run) {
+      if (!_isActive) return;
       if (run == null) return;
       _collectorRuns = _upsertCollectorRun(_collectorRuns, run, 150);
       _emitLoaded();
@@ -92,8 +115,20 @@ class DashboardCubit extends Cubit<DashboardState> {
     _emitLoaded();
   }
 
+  Future<void> deactivate() async {
+    _isActive = false;
+    await _passboltSub?.cancel();
+    await _chkmonitorSub?.cancel();
+    await _alertsSub?.cancel();
+    await _collectorRunSub?.cancel();
+    _passboltSub = null;
+    _chkmonitorSub = null;
+    _alertsSub = null;
+    _collectorRunSub = null;
+  }
+
   void _emitLoaded() {
-    if (_passboltMetrics.isEmpty || _chkmonitorMetrics.isEmpty) return;
+    if (!_passboltReady || !_chkmonitorReady) return;
     _doEmitLoaded();
   }
 
@@ -138,11 +173,8 @@ class DashboardCubit extends Cubit<DashboardState> {
   }
 
   @override
-  Future<void> close() {
-    _passboltSub?.cancel();
-    _chkmonitorSub?.cancel();
-    _alertsSub?.cancel();
-    _collectorRunSub?.cancel();
+  Future<void> close() async {
+    await deactivate();
     return super.close();
   }
 }

@@ -25,19 +25,29 @@ class DashboardContentView extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final padding = AppBreakpoints.horizontalPadding(width);
+        final bottomPadding = MediaQuery.of(context).padding.bottom;
         final isWide = width >= 1100;
+        final isMobile = AppBreakpoints.isMobile(width);
 
         return SingleChildScrollView(
-          padding: EdgeInsets.all(padding),
+          padding: EdgeInsets.fromLTRB(
+            padding,
+            padding,
+            padding,
+            padding + bottomPadding,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const ScreenHeader(
-                title: 'Dashboard',
-                subtitle: 'Resumen general de la infraestructura monitoreada',
-                trailing: DashboardHeaderActions(),
-              ),
-              const SizedBox(height: 24),
+              if (isMobile)
+                const DashboardHeaderActions()
+              else
+                const ScreenHeader(
+                  title: 'Dashboard',
+                  subtitle: 'Resumen general de la infraestructura monitoreada',
+                  trailing: DashboardHeaderActions(),
+                ),
+              SizedBox(height: isMobile ? 12 : 24),
               DashboardStatsGrid(cards: statCards),
               const SizedBox(height: 24),
               if (isWide)

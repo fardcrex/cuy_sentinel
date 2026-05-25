@@ -2,9 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/app.dart';
 import 'core/env/app_env.dart';
 import 'core/injection/envs/phase1_dependencies.dart';
+import 'presentation/app.dart';
 
 // Fase 1 — Supabase completo.
 // flutter run --target lib/main_phase1_mix.dart \

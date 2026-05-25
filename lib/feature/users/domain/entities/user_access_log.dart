@@ -32,6 +32,9 @@ class UserAccessLog {
   final String? deviceName;
   final String? devicePlatform;
 
+  factory UserAccessLog.fromDynamic(dynamic data) =>
+      UserAccessLog.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory UserAccessLog.fromJson(Map<String, dynamic> json) => UserAccessLog(
     id: json['id'] as String,
     userId: json['user_id'] as String,

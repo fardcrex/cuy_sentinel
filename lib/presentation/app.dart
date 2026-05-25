@@ -3,24 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/injection/app_dependencies.dart';
+import '../core/injection/modules/alerts_module.dart';
+import '../core/injection/modules/databases_module.dart';
+import '../core/injection/modules/metrics_module.dart';
+import '../core/injection/modules/monitoring_module.dart';
+import '../core/injection/modules/users_module.dart';
+import '../core/navigation/app_router.dart';
+import '../core/theme/app_theme.dart';
+import '../core/widgets/alert_notification_dialog.dart';
+import '../core/widgets/alert_toast_stack.dart';
 import '../feature/alerts/application/get_alerts_use_case.dart';
 import '../feature/auth/application/sign_in_use_case.dart';
 import '../feature/auth/application/sign_out_use_case.dart';
 import '../feature/auth/application/watch_session_use_case.dart';
 import '../feature/users/application/get_users_use_case.dart';
-import '../presentation/alerts/cubit/alert_notifier_cubit.dart';
-import '../presentation/alerts/cubit/alert_notifier_state.dart';
-import '../presentation/auth/bloc/auth_bloc.dart';
-import 'injection/app_dependencies.dart';
-import 'injection/modules/alerts_module.dart';
-import 'injection/modules/databases_module.dart';
-import 'injection/modules/metrics_module.dart';
-import 'injection/modules/monitoring_module.dart';
-import 'injection/modules/users_module.dart';
-import 'navigation/app_router.dart';
-import 'theme/app_theme.dart';
-import 'widgets/alert_notification_dialog.dart';
-import 'widgets/alert_toast_stack.dart';
+import 'alerts/cubit/alert_notifier_cubit.dart';
+import 'alerts/cubit/alert_notifier_state.dart';
+import 'auth/bloc/auth_bloc.dart';
 
 class CuySentinelApp extends StatefulWidget {
   const CuySentinelApp({super.key, required this.dependencies});

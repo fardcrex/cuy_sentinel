@@ -30,6 +30,9 @@ class AlertEvent {
   final bool resolved;
   final DateTime? resolvedAt;
 
+  factory AlertEvent.fromDynamic(dynamic data) =>
+      AlertEvent.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory AlertEvent.fromJson(Map<String, dynamic> json) => AlertEvent(
     id: json['id'] as String,
     serviceId: json['service_id'] as String,

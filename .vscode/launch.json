@@ -15,15 +15,15 @@
       "args": ["-d", "chrome", "--web-port", "8040"]
     },
     {
-      "name": "PROD — Supabase",
+      "name": "PHASE1 — Supabase",
       "request": "launch",
       "type": "dart",
-      "flutterMode": "release",
+      "flutterMode": "debug",
       "program": "lib/main_phase1.dart",
       "args": ["--dart-define-from-file=envs/sentinel.phase1.json"]
     },
     {
-      "name": "PROD — Supabase Web",
+      "name": "PHASE1 Web — Supabase",
       "request": "launch",
       "type": "dart",
       "program": "lib/main_phase1.dart",
@@ -33,6 +33,27 @@
         "--web-port",
         "8040",
         "--dart-define-from-file=envs/sentinel.phase1.json"
+      ]
+    },
+    {
+      "name": "PHASE2 — Node.js",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "program": "lib/main_phase2.dart",
+      "args": ["--dart-define-from-file=envs/sentinel.phase2.json"]
+    },
+    {
+      "name": "PHASE2 Web— Node.js Web",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_phase2.dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--web-port",
+        "8040",
+        "--dart-define-from-file=envs/sentinel.phase2.json"
       ]
     }
   ]

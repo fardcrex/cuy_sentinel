@@ -22,8 +22,7 @@ class MetricChartPlaceholder extends StatefulWidget {
   final Duration duration;
 
   @override
-  State<MetricChartPlaceholder> createState() =>
-      _MetricChartPlaceholderState();
+  State<MetricChartPlaceholder> createState() => _MetricChartPlaceholderState();
 }
 
 class _MetricChartPlaceholderState extends State<MetricChartPlaceholder>
@@ -54,8 +53,10 @@ class _MetricChartPlaceholderState extends State<MetricChartPlaceholder>
     if (!_samePoints(oldWidget.points, widget.points)) {
       _fromPoints = _interpolatePoints(_controller.value);
       _toPoints = List<double?>.from(widget.points);
-      _useSlidingWindowTransition =
-          _isSlidingWindowUpdate(oldWidget.points, widget.points);
+      _useSlidingWindowTransition = _isSlidingWindowUpdate(
+        oldWidget.points,
+        widget.points,
+      );
       _controller.forward(from: 0);
     }
   }
@@ -77,8 +78,7 @@ class _MetricChartPlaceholderState extends State<MetricChartPlaceholder>
           curve: Curves.easeOutCubic,
         ),
         builder: (context, child) {
-          final progress =
-              Curves.easeOutCubic.transform(_controller.value);
+          final progress = Curves.easeOutCubic.transform(_controller.value);
           return CustomPaint(
             painter: _LineChartPainter(
               fromPoints: _fromPoints,
@@ -205,12 +205,24 @@ class _LineChartPainter extends CustomPainter {
 
     if (useSlidingWindowTransition && progress < 1) {
       _drawSeries(
-          canvas, size, normFrom, oldShift, fillPaint(1 - progress), oldLinePaint);
+        canvas,
+        size,
+        normFrom,
+        oldShift,
+        fillPaint(1 - progress),
+        oldLinePaint,
+      );
     }
 
     if (useSlidingWindowTransition) {
       _drawSeries(
-          canvas, size, normTo, newShift, fillPaint(progress), newLinePaint);
+        canvas,
+        size,
+        normTo,
+        newShift,
+        fillPaint(progress),
+        newLinePaint,
+      );
     } else {
       final interpolated = List<double?>.generate(targetLen, (i) {
         final f = normFrom[i];

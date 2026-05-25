@@ -13,11 +13,17 @@ class AlertsLoadingView extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final padding = AppBreakpoints.horizontalPadding(width);
+        final bottomPadding = MediaQuery.of(context).padding.bottom;
         final isWide = AppBreakpoints.isDesktop(width);
 
         return LoadingSkeletonPulse(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(padding),
+            padding: EdgeInsets.fromLTRB(
+              padding,
+              padding,
+              padding,
+              padding + bottomPadding,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

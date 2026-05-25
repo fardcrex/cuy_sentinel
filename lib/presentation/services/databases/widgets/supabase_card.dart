@@ -8,12 +8,82 @@ import '../../../widgets/status_badge.dart';
 import '../database_model.dart';
 
 class SupabaseCard extends StatelessWidget {
-  const SupabaseCard({super.key, required this.model});
+  const SupabaseCard({super.key, required this.model, this.enabled = true});
 
   final DatabaseHealthModel model;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
+    final card = _buildCard(context);
+    if (enabled) return card;
+
+    return Stack(
+      children: [
+        Opacity(opacity: 0.35, child: card),
+        Positioned.fill(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.panel.withValues(alpha: 0.70),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: AppColors.stroke),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.stroke.withValues(alpha: 0.6),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.lock_outline_rounded,
+                      color: AppColors.textInactive,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.stroke),
+                    ),
+                    child: const Text(
+                      'Migrado a Fase 2',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Reemplazado por PostgreSQL auto-hospedado',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textInactive,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard(BuildContext context) {
     return AppCard(
       padding: EdgeInsets.zero,
       child: Column(

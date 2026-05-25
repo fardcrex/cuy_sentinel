@@ -15,6 +15,9 @@ abstract final class UsersModule {
     RepositoryProvider<GetPanelUsersUseCase>(
       create: (_) => GetPanelUsersUseCase(repo),
     ),
+    RepositoryProvider<GetPanelUserByIdUseCase>(
+      create: (_) => GetPanelUserByIdUseCase(repo),
+    ),
     RepositoryProvider<GetAccessLogsUseCase>(
       create: (_) => GetAccessLogsUseCase(repo),
     ),
@@ -32,6 +35,9 @@ abstract final class UsersModule {
     ),
     RepositoryProvider<UntrackPresenceUseCase>(
       create: (_) => UntrackPresenceUseCase(repo),
+    ),
+    RepositoryProvider<ChangeUserRoleUseCase>(
+      create: (_) => ChangeUserRoleUseCase(repo),
     ),
   ];
 }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/assets/app_assets.dart';
+import '../../../../core/env/app_env.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../widgets/app_card.dart';
+
+const _isPhase2 = AppEnv.apiBaseUrl != '';
 
 class SchemaCard extends StatelessWidget {
   const SchemaCard({super.key});
@@ -40,21 +43,21 @@ class SchemaCard extends StatelessWidget {
             icon: Icons.cloud_outlined,
             label: 'Supabase REST + Realtime',
             phase: 'Fase 1',
-            active: true,
+            active: !_isPhase2,
           ),
           const SizedBox(height: 10),
           const ArchRow(
             icon: Icons.dns_rounded,
             label: 'PostgreSQL + Node.js API',
             phase: 'Fase 2',
-            active: false,
+            active: _isPhase2,
           ),
           const SizedBox(height: 10),
           const ArchRow(
             icon: Icons.copy_all_rounded,
             label: 'Réplica streaming WAL',
             phase: 'Fase 2',
-            active: false,
+            active: _isPhase2,
           ),
         ],
       ),

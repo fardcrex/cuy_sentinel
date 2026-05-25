@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/assets/app_assets.dart';
@@ -11,7 +12,7 @@ import 'package:go_router/go_router.dart';
 class LoginContentView extends StatelessWidget {
   const LoginContentView({
     super.key,
-    required this.bgController,
+    required this.bgProgress,
     required this.matrixTone,
     required this.matrixAccent,
     required this.bgStart,
@@ -26,7 +27,7 @@ class LoginContentView extends StatelessWidget {
     required this.onSubmit,
   });
 
-  final AnimationController bgController;
+  final ValueListenable<double> bgProgress;
   final Color matrixTone;
   final Color matrixAccent;
   final Color bgStart;
@@ -58,11 +59,11 @@ class LoginContentView extends StatelessWidget {
           children: [
             Positioned.fill(
               child: IgnorePointer(
-                child: AnimatedBuilder(
-                  animation: bgController,
-                  builder: (_, _) => CustomPaint(
+                child: ValueListenableBuilder<double>(
+                  valueListenable: bgProgress,
+                  builder: (_, progress, _) => CustomPaint(
                     painter: LoginMatrixBackgroundPainter(
-                      progress: bgController.value,
+                      progress: progress,
                       density: 0.8,
                       toneColor: matrixTone,
                       accentToneColor: matrixAccent,

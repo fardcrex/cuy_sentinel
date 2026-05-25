@@ -15,6 +15,7 @@ class AlertThresholdTile extends StatelessWidget {
     required this.severity,
     required this.timestamp,
     this.isResolving = false,
+    this.isResolved = false,
     this.onResolve,
   });
 
@@ -25,28 +26,35 @@ class AlertThresholdTile extends StatelessWidget {
   final AlertSeverity severity;
   final String timestamp;
   final bool isResolving;
+  final bool isResolved;
   final VoidCallback? onResolve;
 
-  Color get _color => switch (severity) {
-    AlertSeverity.nuclear => const Color(0xFFFF0040),
-    AlertSeverity.critical => AppColors.danger,
-    AlertSeverity.warning => AppColors.warning,
-    AlertSeverity.info => AppColors.secondary,
-  };
+  Color get _color => isResolved
+      ? AppColors.primary
+      : switch (severity) {
+          AlertSeverity.nuclear => const Color(0xFFFF0040),
+          AlertSeverity.critical => AppColors.danger,
+          AlertSeverity.warning => AppColors.warning,
+          AlertSeverity.info => AppColors.secondary,
+        };
 
-  String get _severityLabel => switch (severity) {
-    AlertSeverity.nuclear => 'Nuclear',
-    AlertSeverity.critical => 'Crítica',
-    AlertSeverity.warning => 'Advertencia',
-    AlertSeverity.info => 'Observación',
-  };
+  String get _severityLabel => isResolved
+      ? 'Resuelta'
+      : switch (severity) {
+          AlertSeverity.nuclear => 'Nuclear',
+          AlertSeverity.critical => 'Crítica',
+          AlertSeverity.warning => 'Advertencia',
+          AlertSeverity.info => 'Observación',
+        };
 
-  IconData get _icon => switch (severity) {
-    AlertSeverity.nuclear => Icons.crisis_alert_rounded,
-    AlertSeverity.critical => Icons.error_outline_rounded,
-    AlertSeverity.warning => Icons.warning_amber_rounded,
-    AlertSeverity.info => Icons.info_outline_rounded,
-  };
+  IconData get _icon => isResolved
+      ? Icons.check_circle_rounded
+      : switch (severity) {
+          AlertSeverity.nuclear => Icons.crisis_alert_rounded,
+          AlertSeverity.critical => Icons.error_outline_rounded,
+          AlertSeverity.warning => Icons.warning_amber_rounded,
+          AlertSeverity.info => Icons.info_outline_rounded,
+        };
 
   @override
   Widget build(BuildContext context) {
@@ -140,16 +148,16 @@ class AlertThresholdTile extends StatelessWidget {
               if (onResolve != null) ...[
                 const SizedBox(height: 8),
                 GestureDetector(
-                  onTap: isResolving ? null : onResolve,
+                  onTap: isResolving || isResolved ? null : onResolve,
                   child: Container(
                     constraints: const BoxConstraints(minHeight: 32),
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
-                      color: isResolving
+                      color: isResolving || isResolved
                           ? AppColors.primary.withValues(alpha: 0.10)
                           : AppColors.stroke.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(8),
-                      border: isResolving
+                      border: isResolving || isResolved
                           ? Border.all(
                               color: AppColors.primary.withValues(alpha: 0.28),
                             )
@@ -164,6 +172,26 @@ class AlertThresholdTile extends StatelessWidget {
                                 strokeWidth: 2,
                                 color: AppColors.primary,
                               ),
+                            )
+                          : isResolved
+                          ? const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_rounded,
+                                  size: 14,
+                                  color: AppColors.primary,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Resuelta',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
                             )
                           : const Text(
                               'Cerrar',

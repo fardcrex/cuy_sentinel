@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/navigation/app_router.dart';
@@ -26,7 +27,8 @@ class _LoginPageState extends State<LoginPage>
   final _formKey = GlobalKey<FormState>();
   final _userController = TextEditingController();
   final _passwordController = TextEditingController();
-  late final AnimationController _bgController;
+  late final Ticker _bgTicker;
+  final _bgProgress = ValueNotifier<double>(0);
 
   bool _obscurePassword = true;
   bool _hasLoginError = false;
@@ -34,10 +36,10 @@ class _LoginPageState extends State<LoginPage>
   @override
   void initState() {
     super.initState();
-    _bgController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 18),
-    )..repeat();
+    _bgTicker = createTicker((elapsed) {
+      _bgProgress.value = elapsed.inMilliseconds / 18000.0;
+    });
+    _bgTicker.start();
     _userController.addListener(_clearError);
     _passwordController.addListener(_clearError);
   }
@@ -48,7 +50,8 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   void dispose() {
-    _bgController.dispose();
+    _bgTicker.dispose();
+    _bgProgress.dispose();
     _userController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -81,7 +84,7 @@ class _LoginPageState extends State<LoginPage>
         }
       },
       builder: (context, state) => LoginContentView(
-        bgController: _bgController,
+        bgProgress: _bgProgress,
         matrixTone:
             _hasLoginError ? _matrixAlertPrimary : AppColors.primary,
         matrixAccent:

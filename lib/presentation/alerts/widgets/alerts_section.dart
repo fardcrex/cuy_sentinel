@@ -11,11 +11,17 @@ class AlertsSection extends StatelessWidget {
     super.key,
     required this.alerts,
     required this.isResolving,
+    required this.isResolved,
+    required this.isDismissing,
+    required this.canResolveAlerts,
     this.onViewAll,
   });
 
   final List<AlertEventModel> alerts;
   final bool Function(String alertId) isResolving;
+  final bool Function(String alertId) isResolved;
+  final bool Function(String alertId) isDismissing;
+  final bool canResolveAlerts;
   final VoidCallback? onViewAll;
 
   @override
@@ -42,10 +48,9 @@ class AlertsSection extends StatelessWidget {
         else
           ...List.generate(alerts.length, (index) {
             final alert = alerts[index];
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: index < alerts.length - 1 ? 12 : 0,
-              ),
+            return _AnimatedAlertItem(
+              isDismissing: isDismissing(alert.id),
+              bottomPadding: index < alerts.length - 1 ? 12 : 0,
               child: AlertThresholdTile(
                 service: alert.service,
                 metric: alert.metric,
@@ -54,12 +59,51 @@ class AlertsSection extends StatelessWidget {
                 severity: alert.severity,
                 timestamp: alert.timestamp,
                 isResolving: isResolving(alert.id),
-                onResolve: () =>
-                    context.read<AlertsCubit>().resolveAlert(alert.id),
+                isResolved: isResolved(alert.id),
+                onResolve: canResolveAlerts
+                    ? () => context.read<AlertsCubit>().resolveAlert(alert.id)
+                    : null,
               ),
             );
           }),
       ],
+    );
+  }
+}
+
+class _AnimatedAlertItem extends StatelessWidget {
+  const _AnimatedAlertItem({
+    required this.child,
+    required this.isDismissing,
+    required this.bottomPadding,
+  });
+
+  final Widget child;
+  final bool isDismissing;
+  final double bottomPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: isDismissing ? 0 : 1),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOutCubic,
+      builder: (context, factor, child) {
+        return ClipRect(
+          child: Align(
+            alignment: Alignment.topCenter,
+            heightFactor: factor,
+            child: Opacity(
+              opacity: factor,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomPadding),
+                child: child,
+              ),
+            ),
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

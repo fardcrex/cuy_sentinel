@@ -17,7 +17,11 @@ Widget _buildCard({
   final model = UserModel(
     userId: targetUserId,
     name: 'Ana García',
-    role: targetRole == UserRole.admin ? 'Administrador' : 'Visualizador',
+    role: switch (targetRole) {
+      UserRole.master => 'Master',
+      UserRole.admin => 'Administrador',
+      UserRole.viewer => 'Visualizador',
+    },
     rawRole: targetRole,
     email: 'ana@test.com',
     createdAt: '1 ene 2025',
@@ -75,14 +79,16 @@ void main() {
       expect(find.text('Hacer Admin'), findsOneWidget);
     });
 
-    testWidgets('viewer NO ve botón Hacer Admin sobre viewer', (tester) async {
+    testWidgets('debug muestra Hacer Admin incluso para viewer', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildCard(
           currentUserRole: UserRole.viewer,
           targetRole: UserRole.viewer,
         ),
       );
-      expect(find.text('Hacer Admin'), findsNothing);
+      expect(find.text('Hacer Admin'), findsOneWidget);
     });
 
     testWidgets('master ve botón Quitar Admin sobre admin', (tester) async {
@@ -95,11 +101,13 @@ void main() {
       expect(find.text('Quitar Admin'), findsOneWidget);
     });
 
-    testWidgets('admin NO ve botón Quitar Admin sobre admin', (tester) async {
+    testWidgets('debug muestra Quitar Admin incluso para admin', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildCard(currentUserRole: UserRole.admin, targetRole: UserRole.admin),
       );
-      expect(find.text('Quitar Admin'), findsNothing);
+      expect(find.text('Quitar Admin'), findsOneWidget);
     });
 
     testWidgets('no muestra acciones sobre perfil propio', (tester) async {

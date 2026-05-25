@@ -1,5 +1,7 @@
 part of '../welcome_page.dart';
 
+// ── Phase 1 ───────────────────────────────────────────────────────────────────
+
 class _Phase1Section extends StatelessWidget {
   const _Phase1Section({required this.sectionKey});
 
@@ -23,7 +25,7 @@ class _Phase1Section extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 56,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.warning.withValues(alpha: 0.15),
+                  color: AppColors.primary.withValues(alpha: 0.15),
                   height: 1,
                 ),
               ),
@@ -48,27 +50,7 @@ class _Phase1Section extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: const Text(
-                  'En progreso',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.warning,
-                  ),
-                ),
-              ),
+              _StatusBadge(label: 'Completada', color: AppColors.primary),
             ],
           ),
           const SizedBox(height: 40),
@@ -86,7 +68,7 @@ class _Phase1Section extends StatelessWidget {
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxHeight: 420),
                         child: Image.asset(
-                          AppAssets.illustrationAnomalyDetected,
+                          AppAssets.illustrationGuardianShield,
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -99,7 +81,7 @@ class _Phase1Section extends StatelessWidget {
                   const _Phase1Content(),
                   const SizedBox(height: 32),
                   Image.asset(
-                    AppAssets.illustrationAnomalyDetected,
+                    AppAssets.illustrationGuardianShield,
                     height: 220,
                     fit: BoxFit.contain,
                   ),
@@ -200,18 +182,18 @@ class _Phase1Content extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.warning.withValues(alpha: 0.06),
+            color: AppColors.primary.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.warning.withValues(alpha: 0.25),
+              color: AppColors.primary.withValues(alpha: 0.25),
             ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(
-                Icons.info_outline_rounded,
-                color: AppColors.warning,
+                Icons.check_circle_outline_rounded,
+                color: AppColors.primary,
                 size: 18,
               ),
               const SizedBox(width: 12),
@@ -233,6 +215,8 @@ class _Phase1Content extends StatelessWidget {
     );
   }
 }
+
+// ── Phase 2 ───────────────────────────────────────────────────────────────────
 
 class _Phase2Section extends StatelessWidget {
   const _Phase2Section();
@@ -264,13 +248,14 @@ class _Phase2Section extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Fase 2 · Arquitectura Escalable',
+                      'Fase 2 · Alta Disponibilidad',
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Arquitectura desacoplada. Go escribe en PostgreSQL propio con réplica WAL. Node.js expone APIs y Socket.IO.',
+                      'Clúster Patroni de 3 nodos con HAProxy y etcd. Node.js expone '
+                      'REST + Socket.IO. Failover automático sin pérdida de escrituras.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -279,27 +264,7 @@ class _Phase2Section extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: const Text(
-                  'Planificado',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
+              _StatusBadge(label: 'Implementada', color: AppColors.primary),
             ],
           ),
           const SizedBox(height: 40),
@@ -307,33 +272,20 @@ class _Phase2Section extends StatelessWidget {
             builder: (context, constraints) {
               final isWide = constraints.maxWidth >= 800;
               if (isWide) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                return const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      flex: 4,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 440),
-                        child: Image.asset(
-                          AppAssets.illustrationGuardianShield,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                    const Expanded(flex: 5, child: _Phase2Content()),
+                    Expanded(flex: 5, child: _PatroniClusterDiagram()),
+                    SizedBox(width: 48),
+                    Expanded(flex: 5, child: _Phase2Content()),
                   ],
                 );
               }
-              return Column(
+              return const Column(
                 children: [
-                  const _Phase2Content(),
-                  const SizedBox(height: 32),
-                  Image.asset(
-                    AppAssets.illustrationGuardianShield,
-                    height: 220,
-                    fit: BoxFit.contain,
-                  ),
+                  _Phase2Content(),
+                  SizedBox(height: 32),
+                  _PatroniClusterDiagram(),
                 ],
               );
             },
@@ -371,17 +323,24 @@ class _Phase2Content extends StatelessWidget {
               ),
               _FlowArrow(),
               _FlowStep(
-                icon: Icons.storage_rounded,
-                title: 'PostgreSQL',
-                subtitle: 'Primario + WAL',
+                icon: Icons.balance_rounded,
+                title: 'HAProxy',
+                subtitle: 'Balanceador',
                 color: AppColors.secondary,
+              ),
+              _FlowArrow(),
+              _FlowStep(
+                icon: Icons.storage_rounded,
+                title: 'Patroni',
+                subtitle: '3 Nodos HA',
+                color: AppColors.primaryBright,
               ),
               _FlowArrow(),
               _FlowStep(
                 icon: Icons.hub_outlined,
                 title: 'Node.js',
                 subtitle: 'API + Socket.IO',
-                color: AppColors.primaryBright,
+                color: AppColors.primary,
               ),
               _FlowArrow(),
               _FlowStep(
@@ -400,30 +359,41 @@ class _Phase2Content extends StatelessWidget {
           items: [
             'Consulta SNMP concurrente con goroutines',
             'Validación y procesamiento de métricas',
-            'Escritura en PostgreSQL primario',
+            'Escritura en primario vía HAProxy (puerto 5432)',
             'Reintentos y manejo de errores de red',
           ],
         ),
         const SizedBox(height: 12),
         const _PhaseComponent(
           color: AppColors.secondary,
-          title: 'PostgreSQL Alta Disponibilidad',
+          title: 'HAProxy · Load Balancer',
           items: [
-            'BD primaria con escrituras del recolector',
-            'Réplica asíncrona vía Streaming/WAL',
-            'Alta disponibilidad y tolerancia a fallos',
-            'Escalabilidad de lectura desde la réplica',
+            'Enruta escrituras siempre al nodo primario Patroni',
+            'Healthcheck cada 2 s — detecta failover automáticamente',
+            'Puerto 5432 para escritura, 5433 para solo lectura',
+            'Sin reconfiguración de clientes ante failover',
           ],
         ),
         const SizedBox(height: 12),
         const _PhaseComponent(
           color: AppColors.primaryBright,
+          title: 'PostgreSQL Patroni HA (3 nodos)',
+          items: [
+            'Primario + 2 réplicas con streaming replication',
+            'etcd gestiona consenso y elección de líder',
+            'Failover automático en < 30 s ante caída del primario',
+            'WAL shipping garantiza cero pérdida de escrituras',
+          ],
+        ),
+        const SizedBox(height: 12),
+        const _PhaseComponent(
+          color: AppColors.primary,
           title: 'Node.js + Socket.IO',
           items: [
-            'APIs REST para el frontend Flutter',
-            'Socket.IO para eventos en tiempo real',
-            'Gestión de usuarios y autenticación',
-            'Emite eventos al ingresar nuevas métricas',
+            'APIs REST consumidas por Flutter',
+            'pg_notify → Socket.IO para eventos en tiempo real',
+            'JWT stateless — sin sesiones en servidor',
+            'Emite active_alerts, db_health, collector_run',
           ],
         ),
         const SizedBox(height: 24),
@@ -432,8 +402,8 @@ class _Phase2Content extends StatelessWidget {
           runSpacing: 8,
           children: [
             _BenefitChip(
-              label: 'Mayor escalabilidad',
-              icon: Icons.trending_up_rounded,
+              label: 'Failover automático',
+              icon: Icons.autorenew_rounded,
               color: AppColors.primary,
             ),
             _BenefitChip(
@@ -447,47 +417,293 @@ class _Phase2Content extends StatelessWidget {
               color: AppColors.primaryBright,
             ),
             _BenefitChip(
-              label: 'Separación de responsabilidades',
-              icon: Icons.account_tree_outlined,
+              label: 'Sin punto único de fallo',
+              icon: Icons.shield_outlined,
               color: AppColors.warning,
             ),
           ],
         ),
         const SizedBox(height: 20),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.25),
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.info_outline_rounded,
-                color: AppColors.primary,
-                size: 18,
+        Builder(
+          builder: (context) => Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.25),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Arquitectura desacoplada y escalable. PostgreSQL con réplica asegura '
-                  'alta disponibilidad. Node.js expone APIs REST y eventos en tiempo real '
-                  'vía Socket.IO. Flutter consume el API desacoplado.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                    height: 1.6,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Clúster Patroni de 3 nodos gestionado por etcd. HAProxy detecta el '
+                    'primario activo y enruta escrituras sin reconfiguración. Node.js '
+                    'escucha pg_notify y emite eventos vía Socket.IO al panel Flutter.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.6,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Patroni Cluster Diagram ───────────────────────────────────────────────────
+
+class _PatroniClusterDiagram extends StatelessWidget {
+  const _PatroniClusterDiagram();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1C22),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.stroke),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) => SizedBox(
+          height: 220,
+          child: CustomPaint(
+            painter: _PatroniDiagramPainter(),
+            size: Size(constraints.maxWidth, 220),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PatroniDiagramPainter extends CustomPainter {
+  static const _sectionBg = Color(0xFF252830);
+  static const _innerBg = Color(0xFF1A1D24);
+  static const _labelC = Color(0xFF8A8E9A);
+  static const _textC = Color(0xFFEAEAEA);
+  static const _arrowC = Color(0xFFCCCCCC);
+  static const _strokeC = Color(0xFF383D4A);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    const gap = 12.0;
+    const labelAreaH = 26.0;
+    const innerPad = 10.0;
+    const sectionR = Radius.circular(10);
+    const innerR = Radius.circular(7);
+
+    final haW = w * 0.22;
+    final ptW = w * 0.34;
+    final etW = w - haW - ptW - gap * 2;
+
+    final haX = 0.0;
+    final ptX = haX + haW + gap;
+    final etX = ptX + ptW + gap;
+
+    final sectionFill = Paint()..color = _sectionBg;
+    final innerFill = Paint()..color = _innerBg;
+    final strokePaint = Paint()
+      ..color = _strokeC
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    final arrowLinePaint = Paint()
+      ..color = _arrowC
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final arrowFill = Paint()..color = _arrowC;
+
+    void drawBox(Rect rect, {Radius radius = sectionR, bool inner = false}) {
+      final rr = RRect.fromRectAndRadius(rect, radius);
+      canvas.drawRRect(rr, inner ? innerFill : sectionFill);
+      canvas.drawRRect(rr, strokePaint);
+    }
+
+    void drawLabel(
+      String text,
+      Rect within, {
+      bool isLabel = false,
+      double fontSize = 11,
+    }) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: TextStyle(
+            color: isLabel ? _labelC : _textC,
+            fontSize: fontSize,
+            fontWeight: isLabel ? FontWeight.w500 : FontWeight.w600,
+            letterSpacing: isLabel ? 0.6 : 0,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      );
+      tp.layout(maxWidth: within.width);
+      tp.paint(
+        canvas,
+        Offset(
+          within.left + (within.width - tp.width) / 2,
+          within.top + (within.height - tp.height) / 2,
+        ),
+      );
+    }
+
+    // Sections
+    drawBox(Rect.fromLTWH(haX, 0, haW, h));
+    drawBox(Rect.fromLTWH(ptX, 0, ptW, h));
+    drawBox(Rect.fromLTWH(etX, 0, etW, h));
+
+    // Section labels
+    drawLabel('HAProxy', Rect.fromLTWH(haX, 0, haW, labelAreaH), isLabel: true);
+    drawLabel('Patroni', Rect.fromLTWH(ptX, 0, ptW, labelAreaH), isLabel: true);
+    drawLabel('etcd', Rect.fromLTWH(etX, 0, etW, labelAreaH), isLabel: true);
+
+    // HAProxy inner box
+    const balaH = 38.0;
+    final balaTop = labelAreaH + (h - labelAreaH - balaH) / 2;
+    final balaRect = Rect.fromLTWH(
+      haX + innerPad,
+      balaTop,
+      haW - innerPad * 2,
+      balaH,
+    );
+    drawBox(balaRect, radius: innerR, inner: true);
+    drawLabel('Balanceador', balaRect);
+
+    // Patroni nodes
+    final nodeAreaTop = labelAreaH + innerPad;
+    final nodeAreaH = h - nodeAreaTop - innerPad;
+    final nodeH = (nodeAreaH - gap * 2) / 3;
+    final nodeRects = List.generate(
+      3,
+      (i) => Rect.fromLTWH(
+        ptX + innerPad,
+        nodeAreaTop + i * (nodeH + gap),
+        ptW - innerPad * 2,
+        nodeH,
+      ),
+    );
+    for (var i = 0; i < 3; i++) {
+      drawBox(nodeRects[i], radius: innerR, inner: true);
+      drawLabel('Nodo ${i + 1}', nodeRects[i]);
+    }
+
+    // etcd inner box
+    const almacenH = 52.0;
+    final almacenTop = labelAreaH + (h - labelAreaH - almacenH) / 2;
+    final almacenRect = Rect.fromLTWH(
+      etX + innerPad,
+      almacenTop,
+      etW - innerPad * 2,
+      almacenH,
+    );
+    drawBox(almacenRect, radius: innerR, inner: true);
+    drawLabel('Almacén\nde estado', almacenRect, fontSize: 10.5);
+
+    // ── Arrow helpers ────────────────────────────────────────────────────────
+
+    void drawArrowhead(Offset tip, Offset from) {
+      final dx = tip.dx - from.dx;
+      final dy = tip.dy - from.dy;
+      final dist = math.sqrt(dx * dx + dy * dy);
+      if (dist < 1) return;
+      const aSize = 5.5;
+      final ux = dx / dist;
+      final uy = dy / dist;
+      final px = -uy * 0.38;
+      final py = ux * 0.38;
+      final path = Path()
+        ..moveTo(tip.dx, tip.dy)
+        ..lineTo(
+          tip.dx - aSize * ux + aSize * px,
+          tip.dy - aSize * uy + aSize * py,
+        )
+        ..lineTo(
+          tip.dx - aSize * ux - aSize * px,
+          tip.dy - aSize * uy - aSize * py,
+        )
+        ..close();
+      canvas.drawPath(path, arrowFill);
+    }
+
+    void drawCurvedArrow(Offset from, Offset to, {bool bidirectional = false}) {
+      final path = Path()..moveTo(from.dx, from.dy);
+      if ((from.dy - to.dy).abs() > 4) {
+        final mid = (from.dx + to.dx) / 2;
+        path.cubicTo(mid, from.dy, mid, to.dy, to.dx, to.dy);
+      } else {
+        path.lineTo(to.dx, to.dy);
+      }
+      canvas.drawPath(path, arrowLinePaint);
+      drawArrowhead(to, from);
+      if (bidirectional) drawArrowhead(from, to);
+    }
+
+    // HAProxy → each Patroni node
+    for (var i = 0; i < 3; i++) {
+      drawCurvedArrow(
+        Offset(balaRect.right, balaRect.center.dy),
+        Offset(nodeRects[i].left, nodeRects[i].center.dy),
+      );
+    }
+
+    // each Patroni node ↔ etcd (bidirectional)
+    for (var i = 0; i < 3; i++) {
+      drawCurvedArrow(
+        Offset(nodeRects[i].right, nodeRects[i].center.dy),
+        Offset(almacenRect.left, almacenRect.center.dy),
+        bidirectional: true,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ── Shared phase helpers ──────────────────────────────────────────────────────
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
     );
   }
 }

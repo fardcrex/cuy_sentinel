@@ -32,21 +32,32 @@ class AlertsCubit extends Cubit<AlertsState> {
   List<AlertEvent> _active = [];
   List<AlertThreshold>? _thresholds;
   List<ServiceEvent>? _incidents;
+  final Set<String> _resolvedAlertIds = {};
+  final Set<String> _dismissingAlertIds = {};
+  bool _isActive = false;
   bool _isReconnecting = false;
   int _secondsLeft = 0;
 
-  Future<void> init() async {
-    emit(AlertsLoading());
-    try {
-      final (thresholds, incidents) = await (
-        _getThresholds.execute(),
-        _getIncidents.execute(),
-      ).wait;
-      _thresholds = thresholds;
-      _incidents = incidents;
-    } catch (e) {
-      emit(AlertsError(e.toString()));
-      return;
+  Future<void> init() => activate();
+
+  Future<void> activate() async {
+    _isActive = true;
+    if (_sub != null) return;
+
+    if (_thresholds == null || _incidents == null) {
+      emit(AlertsLoading());
+      try {
+        final (thresholds, incidents) = await (
+          _getThresholds.execute(),
+          _getIncidents.execute(),
+        ).wait;
+        _thresholds = thresholds;
+        _incidents = incidents;
+      } catch (e) {
+        emit(AlertsError(e.toString()));
+        return;
+      }
+      if (!_isActive || isClosed) return;
     }
 
     _sub = _watchAlerts
@@ -61,9 +72,18 @@ class AlertsCubit extends Cubit<AlertsState> {
           },
         )
         .listen((active) {
+          if (!_isActive) return;
           _active = active;
           _emitLoaded();
         }, onError: (e) => emit(AlertsError(e.toString())));
+    _emitLoaded();
+  }
+
+  Future<void> deactivate() async {
+    _isActive = false;
+    await _sub?.cancel();
+    _sub = null;
+    _stopCountdown();
   }
 
   void _startCountdown(Duration backoff) {
@@ -96,6 +116,9 @@ class AlertsCubit extends Cubit<AlertsState> {
     final resolveErrorsByAlertId = previous is AlertsLoaded
         ? previous.resolveErrorsByAlertId
         : const <String, String>{};
+    final resolveSuccessMessage = previous is AlertsLoaded
+        ? previous.resolveSuccessMessage
+        : null;
 
     emit(
       AlertsLoaded(
@@ -107,11 +130,18 @@ class AlertsCubit extends Cubit<AlertsState> {
         resolvingAlertIds: resolvingAlertIds
             .where((id) => _active.any((alert) => alert.id == id))
             .toSet(),
+        resolvedAlertIds: _resolvedAlertIds
+            .where((id) => _active.any((alert) => alert.id == id))
+            .toSet(),
+        dismissingAlertIds: _dismissingAlertIds
+            .where((id) => _active.any((alert) => alert.id == id))
+            .toSet(),
         resolveErrorsByAlertId: Map.fromEntries(
           resolveErrorsByAlertId.entries.where(
             (entry) => _active.any((alert) => alert.id == entry.key),
           ),
         ),
+        resolveSuccessMessage: resolveSuccessMessage,
       ),
     );
   }
@@ -131,17 +161,30 @@ class AlertsCubit extends Cubit<AlertsState> {
 
     try {
       await _resolveAlert.execute(alertId);
+      _resolvedAlertIds.add(alertId);
       final latest = state;
       if (latest is AlertsLoaded) {
         emit(
           latest.copyWith(
             resolvingAlertIds: {...latest.resolvingAlertIds}..remove(alertId),
-            resolveErrorsByAlertId: Map.of(latest.resolveErrorsByAlertId)
-              ..remove(alertId),
+            resolveSuccessMessage: 'Alerta cerrada correctamente.',
             clearResolveError: true,
           ),
         );
       }
+      _emitLoaded();
+
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (isClosed) return;
+      _dismissingAlertIds.add(alertId);
+      _emitLoaded();
+
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      if (isClosed) return;
+      _active = _active.where((alert) => alert.id != alertId).toList();
+      _resolvedAlertIds.remove(alertId);
+      _dismissingAlertIds.remove(alertId);
+      _emitLoaded();
     } catch (e) {
       final latest = state;
       if (latest is AlertsLoaded) {
@@ -154,10 +197,17 @@ class AlertsCubit extends Cubit<AlertsState> {
               alertId: message,
             },
             resolveErrorMessage: message,
+            clearResolveSuccess: true,
           ),
         );
       }
     }
+  }
+
+  void clearResolveFeedback() {
+    final current = state;
+    if (current is! AlertsLoaded) return;
+    emit(current.copyWith(clearResolveError: true, clearResolveSuccess: true));
   }
 
   String _resolveErrorMessage(Object error) {
@@ -169,8 +219,8 @@ class AlertsCubit extends Cubit<AlertsState> {
   }
 
   @override
-  Future<void> close() {
-    _sub?.cancel();
+  Future<void> close() async {
+    await deactivate();
     _countdownTimer?.cancel();
     return super.close();
   }

@@ -1,4 +1,3 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:cuy_sentinel/core/services/device_info_service.dart';
 import 'package:cuy_sentinel/core/utils/stream_retry.dart';
 import 'package:cuy_sentinel/feature/users/application/get_users_use_case.dart';
@@ -6,6 +5,7 @@ import 'package:cuy_sentinel/feature/users/domain/entities/panel_user.dart';
 import 'package:cuy_sentinel/feature/users/domain/entities/user_access_log.dart';
 import 'package:cuy_sentinel/feature/users/domain/entities/user_presence.dart';
 import 'package:cuy_sentinel/feature/users/domain/interfaces/i_users_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 class _FakeRepo implements IUsersRepository {
   String? loggedUserId;
@@ -61,6 +61,11 @@ class _FakeRepo implements IUsersRepository {
     required String userId,
     int limit = 20,
   }) async => [];
+
+  @override
+  Future<void> updateUserRole(String userId, UserRole role) {
+    throw UnimplementedError();
+  }
 }
 
 class _FakeDeviceInfo implements IDeviceInfoService {

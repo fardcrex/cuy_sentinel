@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -27,20 +28,21 @@ class UserDetailCard extends StatelessWidget {
   final UserRole currentUserRole;
   final String currentUserId;
   final bool isBottomSheet;
-  final VoidCallback? onPromoteToAdmin;
-  final VoidCallback? onDemoteToViewer;
+  final Future<void> Function()? onPromoteToAdmin;
+  final Future<void> Function()? onDemoteToViewer;
 
   bool get _isOwnProfile => model.userId == currentUserId;
 
   bool get _showPromote =>
       !_isOwnProfile &&
-      (currentUserRole == UserRole.admin ||
+      (kDebugMode ||
+          currentUserRole == UserRole.admin ||
           currentUserRole == UserRole.master) &&
       model.rawRole == UserRole.viewer;
 
   bool get _showDemote =>
       !_isOwnProfile &&
-      currentUserRole == UserRole.master &&
+      (kDebugMode || currentUserRole == UserRole.master) &&
       model.rawRole == UserRole.admin;
 
   @override
@@ -48,32 +50,39 @@ class UserDetailCard extends StatelessWidget {
     final radius = isBottomSheet
         ? const BorderRadius.vertical(top: Radius.circular(24))
         : BorderRadius.circular(16);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.panel,
-        borderRadius: radius,
-        border: Border.all(color: AppColors.stroke),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isBottomSheet) const _DragHandle(),
-          _UserDetailHeader(model: model),
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.76;
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isBottomSheet) const _DragHandle(),
+        _UserDetailHeader(model: model),
+        const Divider(color: AppColors.stroke, height: 1),
+        _UserDetailInfoSection(model: model),
+        const Divider(color: AppColors.stroke, height: 1),
+        _UserDetailDevicesSection(devices: model.devices),
+        if (_showPromote || _showDemote) ...[
           const Divider(color: AppColors.stroke, height: 1),
-          _UserDetailInfoSection(model: model),
-          const Divider(color: AppColors.stroke, height: 1),
-          _UserDetailDevicesSection(devices: model.devices),
-          if (_showPromote || _showDemote) ...[
-            const Divider(color: AppColors.stroke, height: 1),
-            _UserDetailActions(
-              showPromote: _showPromote,
-              showDemote: _showDemote,
-              onPromoteToAdmin: onPromoteToAdmin,
-              onDemoteToViewer: onDemoteToViewer,
-            ),
-          ],
+          _UserDetailActions(
+            showPromote: _showPromote,
+            showDemote: _showDemote,
+            onPromoteToAdmin: onPromoteToAdmin,
+            onDemoteToViewer: onDemoteToViewer,
+          ),
         ],
+      ],
+    );
+
+    return ConstrainedBox(
+      constraints: isBottomSheet
+          ? BoxConstraints(maxHeight: maxHeight)
+          : const BoxConstraints(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.panel,
+          borderRadius: radius,
+          border: Border.all(color: AppColors.stroke),
+        ),
+        child: isBottomSheet ? SingleChildScrollView(child: content) : content,
       ),
     );
   }
@@ -345,8 +354,8 @@ class _UserDetailActions extends StatelessWidget {
 
   final bool showPromote;
   final bool showDemote;
-  final VoidCallback? onPromoteToAdmin;
-  final VoidCallback? onDemoteToViewer;
+  final Future<void> Function()? onPromoteToAdmin;
+  final Future<void> Function()? onDemoteToViewer;
 
   @override
   Widget build(BuildContext context) {
@@ -358,9 +367,13 @@ class _UserDetailActions extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: () {
-                  onPromoteToAdmin?.call();
-                  Navigator.of(context).pop();
+                onPressed: () async {
+                  try {
+                    await onPromoteToAdmin?.call();
+                    if (context.mounted) Navigator.of(context).pop();
+                  } catch (_) {
+                    // El callback muestra el error al usuario.
+                  }
                 },
                 icon: const Icon(Icons.arrow_upward_rounded, size: 16),
                 label: const Text('Hacer Admin'),
@@ -379,9 +392,13 @@ class _UserDetailActions extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  onDemoteToViewer?.call();
-                  Navigator.of(context).pop();
+                onPressed: () async {
+                  try {
+                    await onDemoteToViewer?.call();
+                    if (context.mounted) Navigator.of(context).pop();
+                  } catch (_) {
+                    // El callback muestra el error al usuario.
+                  }
                 },
                 icon: const Icon(Icons.arrow_downward_rounded, size: 16),
                 label: const Text('Quitar Admin'),

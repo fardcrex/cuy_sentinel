@@ -14,12 +14,18 @@ class MetricsLoadingView extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final padding = AppBreakpoints.horizontalPadding(width);
+        final bottomPadding = MediaQuery.of(context).padding.bottom;
         final isWide = AppBreakpoints.isDesktop(width);
 
         if (isWide) {
           return LoadingSkeletonPulse(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(padding),
+              padding: EdgeInsets.fromLTRB(
+                padding,
+                padding,
+                padding,
+                padding + bottomPadding,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
@@ -74,7 +80,12 @@ class MetricsLoadingView extends StatelessWidget {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(padding, 24, padding, padding),
+                  padding: EdgeInsets.fromLTRB(
+                    padding,
+                    24,
+                    padding,
+                    padding + bottomPadding,
+                  ),
                   child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

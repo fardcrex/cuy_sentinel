@@ -1,32 +1,116 @@
+import 'dart:async';
+
+import '../../../core/node/node_api_client.dart';
 import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/panel_user.dart';
 import '../domain/entities/user_access_log.dart';
 import '../domain/entities/user_presence.dart';
 import '../domain/interfaces/i_users_repository.dart';
 
-// Fase 2: implementar con Node.js API + Socket.IO
 class NodeUsersRepository implements IUsersRepository {
-  @override
-  Stream<List<PanelUser>> watchUsers({void Function(RetryState)? onRetry}) =>
-      Stream.error(UnimplementedError('NodeUsersRepository.watchUsers'));
+  final _client = NodeApiClient.instance;
 
   @override
-  Future<List<PanelUser>> getUsers() =>
-      throw UnimplementedError('NodeUsersRepository.getUsers');
+  Future<List<PanelUser>> getUsers() async {
+    final rows = await _client.get('/api/users') as List<dynamic>;
+    return rows
+        .map((r) => PanelUser.fromDynamic(r))
+        .toList();
+  }
 
   @override
-  Future<PanelUser?> getUserById(String id) =>
-      throw UnimplementedError('NodeUsersRepository.getUserById');
+  Future<PanelUser?> getUserById(String id) async {
+    final users = await getUsers();
+    try {
+      return users.firstWhere((u) => u.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
-  Future<List<UserAccessLog>> getAccessLogs({int limit = 50}) =>
-      throw UnimplementedError('NodeUsersRepository.getAccessLogs');
+  Stream<List<PanelUser>> watchUsers({void Function(RetryState)? onRetry}) {
+    late final StreamController<List<PanelUser>> controller;
+    Timer? timer;
+
+    Future<void> fetch() async {
+      try {
+        final users = await getUsers();
+        if (!controller.isClosed) controller.add(users);
+      } catch (e) {
+        if (!controller.isClosed) controller.addError(e);
+      }
+    }
+
+    controller = StreamController<List<PanelUser>>(
+      onListen: () async {
+        await fetch();
+        timer = Timer.periodic(const Duration(seconds: 30), (_) => fetch());
+      },
+      onCancel: () {
+        timer?.cancel();
+        timer = null;
+      },
+    );
+
+    return controller.stream;
+  }
+
+  @override
+  Future<List<UserAccessLog>> getAccessLogs({int limit = 50}) async {
+    final rows = await _client.get(
+      '/api/users/access-logs',
+      params: {'limit': '$limit'},
+    ) as List<dynamic>;
+    return rows
+        .map((r) => UserAccessLog.fromDynamic(r))
+        .toList();
+  }
 
   @override
   Future<List<UserAccessLog>> getAccessLogsByUser({
     required String userId,
     int limit = 20,
-  }) => throw UnimplementedError('NodeUsersRepository.getAccessLogsByUser');
+  }) async {
+    final rows = await _client.get(
+      '/api/users/access-logs',
+      params: {'userId': userId, 'limit': '$limit'},
+    ) as List<dynamic>;
+    return rows
+        .map((r) => UserAccessLog.fromDynamic(r))
+        .toList();
+  }
+
+  @override
+  Stream<List<UserAccessLog>> watchAccessLogs({
+    int limit = 50,
+    void Function(RetryState)? onRetry,
+  }) {
+    late final StreamController<List<UserAccessLog>> controller;
+    Timer? timer;
+
+    Future<void> fetch() async {
+      try {
+        final logs = await getAccessLogs(limit: limit);
+        if (!controller.isClosed) controller.add(logs);
+      } catch (e) {
+        if (!controller.isClosed) controller.addError(e);
+      }
+    }
+
+    controller = StreamController<List<UserAccessLog>>(
+      onListen: () async {
+        await fetch();
+        timer = Timer.periodic(const Duration(seconds: 30), (_) => fetch());
+      },
+      onCancel: () {
+        timer?.cancel();
+        timer = null;
+      },
+    );
+
+    return controller.stream;
+  }
 
   @override
   Future<void> logAccess({
@@ -35,21 +119,29 @@ class NodeUsersRepository implements IUsersRepository {
     required UserAccessAction action,
     String? deviceName,
     String? devicePlatform,
-  }) => throw UnimplementedError('NodeUsersRepository.logAccess');
+  }) async {
+    await _client.post('/api/users/access-logs', {
+      'userId': userId,
+      'displayName': displayName,
+      'action': action.toJson(),
+      'deviceName': deviceName,
+      'devicePlatform': devicePlatform,
+    });
+  }
 
   @override
-  Future<void> updateSession(String userId, {required bool loggedIn}) =>
-      throw UnimplementedError('NodeUsersRepository.updateSession');
+  Future<void> updateSession(String userId, {required bool loggedIn}) async {
+    // JWT expiry handles session tracking in Phase 2.
+  }
 
   @override
-  Stream<List<UserAccessLog>> watchAccessLogs({
-    int limit = 50,
-    void Function(RetryState)? onRetry,
-  }) => Stream.error(UnimplementedError('NodeUsersRepository.watchAccessLogs'));
+  Future<void> updateUserRole(String userId, UserRole role) async {
+    await _client.patch('/api/users/$userId/role', {'role': role.toJson()});
+  }
 
+  // Supabase Presence is not available in Phase 2.
   @override
-  Stream<List<UserPresence>> watchPresence() =>
-      Stream.error(UnimplementedError('NodeUsersRepository.watchPresence'));
+  Stream<List<UserPresence>> watchPresence() => Stream.value([]);
 
   @override
   Future<void> trackPresence({
@@ -57,9 +149,8 @@ class NodeUsersRepository implements IUsersRepository {
     required String deviceName,
     required String devicePlatform,
     UserPresenceStatus status = UserPresenceStatus.active,
-  }) => throw UnimplementedError('NodeUsersRepository.trackPresence');
+  }) async {}
 
   @override
-  Future<void> untrackPresence() =>
-      throw UnimplementedError('NodeUsersRepository.untrackPresence');
+  Future<void> untrackPresence() async {}
 }

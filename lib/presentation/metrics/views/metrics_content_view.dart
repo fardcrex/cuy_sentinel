@@ -28,6 +28,7 @@ class MetricsContentView extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final padding = AppBreakpoints.horizontalPadding(width);
+        final bottomPadding = MediaQuery.of(context).padding.bottom;
         final isWide = AppBreakpoints.isDesktop(width);
 
         final filterRow = MetricsFilterRow(
@@ -47,7 +48,12 @@ class MetricsContentView extends StatelessWidget {
 
         if (isWide) {
           return SingleChildScrollView(
-            padding: EdgeInsets.all(padding),
+            padding: EdgeInsets.fromLTRB(
+              padding,
+              padding,
+              padding,
+              padding + bottomPadding,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -121,7 +127,12 @@ class MetricsContentView extends StatelessWidget {
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(padding, 24, padding, padding),
+                padding: EdgeInsets.fromLTRB(
+                  padding,
+                  24,
+                  padding,
+                  padding + bottomPadding,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

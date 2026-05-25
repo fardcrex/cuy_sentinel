@@ -46,6 +46,9 @@ class TableStats {
     return indexScans / total;
   }
 
+  factory TableStats.fromDynamic(dynamic data) =>
+      TableStats.fromJson(Map<String, dynamic>.from(data as Map));
+
   factory TableStats.fromJson(Map<String, dynamic> json) => TableStats(
     instanceId: json['instance_id'] as String,
     tableName: json['table_name'] as String,

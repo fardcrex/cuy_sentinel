@@ -62,12 +62,6 @@ class _BandwidthChartCardState extends State<BandwidthChartCard> {
   Widget build(BuildContext context) {
     final inRaw = widget.inBuckets.map(_rawValue).toList();
     final outRaw = widget.outBuckets.map(_rawValue).toList();
-    // LOG: Mostrar los arrays de puntos que se van a graficar (incluyendo nulls)
-    // Solo para debug visual de gaps
-    // ignore: avoid_print
-    print('[BandwidthChartCard] Entrante: $inRaw');
-    // ignore: avoid_print
-    print('[BandwidthChartCard] Saliente: $outRaw');
     final inStats = _buildStats(inRaw);
     final outStats = _buildStats(outRaw);
 
@@ -75,29 +69,45 @@ class _BandwidthChartCardState extends State<BandwidthChartCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Ancho de banda',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              for (var i = 0; i < _services.length; i++) ...[
-                if (i > 0) const SizedBox(width: 6),
-                _Chip(
-                  label: _services[i],
-                  selected: i == _serviceIndex,
-                  onTap: () => setState(() {
-                    _serviceIndex = i;
-                    _displayMax = 0;
-                    _updateMax();
-                  }),
-                ),
-              ],
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final chips = [
+                for (var i = 0; i < _services.length; i++)
+                  _Chip(
+                    label: _services[i],
+                    selected: i == _serviceIndex,
+                    onTap: () => setState(() {
+                      _serviceIndex = i;
+                      _displayMax = 0;
+                      _updateMax();
+                    }),
+                  ),
+              ];
+              final title = Text(
+                'Ancho de banda',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              );
+
+              if (constraints.maxWidth < 390) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    title,
+                    const SizedBox(height: 12),
+                    Wrap(spacing: 8, runSpacing: 8, children: chips),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: title),
+                  Wrap(spacing: 6, runSpacing: 8, children: chips),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 6),
           Text(
@@ -183,28 +193,35 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.16)
-              : AppColors.panel,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          constraints: const BoxConstraints(minHeight: 36),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
             color: selected
-                ? AppColors.primary.withValues(alpha: 0.5)
-                : AppColors.stroke,
+                ? AppColors.primary.withValues(alpha: 0.16)
+                : AppColors.panel,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? AppColors.primary.withValues(alpha: 0.5)
+                  : AppColors.stroke,
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: selected ? AppColors.primary : AppColors.textSecondary,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? AppColors.primary : AppColors.textSecondary,
+            ),
           ),
         ),
       ),

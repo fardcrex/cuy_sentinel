@@ -12,9 +12,9 @@ class DatabasesCubit extends Cubit<DatabasesState> {
   DatabasesCubit({
     required WatchDatabaseHealthUseCase watchHealth,
     required GetTableStatsUseCase getTableStats,
-  })  : _watchHealth = watchHealth,
-        _getTableStats = getTableStats,
-        super(DatabasesInitial());
+  }) : _watchHealth = watchHealth,
+       _getTableStats = getTableStats,
+       super(DatabasesInitial());
 
   final WatchDatabaseHealthUseCase _watchHealth;
   final GetTableStatsUseCase _getTableStats;
@@ -25,25 +25,43 @@ class DatabasesCubit extends Cubit<DatabasesState> {
   static const _instanceId = 'supabase-phase1';
 
   List<TableStats> _tableStats = [];
+  DatabaseHealth? _health;
+  bool _isActive = false;
   bool _isReconnecting = false;
   int _secondsLeft = 0;
 
-  Future<void> load() async {
-    emit(DatabasesLoading());
-    try {
-      _tableStats = await _getTableStats.execute(_instanceId);
-      _sub = _watchHealth.execute(_instanceId, onRetry: _onRetry).listen(
-        (health) => emit(DatabasesLoaded(
-          health: health,
-          tableStats: _tableStats,
-          isReconnecting: _isReconnecting,
-          reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
-        )),
-        onError: (e) => emit(DatabasesError(e.toString())),
-      );
-    } catch (e) {
-      emit(DatabasesError(e.toString()));
+  Future<void> load() => activate();
+
+  Future<void> activate() async {
+    _isActive = true;
+    if (_sub != null) return;
+
+    if (_tableStats.isEmpty) {
+      emit(DatabasesLoading());
+      try {
+        _tableStats = await _getTableStats.execute(_instanceId);
+      } catch (e) {
+        emit(DatabasesError(e.toString()));
+        return;
+      }
+      if (!_isActive || isClosed) return;
     }
+
+    _sub = _watchHealth.execute(_instanceId, onRetry: _onRetry).listen((
+      health,
+    ) {
+      if (!_isActive) return;
+      _health = health;
+      _emitLoaded();
+    }, onError: (e) => emit(DatabasesError(e.toString())));
+    _emitLoaded();
+  }
+
+  Future<void> deactivate() async {
+    _isActive = false;
+    await _sub?.cancel();
+    _sub = null;
+    _stopCountdown();
   }
 
   void _onRetry(RetryState retryState) {
@@ -75,19 +93,21 @@ class DatabasesCubit extends Cubit<DatabasesState> {
   }
 
   void _emitLoaded() {
-    final current = state;
-    if (current is! DatabasesLoaded || isClosed) return;
-    emit(DatabasesLoaded(
-      health: current.health,
-      tableStats: _tableStats,
-      isReconnecting: _isReconnecting,
-      reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
-    ));
+    final health = _health;
+    if (health == null || isClosed) return;
+    emit(
+      DatabasesLoaded(
+        health: health,
+        tableStats: _tableStats,
+        isReconnecting: _isReconnecting,
+        reconnectingInSeconds: _isReconnecting ? _secondsLeft : null,
+      ),
+    );
   }
 
   @override
-  Future<void> close() {
-    _sub?.cancel();
+  Future<void> close() async {
+    await deactivate();
     _countdownTimer?.cancel();
     return super.close();
   }

@@ -15,6 +15,7 @@ import '../../core/theme/app_colors.dart';
 import '../../feature/alerts/application/get_alerts_use_case.dart';
 import '../../feature/metrics/application/get_latest_metrics_use_case.dart';
 import '../../feature/metrics/application/get_metrics_history_use_case.dart';
+import '../../feature/monitoring/application/fetch_db_nodes_use_case.dart';
 import '../../feature/monitoring/application/get_collector_runs_use_case.dart';
 import '../../feature/monitoring/application/get_service_events_use_case.dart';
 import '../../feature/monitoring/application/get_services_use_case.dart';
@@ -24,9 +25,9 @@ import '../auth/bloc/auth_bloc.dart';
 import '../dashboard/cubit/dashboard_cubit.dart';
 import '../metrics/cubit/metrics_cubit.dart';
 import '../services/databases/cubit/databases_cubit.dart';
+import '../services/databases/cubit/db_nodes_cubit.dart';
 import '../services/monitored_services/cubit/services_cubit.dart';
 import '../users/bloc/users_bloc.dart';
-import 'app_card.dart';
 import 'glass_nav_bar.dart';
 import 'glass_nav_rail.dart';
 import 'nav_style_cubit.dart';
@@ -60,6 +61,11 @@ class PanelShell extends StatelessWidget {
           create: (ctx) => DatabasesCubit(
             watchHealth: ctx.read<WatchDatabaseHealthUseCase>(),
             getTableStats: ctx.read<GetTableStatsUseCase>(),
+          ),
+        ),
+        BlocProvider(
+          create: (ctx) => DbNodesCubit(
+            fetch: ctx.read<FetchDbNodesUseCase>(),
           ),
         ),
         BlocProvider(
@@ -133,6 +139,7 @@ class _ShellRouteLifecycleState extends State<_ShellRouteLifecycle> {
     final services = context.read<ServicesCubit>();
     final metrics = context.read<MetricsCubit>();
     final databases = context.read<DatabasesCubit>();
+    final dbNodes = context.read<DbNodesCubit>();
     final alerts = context.read<AlertsCubit>();
     final users = context.read<UsersBloc>();
 
@@ -145,9 +152,11 @@ class _ShellRouteLifecycleState extends State<_ShellRouteLifecycle> {
     if (widget.currentPath == AppRoutes.services) {
       unawaited(services.activate());
       unawaited(databases.activate());
+      unawaited(dbNodes.activate());
     } else {
       unawaited(services.deactivate());
       unawaited(databases.deactivate());
+      unawaited(dbNodes.deactivate());
     }
 
     if (widget.currentPath == AppRoutes.metrics) {
@@ -490,7 +499,7 @@ class _DesktopSidebar extends StatelessWidget {
               ),
             ),
           const Spacer(),
-          const AppCard(
+          /*   const AppCard(
             padding: EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,7 +521,7 @@ class _DesktopSidebar extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+          ), */
           const SizedBox(height: 12),
           const Center(child: _AppVersionLabel()),
           const SizedBox(height: 8),

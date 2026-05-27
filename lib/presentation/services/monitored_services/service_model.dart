@@ -23,17 +23,17 @@ String _formatUptime(int? seconds) {
   return '${d.inMinutes}m';
 }
 
-Color _accentColor(String serviceId) => switch (serviceId) {
-      'svc-passbolt' => AppColors.primary,
-      'svc-chkmonitor' => AppColors.secondary,
-      _ => AppColors.primary,
-    };
+Color _accentColor(String serviceId) => switch (serviceId.toLowerCase()) {
+  'passbolt' => AppColors.primary,
+  'chkmonitor' => AppColors.secondary,
+  _ => AppColors.primary,
+};
 
-String _imagePath(String serviceId) => switch (serviceId) {
-      'svc-passbolt' => AppAssets.badgePassboltSuccess,
-      'svc-chkmonitor' => AppAssets.badgeServerSuccess,
-      _ => AppAssets.badgeServerSuccess,
-    };
+String _imagePath(String serviceId) => switch (serviceId.toLowerCase()) {
+  'passbolt' => AppAssets.badgePassboltSuccess,
+  'chkmonitor' => AppAssets.badgeServerSuccess,
+  _ => AppAssets.badgeServerSuccess,
+};
 
 // ── models ────────────────────────────────────────────────────────────────────
 
@@ -83,21 +83,21 @@ class ServicesSummaryModel {
 
 extension ServiceDetailModelX on MonitoredService {
   ServiceDetailModel toModel(Metric? latest) => ServiceDetailModel(
-        name: serviceName,
-        containerName: containerName,
-        host: hostIp,
-        snmpPort: snmpPort,
-        status: latest?.serviceStatus ?? ServiceStatus.offline,
-        cpuPercent: latest?.cpuUsagePercent ?? 0,
-        ramUsedMb: latest?.ramUsageMb ?? 0,
-        ramTotalMb: latest?.ramTotalMb ?? 1,
-        diskPercent: latest?.diskUsagePercent ?? 0,
-        bwInMbps: latest?.bandwidthInMb ?? 0,
-        bwOutMbps: latest?.bandwidthOutMb ?? 0,
-        uptimeLabel: _formatUptime(latest?.uptimeSeconds),
-        imagePath: _imagePath(id),
-        accentColor: _accentColor(id),
-      );
+    name: serviceName,
+    containerName: containerName,
+    host: hostIp,
+    snmpPort: snmpPort,
+    status: latest?.serviceStatus ?? ServiceStatus.offline,
+    cpuPercent: latest?.cpuUsagePercent ?? 0,
+    ramUsedMb: latest?.ramUsageMb ?? 0,
+    ramTotalMb: latest?.ramTotalMb ?? 1,
+    diskPercent: latest?.diskUsagePercent ?? 0,
+    bwInMbps: latest?.bandwidthInMb ?? 0,
+    bwOutMbps: latest?.bandwidthOutMb ?? 0,
+    uptimeLabel: _formatUptime(latest?.uptimeSeconds),
+    imagePath: _imagePath(serviceName),
+    accentColor: _accentColor(serviceName),
+  );
 }
 
 extension ServicesSummaryModelX on MetricsLoaded {

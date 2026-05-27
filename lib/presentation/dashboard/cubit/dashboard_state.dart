@@ -18,6 +18,7 @@ final class DashboardLoaded extends DashboardState {
     required this.collectorRuns,
     required this.services,
     required this.recentEvents,
+    this.isRefreshing = false,
   });
 
   final List<Metric> passboltMetrics;
@@ -26,9 +27,21 @@ final class DashboardLoaded extends DashboardState {
   final List<CollectorRun> collectorRuns;
   final List<MonitoredService> services;
   final List<ServiceEvent> recentEvents;
+  final bool isRefreshing;
+
+  DashboardLoaded asRefreshing() => DashboardLoaded(
+    passboltMetrics: passboltMetrics,
+    chkmonitorMetrics: chkmonitorMetrics,
+    activeAlerts: activeAlerts,
+    collectorRuns: collectorRuns,
+    services: services,
+    recentEvents: recentEvents,
+    isRefreshing: true,
+  );
 }
 
 final class DashboardError extends DashboardState {
-  DashboardError(this.message);
+  DashboardError(this.message, {required this.source});
   final String message;
+  final String source;
 }

@@ -51,20 +51,37 @@ class Metric {
   factory Metric.fromJson(Map<String, dynamic> json) => Metric(
     id: json['id'] as String,
     serviceId: json['service_id'] as String,
-    cpuUsagePercent: (json['cpu_usage_percent'] as num?)?.toDouble(),
-    ramUsageMb: json['ram_usage_mb'] as int?,
-    ramTotalMb: json['ram_total_mb'] as int?,
-    diskUsagePercent: (json['disk_usage_percent'] as num?)?.toDouble(),
-    bandwidthInMb: (json['bandwidth_in_mb'] as num?)?.toDouble(),
-    bandwidthOutMb: (json['bandwidth_out_mb'] as num?)?.toDouble(),
-    uptimeSeconds: json['uptime_seconds'] as int?,
+    cpuUsagePercent: _toDouble(json['cpu_usage_percent']),
+    ramUsageMb: _toInt(json['ram_usage_mb']),
+    ramTotalMb: _toInt(json['ram_total_mb']),
+    diskUsagePercent: _toDouble(json['disk_usage_percent']),
+    bandwidthInMb: _toDouble(json['bandwidth_in_mb']),
+    bandwidthOutMb: _toDouble(json['bandwidth_out_mb']),
+    uptimeSeconds: _toInt(json['uptime_seconds']),
     serviceStatus: ServiceStatus.fromString(
       json['service_status'] as String? ?? 'offline',
     ),
-    snmpLatencyMs: json['snmp_latency_ms'] as int?,
-    snmpLossPercent: (json['snmp_loss_percent'] as num?)?.toDouble(),
+    snmpLatencyMs: _toInt(json['snmp_latency_ms']),
+    snmpLossPercent: _toDouble(json['snmp_loss_percent']),
     collectedAt: DateTime.parse(json['collected_at'] as String),
   );
+
+  // PostgreSQL NUMERIC/DECIMAL fields arrive as String from Node.js to avoid
+  // JS floating-point precision loss.
+  static double? _toDouble(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v);
+    return null;
+  }
+
+  static int? _toInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v) ?? double.tryParse(v)?.toInt();
+    return null;
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,

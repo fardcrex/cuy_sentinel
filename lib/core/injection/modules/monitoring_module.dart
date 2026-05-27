@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../feature/monitoring/application/fetch_db_nodes_use_case.dart';
 import '../../../feature/monitoring/application/get_collector_runs_use_case.dart';
 import '../../../feature/monitoring/application/get_service_events_use_case.dart';
 import '../../../feature/monitoring/application/get_services_use_case.dart';
@@ -26,6 +27,9 @@ abstract final class MonitoringModule {
     ),
     RepositoryProvider<WatchLastCollectorRunUseCase>(
       create: (_) => WatchLastCollectorRunUseCase(repo),
+    ),
+    RepositoryProvider<FetchDbNodesUseCase>(
+      create: (_) => FetchDbNodesUseCase(repo),
     ),
   ];
 }

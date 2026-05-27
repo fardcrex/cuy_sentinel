@@ -58,7 +58,7 @@ class DeviceInfoService implements IDeviceInfoService {
   Future<({String deviceName, String devicePlatform})> _windowsInfo() async {
     final info = await _plugin.windowsInfo;
     return (
-      deviceName: '${info.computerName} · Windows ${info.majorVersion}',
+      deviceName: '${info.productName} · ${info.computerName}',
       devicePlatform: 'windows',
     );
   }

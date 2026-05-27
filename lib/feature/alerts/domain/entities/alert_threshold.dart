@@ -33,10 +33,16 @@ class AlertThreshold {
     id: json['id'] as String,
     serviceId: json['service_id'] as String?,
     metricName: json['metric_name'] as String,
-    thresholdValue: (json['threshold_value'] as num).toDouble(),
+    thresholdValue: _toDouble(json['threshold_value']),
     severity: AlertSeverity.fromString(json['severity'] as String),
     enabled: (json['enabled'] as bool?) ?? true,
   );
+
+  static double _toDouble(dynamic v) {
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v) ?? 0.0;
+    return 0.0;
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,

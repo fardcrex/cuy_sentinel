@@ -78,6 +78,8 @@ class MetricsCubit extends Cubit<MetricsState> {
         MetricsLoaded(
           passboltMetrics: passbolt,
           chkmonitorMetrics: chkmonitor,
+          passboltId: _passboltId ?? '',
+          chkmonitorId: _chkmonitorId ?? '',
           range: range,
           queryFrom: from,
           queryTo: to,

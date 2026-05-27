@@ -80,12 +80,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
       unawaited(
-        _logAccess.execute(
-          userId: user.id,
-          fallbackName: user.email,
-          action: UserAccessAction.login,
-          loggedIn: true,
-        ),
+        _logAccess
+            .execute(
+              userId: user.id,
+              fallbackName: user.email,
+              action: UserAccessAction.login,
+              loggedIn: true,
+            )
+            .catchError((_) {}),
       );
       unawaited(_trackPresence.execute(user.id));
       emit(AuthAuthenticated(user));
@@ -103,12 +105,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final current = state;
     if (current is AuthAuthenticated) {
       await _untrackPresence.execute();
-      await _logAccess.execute(
-        userId: current.user.id,
-        fallbackName: current.user.email,
-        action: UserAccessAction.logout,
-        loggedIn: false,
-      );
+      try {
+        await _logAccess.execute(
+          userId: current.user.id,
+          fallbackName: current.user.email,
+          action: UserAccessAction.logout,
+          loggedIn: false,
+        );
+      } catch (_) {
+        // Never block logout if access logging fails (e.g. stale JWT / FK mismatch).
+      }
     }
     await _signOut.execute();
     emit(const AuthUnauthenticated());

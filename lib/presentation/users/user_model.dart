@@ -262,12 +262,12 @@ extension UserModelX on PanelUser {
     };
 
     final devices = devicesByKey.values.toList();
-    final hasActivePresence = presenceDevices.any(
-      (presence) => presence.status == UserPresenceStatus.active,
-    );
-    final hasAwayPresence = presenceDevices.any(
-      (presence) => presence.status == UserPresenceStatus.away,
-    );
+    // When no real-time presence data (Phase 2), derive status from session_expires_at.
+    final hasActivePresence = presenceDevices.isNotEmpty
+        ? presenceDevices.any((p) => p.status == UserPresenceStatus.active)
+        : isOnline;
+    final hasAwayPresence = presenceDevices.isNotEmpty &&
+        presenceDevices.any((p) => p.status == UserPresenceStatus.away);
 
     return UserModel(
       userId: id,

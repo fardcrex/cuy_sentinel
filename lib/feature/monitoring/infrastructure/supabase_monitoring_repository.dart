@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../../../core/utils/stream_retry.dart';
 
 import '../domain/entities/collector_run.dart';
+import '../domain/entities/db_node.dart';
 import '../domain/entities/monitored_service.dart';
 import '../domain/entities/service_event.dart';
 import '../domain/interfaces/i_monitoring_repository.dart';
@@ -96,4 +97,7 @@ class SupabaseMonitoringRepository implements IMonitoringRepository {
             .map((rows) => rows.isEmpty ? null : CollectorRun.fromJson(rows.first)),
         onRetry: onRetry,
       );
+
+  @override
+  Future<List<DbNode>> fetchDbNodes() async => [];
 }

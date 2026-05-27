@@ -25,7 +25,7 @@ class DashboardPage extends StatelessWidget {
       builder: (context, state) => switch (state) {
         DashboardInitial() ||
         DashboardLoading() => const DashboardLoadingView(),
-        DashboardError(:final message) => DashboardErrorView(message: message),
+        DashboardError(:final message, :final source) => DashboardErrorView(message: message, source: source),
         DashboardLoaded() => DashboardContentView(state: state),
       },
     );

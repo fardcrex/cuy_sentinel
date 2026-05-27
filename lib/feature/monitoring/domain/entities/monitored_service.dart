@@ -31,7 +31,7 @@ class MonitoredService {
         containerName: json['container_name'] as String,
         hostIp: json['host_ip'] as String,
         snmpPort: json['snmp_port'] as int,
-        slug: json['slug'] as String?,
+        slug: (json['slug'] ?? json['container_name']) as String?,
         description: json['description'] as String?,
         enabled: (json['enabled'] as bool?) ?? true,
         createdAt: DateTime.parse(json['created_at'] as String),

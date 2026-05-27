@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -70,8 +71,14 @@ class DashboardCubit extends Cubit<DashboardState> {
         _collectorRuns = await _getCollectorRuns.execute(limit: 150);
         _services = await _getServices.execute();
         _recentEvents = await _loadRecentEvents(_services);
-      } catch (e) {
-        emit(DashboardError(e.toString()));
+      } catch (e, st) {
+        log(
+          'Error en dashboard.init',
+          error: e,
+          stackTrace: st,
+          name: 'DashboardCubit',
+        );
+        emit(DashboardError(e.toString(), source: 'dashboard.init'));
         return;
       }
       if (!_isActive || isClosed) return;
@@ -86,33 +93,94 @@ class DashboardCubit extends Cubit<DashboardState> {
 
     _passboltSub = _watchMetrics
         .execute(serviceId: passboltId, limit: 12)
-        .listen((m) {
-          if (!_isActive) return;
-          _passboltMetrics = m;
-          _passboltReady = true;
-          _emitLoaded();
-        }, onError: (e) => emit(DashboardError(e.toString())));
+        .listen(
+          (m) {
+            if (!_isActive) return;
+            _passboltMetrics = m;
+            _passboltReady = true;
+            _emitLoaded();
+          },
+          onError: (e, st) {
+            log(
+              'Error en passbolt.metrics',
+              error: e,
+              stackTrace: st,
+              name: 'DashboardCubit',
+            );
+            emit(DashboardError(e.toString(), source: 'passbolt.metrics'));
+          },
+        );
     _chkmonitorSub = _watchMetrics
         .execute(serviceId: chkmonitorId, limit: 12)
-        .listen((m) {
-          if (!_isActive) return;
-          _chkmonitorMetrics = m;
-          _chkmonitorReady = true;
-          _emitLoaded();
-        }, onError: (e) => emit(DashboardError(e.toString())));
-    _alertsSub = _watchAlerts.execute().listen((a) {
-      if (!_isActive) return;
-      _activeAlerts = a;
-      _emitLoaded();
-    }, onError: (e) => emit(DashboardError(e.toString())));
-    _collectorRunSub = _watchLastCollectorRun.execute().listen((run) {
-      if (!_isActive) return;
-      if (run == null) return;
-      _collectorRuns = _upsertCollectorRun(_collectorRuns, run, 150);
-      _emitLoaded();
-    }, onError: (e) => emit(DashboardError(e.toString())));
+        .listen(
+          (m) {
+            if (!_isActive) return;
+            _chkmonitorMetrics = m;
+            _chkmonitorReady = true;
+            _emitLoaded();
+          },
+          onError: (e, st) {
+            log(
+              'Error en chkmonitor.metrics',
+              error: e,
+              stackTrace: st,
+              name: 'DashboardCubit',
+            );
+            emit(DashboardError(e.toString(), source: 'chkmonitor.metrics'));
+          },
+        );
+    _alertsSub = _watchAlerts.execute().listen(
+      (a) {
+        if (!_isActive) return;
+        _activeAlerts = a;
+        _emitLoaded();
+      },
+      onError: (e, st) {
+        log(
+          'Error en alerts',
+          error: e,
+          stackTrace: st,
+          name: 'DashboardCubit',
+        );
+        emit(DashboardError(e.toString(), source: 'alerts'));
+      },
+    );
+    _collectorRunSub = _watchLastCollectorRun.execute().listen(
+      (run) {
+        if (!_isActive) return;
+        if (run == null) return;
+        _collectorRuns = _upsertCollectorRun(_collectorRuns, run, 150);
+        _emitLoaded();
+      },
+      onError: (e, st) {
+        log(
+          'Error en collector_run',
+          error: e,
+          stackTrace: st,
+          name: 'DashboardCubit',
+        );
+        emit(DashboardError(e.toString(), source: 'collector_run'));
+      },
+    );
 
     _emitLoaded();
+  }
+
+  Future<void> refresh() async {
+    final current = state;
+    if (current is DashboardLoaded) emit(current.asRefreshing());
+
+    await deactivate();
+    _passboltReady = false;
+    _chkmonitorReady = false;
+    _passboltMetrics = [];
+    _chkmonitorMetrics = [];
+    _activeAlerts = [];
+    _collectorRuns = [];
+    _services = [];
+    _recentEvents = [];
+
+    await activate();
   }
 
   Future<void> deactivate() async {

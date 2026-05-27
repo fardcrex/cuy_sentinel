@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'core/injection/envs/phase2_dependencies.dart';
+import 'core/utils/app_bloc_observer.dart';
 import 'feature/auth/infrastructure/node_auth_repository.dart';
 import 'presentation/app.dart';
 
@@ -11,6 +13,7 @@ import 'presentation/app.dart';
 void main() async {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+  Bloc.observer = const AppBlocObserver();
   /*  await Supabase.initialize(
     url: AppEnv.supabaseUrl,
     anonKey: AppEnv.supabaseAnonKey,

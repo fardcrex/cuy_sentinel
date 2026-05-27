@@ -23,7 +23,12 @@ final class UsersLoaded extends UsersState {
   final bool isReconnecting;
   final int? reconnectingInSeconds;
 
-  Set<String> get onlineIds => presences.map((p) => p.userId).toSet();
+  Set<String> get onlineIds {
+    if (presences.isNotEmpty) return presences.map((p) => p.userId).toSet();
+    // Phase 2: no real-time presence — fall back to session_expires_at on each user.
+    return users.where((u) => u.isOnline).map((u) => u.id).toSet();
+  }
+
   bool isOnline(String userId) => onlineIds.contains(userId);
   int get onlineCount => onlineIds.length;
   int get adminCount => users

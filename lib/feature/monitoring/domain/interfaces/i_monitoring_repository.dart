@@ -1,5 +1,6 @@
 import '../../../../core/utils/stream_retry.dart';
 import '../entities/collector_run.dart';
+import '../entities/db_node.dart';
 import '../entities/monitored_service.dart';
 import '../entities/service_event.dart';
 
@@ -20,4 +21,7 @@ abstract interface class IMonitoringRepository {
 
   /// Real-time stream — emits every time the collector finishes a run.
   Stream<CollectorRun?> watchLastCollectorRun({void Function(RetryState)? onRetry});
+
+  /// Patroni cluster nodes — Phase 2 only. Returns empty list in other phases.
+  Future<List<DbNode>> fetchDbNodes();
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../../core/node/node_api_client.dart';
 import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/collector_run.dart';
+import '../domain/entities/db_node.dart';
 import '../domain/entities/monitored_service.dart';
 import '../domain/entities/service_event.dart';
 import '../domain/interfaces/i_monitoring_repository.dart';
@@ -95,6 +96,14 @@ class NodeMonitoringRepository implements IMonitoringRepository {
     ) as List<dynamic>;
     return rows
         .map((r) => CollectorRun.fromDynamic(r))
+        .toList();
+  }
+
+  @override
+  Future<List<DbNode>> fetchDbNodes() async {
+    final rows = await _client.get('/api/monitoring/db-nodes') as List<dynamic>;
+    return rows
+        .map((r) => DbNode.fromJson(Map<String, dynamic>.from(r as Map)))
         .toList();
   }
 

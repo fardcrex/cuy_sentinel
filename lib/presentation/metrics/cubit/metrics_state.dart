@@ -17,6 +17,8 @@ final class MetricsLoaded extends MetricsState {
   const MetricsLoaded({
     required this.passboltMetrics,
     required this.chkmonitorMetrics,
+    required this.passboltId,
+    required this.chkmonitorId,
     required this.range,
     required this.queryFrom,
     required this.queryTo,
@@ -26,6 +28,8 @@ final class MetricsLoaded extends MetricsState {
   /// Ascendente: índice 0 = más antiguo, last = más reciente.
   final List<Metric> passboltMetrics;
   final List<Metric> chkmonitorMetrics;
+  final String passboltId;
+  final String chkmonitorId;
   final MetricsRange range;
   final DateTime queryFrom;
   final DateTime queryTo;
@@ -34,18 +38,19 @@ final class MetricsLoaded extends MetricsState {
   MetricsLoaded asRefreshing() => MetricsLoaded(
         passboltMetrics: passboltMetrics,
         chkmonitorMetrics: chkmonitorMetrics,
+        passboltId: passboltId,
+        chkmonitorId: chkmonitorId,
         range: range,
         queryFrom: queryFrom,
         queryTo: queryTo,
         isRefreshing: true,
       );
 
-  /// Preservado — usado por services_tab_view.dart.
-  List<Metric> forService(String serviceId) => switch (serviceId) {
-        'svc-passbolt' => passboltMetrics,
-        'svc-chkmonitor' => chkmonitorMetrics,
-        _ => const [],
-      };
+  List<Metric> forService(String serviceId) {
+    if (serviceId == passboltId) return passboltMetrics;
+    if (serviceId == chkmonitorId) return chkmonitorMetrics;
+    return const [];
+  }
 }
 
 final class MetricsError extends MetricsState {

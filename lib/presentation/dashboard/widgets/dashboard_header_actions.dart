@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../cubit/dashboard_cubit.dart';
+import '../cubit/dashboard_state.dart';
 
 class DashboardHeaderActions extends StatelessWidget {
   const DashboardHeaderActions({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isRefreshing = context.select<DashboardCubit, bool>(
+      (c) => switch (c.state) {
+        DashboardLoaded(:final isRefreshing) => isRefreshing,
+        DashboardLoading() => true,
+        _ => false,
+      },
+    );
+
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -36,8 +47,16 @@ class DashboardHeaderActions extends StatelessWidget {
           ),
         ),
         FilledButton.icon(
-          onPressed: () {},
-          icon: const Icon(Icons.refresh_rounded, size: 18),
+          onPressed: isRefreshing
+              ? null
+              : () => context.read<DashboardCubit>().refresh(),
+          icon: isRefreshing
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.refresh_rounded, size: 18),
           label: const Text('Actualizar'),
         ),
       ],

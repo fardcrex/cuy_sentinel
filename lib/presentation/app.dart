@@ -13,14 +13,18 @@ import '../core/navigation/app_router.dart';
 import '../core/theme/app_theme.dart';
 import '../core/widgets/alert_notification_dialog.dart';
 import '../core/widgets/alert_toast_stack.dart';
+import '../core/widgets/service_down_dialog.dart';
 import '../feature/alerts/application/get_alerts_use_case.dart';
 import '../feature/auth/application/sign_in_use_case.dart';
 import '../feature/auth/application/sign_out_use_case.dart';
 import '../feature/auth/application/watch_session_use_case.dart';
+import '../feature/monitoring/application/get_service_events_use_case.dart';
 import '../feature/users/application/get_users_use_case.dart';
 import 'alerts/cubit/alert_notifier_cubit.dart';
 import 'alerts/cubit/alert_notifier_state.dart';
 import 'auth/bloc/auth_bloc.dart';
+import 'monitoring/cubit/service_down_notifier_cubit.dart';
+import 'monitoring/cubit/service_down_notifier_state.dart';
 
 class CuySentinelApp extends StatefulWidget {
   const CuySentinelApp({super.key, required this.dependencies});
@@ -36,6 +40,7 @@ class _CuySentinelAppState extends State<CuySentinelApp>
   late final AuthBloc _authBloc;
   late final GoRouter _router;
   bool _alertDialogOpen = false;
+  bool _serviceDownDialogOpen = false;
 
   @override
   void initState() {
@@ -124,6 +129,18 @@ class _CuySentinelAppState extends State<CuySentinelApp>
               return cubit;
             },
           ),
+          BlocProvider<ServiceDownNotifierCubit>(
+            lazy: false,
+            create: (ctx) {
+              final cubit = ServiceDownNotifierCubit(
+                watchEvents: ctx.read<WatchActiveEventsUseCase>(),
+              );
+              if (ctx.read<AuthBloc>().state is AuthAuthenticated) {
+                cubit.start();
+              }
+              return cubit;
+            },
+          ),
         ],
         child: MaterialApp.router(
           title: 'Cuy Sentinel',
@@ -154,13 +171,27 @@ class _CuySentinelAppState extends State<CuySentinelApp>
                   }
                 },
               ),
+              BlocListener<ServiceDownNotifierCubit, ServiceDownNotifierState>(
+                listener: (ctx, state) {
+                  if (state is! ServiceDownNotifierNewEvent) return;
+                  final navCtx = appNavigatorKey.currentContext;
+                  if (navCtx == null || _serviceDownDialogOpen) return;
+                  _serviceDownDialogOpen = true;
+                  showServiceDownDialog(navCtx, state.event).whenComplete(() {
+                    _serviceDownDialogOpen = false;
+                  });
+                },
+              ),
               BlocListener<AuthBloc, AuthState>(
                 listener: (ctx, state) {
                   final notifier = ctx.read<AlertNotifierCubit>();
+                  final downNotifier = ctx.read<ServiceDownNotifierCubit>();
                   if (state is AuthAuthenticated) {
                     notifier.start();
+                    downNotifier.start();
                   } else if (state is AuthUnauthenticated) {
                     notifier.stop();
+                    downNotifier.stop();
                   }
                 },
               ),

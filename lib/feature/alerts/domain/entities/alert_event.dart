@@ -36,10 +36,10 @@ class AlertEvent {
   factory AlertEvent.fromJson(Map<String, dynamic> json) => AlertEvent(
     id: json['id'] as String,
     serviceId: json['service_id'] as String,
-    serviceName: json['service_name'] as String,
+    serviceName: json['service_name'] as String? ?? '',
     metricName: json['metric_name'] as String,
-    currentValue: (json['current_value'] as num).toDouble(),
-    thresholdValue: (json['threshold_value'] as num).toDouble(),
+    currentValue: _toDouble(json['current_value']),
+    thresholdValue: _toDouble(json['threshold_value']),
     severity: AlertSeverity.fromString(json['severity'] as String),
     triggeredAt: DateTime.parse(json['triggered_at'] as String).toLocal(),
     resolved: (json['resolved'] as bool?) ?? false,
@@ -47,6 +47,12 @@ class AlertEvent {
         ? DateTime.parse(json['resolved_at'] as String).toLocal()
         : null,
   );
+
+  static double _toDouble(dynamic v) {
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v) ?? 0.0;
+    return 0.0;
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,

@@ -10,6 +10,7 @@ import '../../../widgets/loading_skeleton.dart';
 import '../cubit/databases_cubit.dart';
 import '../cubit/databases_state.dart';
 import '../database_model.dart';
+import '../widgets/db_nodes_card.dart';
 import '../widgets/phase2_db_card.dart';
 import '../widgets/phase_pill.dart';
 import '../widgets/schema_card.dart';
@@ -136,6 +137,8 @@ class DatabasesTabView extends StatelessWidget {
                                     ],
                                     enabled: true,
                                   ),
+                                  SizedBox(height: 20),
+                                  DbNodesCard(),
                                 ],
                               ),
                             ),
@@ -240,6 +243,8 @@ class DatabasesTabView extends StatelessWidget {
                             ],
                             enabled: true,
                           ),
+                          const SizedBox(height: 20),
+                          const DbNodesCard(),
                           const SizedBox(height: 20),
                           SupabaseCard(model: model, enabled: false),
                         ],

@@ -1,5 +1,6 @@
 import '../../../core/utils/stream_retry.dart';
 import '../domain/entities/collector_run.dart';
+import '../domain/entities/db_node.dart';
 import '../domain/entities/monitored_service.dart';
 import '../domain/entities/service_event.dart';
 import '../domain/interfaces/i_monitoring_repository.dart';
@@ -126,6 +127,32 @@ class InMemoryMonitoringRepository implements IMonitoringRepository {
       await Future.delayed(const Duration(seconds: 5));
     }
   }
+
+  @override
+  Future<List<DbNode>> fetchDbNodes() async => [
+    DbNode.fromJson({
+      'name': 'patroni1',
+      'host': 'patroni1',
+      'port': 8008,
+      'reachable': true,
+      'role': 'primary',
+      'state': 'running',
+      'lag': null,
+      'timeline': 2,
+      'version': 150018,
+    }),
+    DbNode.fromJson({
+      'name': 'patroni2',
+      'host': 'patroni2',
+      'port': 8008,
+      'reachable': true,
+      'role': 'replica',
+      'state': 'streaming',
+      'lag': 0,
+      'timeline': 2,
+      'version': 150018,
+    }),
+  ];
 
   static List<CollectorRun> _buildRuns(int limit) {
     final now = DateTime.now();

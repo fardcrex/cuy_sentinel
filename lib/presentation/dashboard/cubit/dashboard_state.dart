@@ -18,6 +18,7 @@ final class DashboardLoaded extends DashboardState {
     required this.collectorRuns,
     required this.services,
     required this.recentEvents,
+    required this.activeServiceEvents,
     this.isRefreshing = false,
   });
 
@@ -26,7 +27,10 @@ final class DashboardLoaded extends DashboardState {
   final List<AlertEvent> activeAlerts;
   final List<CollectorRun> collectorRuns;
   final List<MonitoredService> services;
+  /// Historical events shown in RecentEventsCard (updated in real-time).
   final List<ServiceEvent> recentEvents;
+  /// Currently active (unresolved) service events — used to override stale metric status.
+  final List<ServiceEvent> activeServiceEvents;
   final bool isRefreshing;
 
   DashboardLoaded asRefreshing() => DashboardLoaded(
@@ -36,6 +40,7 @@ final class DashboardLoaded extends DashboardState {
     collectorRuns: collectorRuns,
     services: services,
     recentEvents: recentEvents,
+    activeServiceEvents: activeServiceEvents,
     isRefreshing: true,
   );
 }

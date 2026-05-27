@@ -78,6 +78,7 @@ class DashboardContentView extends StatelessWidget {
                             services: state.services,
                             passboltMetrics: state.passboltMetrics,
                             chkmonitorMetrics: state.chkmonitorMetrics,
+                            activeServiceEvents: state.activeServiceEvents,
                           ),
                           const SizedBox(height: 20),
                           CollectorHealthCard(runs: state.collectorRuns),

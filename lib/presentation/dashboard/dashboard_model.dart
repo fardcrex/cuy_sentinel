@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../feature/alerts/domain/entities/alert_severity.dart';
 import '../../feature/metrics/domain/entities/metric.dart';
+import '../../feature/monitoring/domain/entities/service_event.dart';
 import '../../feature/monitoring/domain/entities/service_status.dart';
 import '../metrics/metric_model.dart';
 import '../widgets/animated_number_text.dart';
@@ -82,8 +83,25 @@ extension DashboardLoadedModelX on DashboardLoaded {
     final pb = passboltMetrics.lastOrNull;
     final ck = chkmonitorMetrics.lastOrNull;
 
-    final pbOnline = pb?.serviceStatus == ServiceStatus.online;
-    final ckOnline = ck?.serviceStatus == ServiceStatus.online;
+    // Active service events override stale metric status for the stat counter.
+    final activeByService = {
+      for (final e in activeServiceEvents.where((e) => e.isActive))
+        e.serviceId: e,
+    };
+    bool resolveOnline(String serviceId, ServiceStatus? metricStatus) {
+      final event = activeByService[serviceId];
+      if (event != null) return event.eventType != ServiceEventType.down;
+      return metricStatus == ServiceStatus.online;
+    }
+
+    final pbOnline = resolveOnline(
+      services.firstWhere((s) => s.slug == 'passbolt', orElse: () => services.first).id,
+      pb?.serviceStatus,
+    );
+    final ckOnline = resolveOnline(
+      services.firstWhere((s) => s.slug == 'chkmonitor', orElse: () => services.last).id,
+      ck?.serviceStatus,
+    );
     final onlineCount = (pbOnline ? 1 : 0) + (ckOnline ? 1 : 0);
 
     final allMetrics = [...passboltMetrics, ...chkmonitorMetrics];

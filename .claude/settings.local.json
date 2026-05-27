@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"c:/Users/Jacobo/Documents/flutter proyects\" -name \"*.js\" -o -name \"*.ts\" 2>/dev/null | grep -v node_modules | grep -v \".dart\" | head -40)",
+      "Read(//c/Users/Jacobo/Documents/flutter proyects/**)",
+      "Bash(docker exec *)",
+      "Bash(docker port *)",
+      "Bash(curl -s http://localhost:3000/api/services)",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"admin@cuysentinel.com\\\\\",\\\\\"password\\\\\":\\\\\"admin123\\\\\"}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"master@cuy.local\\\\\",\\\\\"password\\\\\":\\\\\"admin123\\\\\"}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"master@cuy.local\\\\\",\\\\\"password\\\\\":\\\\\"sentinel2025\\\\\"}\")",
+      "Bash(curl -s http://localhost:3000/api/services -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcxYmFkNTgwLWI4YTktNGI0ZS1hYjQ5LWVhZjhlODM2YWZjZiIsImVtYWlsIjoibWFzdGVyQGN1eS5sb2NhbCIsInJvbGUiOiJtYXN0ZXIiLCJpYXQiOjE3Nzk4MTQzMjUsImV4cCI6MTc3OTg0MzEyNX0.hfW8PdGmoz1tqnMk1JxP8XEiFPxi8XZiMcpaF6eiDT0')",
+      "Bash(curl -s http://localhost:3000/api/monitoring/collector?limit=5 -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcxYmFkNTgwLWI4YTktNGI0ZS1hYjQ5LWVhZjhlODM2YWZjZiIsImVtYWlsIjoibWFzdGVyQGN1eS5sb2NhbCIsInJvbGUiOiJtYXN0ZXIiLCJpYXQiOjE3Nzk4MTQzMjUsImV4cCI6MTc3OTg0MzEyNX0.hfW8PdGmoz1tqnMk1JxP8XEiFPxi8XZiMcpaF6eiDT0')",
+      "Bash(curl -s http://localhost:3000/api/metrics/a6e31d06-4575-458d-9388-7b4a89d9ad1d?limit=3 -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcxYmFkNTgwLWI4YTktNGI0ZS1hYjQ5LWVhZjhlODM2YWZjZiIsImVtYWlsIjoibWFzdGVyQGN1eS5sb2NhbCIsInJvbGUiOiJtYXN0ZXIiLCJpYXQiOjE3Nzk4MTQzMjUsImV4cCI6MTc3OTg0MzEyNX0.hfW8PdGmoz1tqnMk1JxP8XEiFPxi8XZiMcpaF6eiDT0')",
+      "Bash(curl -s 'http://localhost:3000/api/monitoring/events?serviceId=a6e31d06-4575-458d-9388-7b4a89d9ad1d&limit=3' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcxYmFkNTgwLWI4YTktNGI0ZS1hYjQ5LWVhZjhlODM2YWZjZiIsImVtYWlsIjoibWFzdGVyQGN1eS5sb2NhbCIsInJvbGUiOiJtYXN0ZXIiLCJpYXQiOjE3Nzk4MTQzMjUsImV4cCI6MTc3OTg0MzEyNX0.hfW8PdGmoz1tqnMk1JxP8XEiFPxi8XZiMcpaF6eiDT0')",
+      "Bash(Get-ChildItem -Path lib -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(flutter analyze *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

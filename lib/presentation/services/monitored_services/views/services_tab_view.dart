@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/reconnecting_banner.dart';
 import '../../../widgets/app_card.dart';
 import '../../../widgets/loading_skeleton.dart';
+import '../../../../feature/monitoring/domain/entities/service_status.dart';
 import '../../../metrics/cubit/metrics_cubit.dart';
 import '../../../metrics/cubit/metrics_state.dart';
 import '../cubit/services_cubit.dart';
@@ -50,10 +51,19 @@ class ServicesTabView extends StatelessWidget {
 
     final loaded = svcState as ServicesLoaded;
     final metrics = mtrState as MetricsLoaded;
+
+    // Active events override metric status: the backend emits service events
+    // immediately while metrics lag by ~5 min (Go collector interval).
     final serviceModels = loaded.services
-        .map((s) => s.toModel(metrics.forService(s.id).lastOrNull))
+        .map((s) => s.toModel(
+              metrics.forService(s.id).lastOrNull,
+              activeEvents: loaded.activeEvents,
+            ))
         .toList();
-    final summary = metrics.toSummaryModel();
+
+    final onlineCount =
+        serviceModels.where((m) => m.status == ServiceStatus.online).length;
+    final onlineLabel = '$onlineCount en línea';
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -79,7 +89,7 @@ class ServicesTabView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ServicesBadge(label: summary.onlineLabel),
+                    ServicesBadge(label: onlineLabel),
                     const SizedBox(height: 20),
                     if (isWide)
                       Row(

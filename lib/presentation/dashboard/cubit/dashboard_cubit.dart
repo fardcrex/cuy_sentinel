@@ -23,12 +23,14 @@ class DashboardCubit extends Cubit<DashboardState> {
     required WatchLastCollectorRunUseCase watchLastCollectorRun,
     required GetServicesUseCase getServices,
     required GetServiceEventsUseCase getServiceEvents,
+    required WatchActiveEventsUseCase watchServiceEvents,
   }) : _watchMetrics = watchMetrics,
        _watchAlerts = watchAlerts,
        _getCollectorRuns = getCollectorRuns,
        _watchLastCollectorRun = watchLastCollectorRun,
        _getServices = getServices,
        _getServiceEvents = getServiceEvents,
+       _watchServiceEvents = watchServiceEvents,
        super(DashboardInitial());
 
   final WatchLatestMetricsUseCase _watchMetrics;
@@ -37,11 +39,13 @@ class DashboardCubit extends Cubit<DashboardState> {
   final WatchLastCollectorRunUseCase _watchLastCollectorRun;
   final GetServicesUseCase _getServices;
   final GetServiceEventsUseCase _getServiceEvents;
+  final WatchActiveEventsUseCase _watchServiceEvents;
 
   StreamSubscription<List<Metric>>? _passboltSub;
   StreamSubscription<List<Metric>>? _chkmonitorSub;
   StreamSubscription<List<AlertEvent>>? _alertsSub;
   StreamSubscription<CollectorRun?>? _collectorRunSub;
+  StreamSubscription<List<ServiceEvent>>? _serviceEventsSub;
 
   bool _isActive = false;
   bool _passboltReady = false;
@@ -53,6 +57,7 @@ class DashboardCubit extends Cubit<DashboardState> {
   List<CollectorRun> _collectorRuns = [];
   List<MonitoredService> _services = [];
   List<ServiceEvent> _recentEvents = [];
+  List<ServiceEvent> _activeServiceEvents = [];
 
   Future<void> init() => activate();
 
@@ -70,6 +75,7 @@ class DashboardCubit extends Cubit<DashboardState> {
       try {
         _collectorRuns = await _getCollectorRuns.execute(limit: 150);
         _services = await _getServices.execute();
+        // Load initial snapshot of recent events (historical, includes resolved).
         _recentEvents = await _loadRecentEvents(_services);
       } catch (e, st) {
         log(
@@ -163,6 +169,25 @@ class DashboardCubit extends Cubit<DashboardState> {
       },
     );
 
+    // Real-time active events: drives ServicesStatusCard status and merges
+    // new events into the historical RecentEventsCard list.
+    _serviceEventsSub = _watchServiceEvents.execute().listen(
+      (events) {
+        if (!_isActive) return;
+        _activeServiceEvents = events;
+        _mergeIntoRecentEvents(events);
+        _emitLoaded();
+      },
+      onError: (e, st) {
+        log(
+          'Error en service_events',
+          error: e,
+          stackTrace: st,
+          name: 'DashboardCubit',
+        );
+      },
+    );
+
     _emitLoaded();
   }
 
@@ -179,6 +204,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     _collectorRuns = [];
     _services = [];
     _recentEvents = [];
+    _activeServiceEvents = [];
 
     await activate();
   }
@@ -189,10 +215,12 @@ class DashboardCubit extends Cubit<DashboardState> {
     await _chkmonitorSub?.cancel();
     await _alertsSub?.cancel();
     await _collectorRunSub?.cancel();
+    await _serviceEventsSub?.cancel();
     _passboltSub = null;
     _chkmonitorSub = null;
     _alertsSub = null;
     _collectorRunSub = null;
+    _serviceEventsSub = null;
   }
 
   void _emitLoaded() {
@@ -208,8 +236,20 @@ class DashboardCubit extends Cubit<DashboardState> {
       collectorRuns: _collectorRuns,
       services: _services,
       recentEvents: _recentEvents,
+      activeServiceEvents: _activeServiceEvents,
     ),
   );
+
+  /// Merges newly detected active events into [_recentEvents] so the
+  /// RecentEventsCard stays up-to-date without a full reload.
+  void _mergeIntoRecentEvents(List<ServiceEvent> incoming) {
+    final existing = {for (final e in _recentEvents) e.id};
+    final novel = incoming.where((e) => !existing.contains(e.id)).toList();
+    if (novel.isEmpty) return;
+    _recentEvents = [...novel, ..._recentEvents]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (_recentEvents.length > 5) _recentEvents = _recentEvents.take(5).toList();
+  }
 
   Future<List<ServiceEvent>> _loadRecentEvents(
     List<MonitoredService> services,

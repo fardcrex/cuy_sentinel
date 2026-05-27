@@ -89,7 +89,6 @@ class NodeAuthRepository implements IAuthRepository {
       _sessionController.add(_currentUser);
       return _currentUser!;
     } catch (e) {
-      print('Error en NodeAuthRepository.signIn: $e');
       if (e is InvalidCredentialsException || e is ServerAuthException) rethrow;
       final msg = e.toString();
       if (msg.contains('Credenciales incorrectas')) {

@@ -4,6 +4,7 @@ import '../../core/assets/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../feature/metrics/domain/entities/metric.dart';
 import '../../feature/monitoring/domain/entities/monitored_service.dart';
+import '../../feature/monitoring/domain/entities/service_event.dart';
 import 'animated_number_text.dart';
 import 'app_card.dart';
 import 'status_badge.dart';
@@ -14,17 +15,24 @@ class ServicesStatusCard extends StatelessWidget {
     required this.services,
     required this.passboltMetrics,
     required this.chkmonitorMetrics,
+    this.activeServiceEvents = const [],
   });
 
   final List<MonitoredService> services;
   final List<Metric> passboltMetrics;
   final List<Metric> chkmonitorMetrics;
+  final List<ServiceEvent> activeServiceEvents;
 
   @override
   Widget build(BuildContext context) {
     final latestMetrics = {
       'svc-passbolt': passboltMetrics.firstOrNull,
       'svc-chkmonitor': chkmonitorMetrics.firstOrNull,
+    };
+    // Index active events by serviceId for O(1) lookup.
+    final activeByService = {
+      for (final e in activeServiceEvents.where((e) => e.isActive))
+        e.serviceId: e,
     };
 
     return AppCard(
@@ -45,9 +53,10 @@ class ServicesStatusCard extends StatelessWidget {
               accentColor: _serviceColor(services[i].id),
               name: services[i].serviceName,
               host: '${services[i].hostIp}:${services[i].snmpPort}',
-              status:
-                  latestMetrics[services[i].id]?.serviceStatus ??
-                  ServiceStatus.warning,
+              status: _resolveStatus(
+                latestMetrics[services[i].id],
+                activeByService[services[i].id],
+              ),
               uptime: _buildUptimeWidget(
                 latestMetrics[services[i].id]?.uptimeSeconds,
               ),
@@ -56,6 +65,20 @@ class ServicesStatusCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static ServiceStatus _resolveStatus(
+    Metric? latest,
+    ServiceEvent? activeEvent,
+  ) {
+    if (activeEvent != null) {
+      return switch (activeEvent.eventType) {
+        ServiceEventType.down => ServiceStatus.offline,
+        ServiceEventType.degraded => ServiceStatus.degraded,
+        _ => latest?.serviceStatus ?? ServiceStatus.warning,
+      };
+    }
+    return latest?.serviceStatus ?? ServiceStatus.warning;
   }
 
   static String _serviceImage(String serviceId) => switch (serviceId) {

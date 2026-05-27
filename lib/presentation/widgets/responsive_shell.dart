@@ -76,6 +76,7 @@ class PanelShell extends StatelessWidget {
             watchLastCollectorRun: ctx.read<WatchLastCollectorRunUseCase>(),
             getServices: ctx.read<GetServicesUseCase>(),
             getServiceEvents: ctx.read<GetServiceEventsUseCase>(),
+            watchServiceEvents: ctx.read<WatchActiveEventsUseCase>(),
           ),
         ),
         BlocProvider(

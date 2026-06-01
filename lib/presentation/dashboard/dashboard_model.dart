@@ -168,7 +168,11 @@ extension DashboardLoadedModelX on DashboardLoaded {
         ),
         caption: const Text('Passbolt · ChkMonitor'),
         icon: Icons.cloud_done_rounded,
-        color: AppColors.primary,
+        color: onlineCount == 2
+            ? AppColors.primary
+            : onlineCount == 1
+            ? AppColors.warning
+            : AppColors.danger,
         sparkPoints: _statusPoints(
           passboltMetrics,
           (m) => m.serviceStatus,

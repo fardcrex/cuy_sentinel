@@ -16,6 +16,7 @@ final class AlertsLoaded extends AlertsState {
     required this.incidents,
     this.isReconnecting = false,
     this.reconnectingInSeconds,
+    this.isRefreshingIncidents = false,
     this.resolvingAlertIds = const {},
     this.resolvedAlertIds = const {},
     this.dismissingAlertIds = const {},
@@ -28,6 +29,7 @@ final class AlertsLoaded extends AlertsState {
   final List<AlertThreshold> thresholds;
   final List<ServiceEvent> incidents;
   final bool isReconnecting;
+  final bool isRefreshingIncidents;
 
   /// Segundos restantes para el próximo reintento. null cuando no reconecta.
   final int? reconnectingInSeconds;
@@ -42,6 +44,8 @@ final class AlertsLoaded extends AlertsState {
     bool? isReconnecting,
     int? reconnectingInSeconds,
     bool clearCountdown = false,
+    bool? isRefreshingIncidents,
+    List<ServiceEvent>? incidents,
     Set<String>? resolvingAlertIds,
     Set<String>? resolvedAlertIds,
     Set<String>? dismissingAlertIds,
@@ -53,11 +57,13 @@ final class AlertsLoaded extends AlertsState {
   }) => AlertsLoaded(
     activeAlerts: activeAlerts,
     thresholds: thresholds,
-    incidents: incidents,
+    incidents: incidents ?? this.incidents,
     isReconnecting: isReconnecting ?? this.isReconnecting,
     reconnectingInSeconds: clearCountdown
         ? null
         : (reconnectingInSeconds ?? this.reconnectingInSeconds),
+    isRefreshingIncidents:
+        isRefreshingIncidents ?? this.isRefreshingIncidents,
     resolvingAlertIds: resolvingAlertIds ?? this.resolvingAlertIds,
     resolvedAlertIds: resolvedAlertIds ?? this.resolvedAlertIds,
     dismissingAlertIds: dismissingAlertIds ?? this.dismissingAlertIds,

@@ -8,6 +8,7 @@ import '../../../feature/users/domain/entities/panel_user.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../widgets/screen_header.dart';
 import '../alert_model.dart';
+import '../cubit/alerts_cubit.dart';
 import '../cubit/alerts_state.dart';
 import '../widgets/alert_summary_badges.dart';
 import '../widgets/alerts_aside.dart';
@@ -131,6 +132,10 @@ class _AlertsContentViewState extends State<AlertsContentView> {
                           IncidentsSection(
                             key: _incidentsKey,
                             incidents: incidentModels,
+                            isRefreshing: widget.state.isRefreshingIncidents,
+                            onRefresh: () => context
+                                .read<AlertsCubit>()
+                                .refreshIncidents(),
                           ),
                         ],
                       ),

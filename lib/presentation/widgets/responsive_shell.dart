@@ -160,7 +160,8 @@ class _ShellRouteLifecycleState extends State<_ShellRouteLifecycle> {
       unawaited(dbNodes.deactivate());
     }
 
-    if (widget.currentPath == AppRoutes.metrics) {
+    if (widget.currentPath == AppRoutes.metrics ||
+        widget.currentPath == AppRoutes.services) {
       unawaited(metrics.activate());
     } else {
       unawaited(metrics.deactivate());

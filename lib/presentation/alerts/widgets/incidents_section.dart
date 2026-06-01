@@ -5,21 +5,47 @@ import '../alert_model.dart';
 import 'empty_state.dart';
 
 class IncidentsSection extends StatelessWidget {
-  const IncidentsSection({super.key, required this.incidents});
+  const IncidentsSection({
+    super.key,
+    required this.incidents,
+    this.isRefreshing = false,
+    this.onRefresh,
+  });
 
   final List<IncidentModel> incidents;
+  final bool isRefreshing;
+  final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Historial de incidentes',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w700),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Historial de incidentes',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            if (isRefreshing)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              IconButton(
+                onPressed: onRefresh,
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Actualizar historial',
+                visualDensity: VisualDensity.compact,
+              ),
+          ],
         ),
         const SizedBox(height: 14),
         if (incidents.isEmpty)

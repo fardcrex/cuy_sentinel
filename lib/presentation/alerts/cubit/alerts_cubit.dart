@@ -204,6 +204,27 @@ class AlertsCubit extends Cubit<AlertsState> {
     }
   }
 
+  Future<void> refreshIncidents() async {
+    final current = state;
+    if (current is! AlertsLoaded || current.isRefreshingIncidents) return;
+    emit(current.copyWith(isRefreshingIncidents: true));
+    try {
+      _incidents = await _getIncidents.execute();
+    } catch (_) {
+      // silent — keep stale data on error
+    }
+    if (isClosed) return;
+    final latest = state;
+    if (latest is AlertsLoaded) {
+      emit(
+        latest.copyWith(
+          incidents: _incidents,
+          isRefreshingIncidents: false,
+        ),
+      );
+    }
+  }
+
   void clearResolveFeedback() {
     final current = state;
     if (current is! AlertsLoaded) return;

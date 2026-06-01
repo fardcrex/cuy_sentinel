@@ -93,11 +93,12 @@ class DatabasesTabView extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    if (isWide)
-                      // Phase 2: PostgreSQL cards take the main left column;
-                      // Supabase moves to the secondary right column (below schema).
-                      // Phase 1: Supabase is the main left card.
-                      if (_isPhase2)
+                    // Phase 2: DbNodesCard es el hero al top, full-width, en todos los layouts.
+                    // Phase 1: Supabase es el card principal.
+                    if (_isPhase2) ...[
+                      const DbNodesCard(),
+                      const SizedBox(height: 20),
+                      if (isWide)
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -137,8 +138,6 @@ class DatabasesTabView extends StatelessWidget {
                                     ],
                                     enabled: true,
                                   ),
-                                  SizedBox(height: 20),
-                                  DbNodesCard(),
                                 ],
                               ),
                             ),
@@ -149,104 +148,99 @@ class DatabasesTabView extends StatelessWidget {
                                 children: [
                                   const SchemaCard(),
                                   const SizedBox(height: 20),
-                                  SupabaseCard(
-                                    model: model,
-                                    enabled: false,
-                                  ),
+                                  SupabaseCard(model: model, enabled: false),
                                 ],
                               ),
                             ),
                           ],
                         )
                       else
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Column(
                           children: [
-                            Expanded(
-                              flex: 5,
-                              child: SupabaseCard(model: model),
+                            const Phase2DbCard(
+                              title: 'PostgreSQL Primario',
+                              subtitle: 'Base de datos principal · activo',
+                              description:
+                                  'Instancia auto-hospedada en Ubuntu 24.04. '
+                                  'Control total sobre configuración, índices y vacuuming. '
+                                  'Actúa como nodo primario para la réplica streaming.',
+                              features: [
+                                'Acceso local en red privada',
+                                'Configuración avanzada (pg_hba, postgresql.conf)',
+                                'WAL archiving habilitado',
+                                'Monitoreo con pg_stat_activity',
+                              ],
+                              enabled: true,
                             ),
-                            const SizedBox(width: 20),
-                            const Expanded(
-                              flex: 3,
-                              child: Column(
-                                children: [
-                                  SchemaCard(),
-                                  SizedBox(height: 20),
-                                  Phase2DbCard(
-                                    title: 'PostgreSQL Primario',
-                                    subtitle: 'Reemplazará a Supabase en Fase 2',
-                                    description:
-                                        'Instancia auto-hospedada en Ubuntu 24.04. '
-                                        'Control total sobre configuración, índices y vacuuming. '
-                                        'Actúa como nodo primario para la réplica streaming.',
-                                    features: [
-                                      'Acceso local en red privada',
-                                      'Configuración avanzada (pg_hba, postgresql.conf)',
-                                      'WAL archiving habilitado',
-                                      'Monitoreo con pg_stat_activity',
-                                    ],
-                                  ),
-                                  SizedBox(height: 20),
-                                  Phase2DbCard(
-                                    title: 'PostgreSQL Réplica',
-                                    subtitle: 'Alta disponibilidad — streaming WAL',
-                                    description:
-                                        'Réplica asíncrona de streaming desde el nodo primario. '
-                                        'Reduce latencia de lecturas y permite failover automático '
-                                        'ante caída del primario.',
-                                    features: [
-                                      'Réplica streaming asíncrona',
-                                      'Solo lectura (hot standby)',
-                                      'Failover manual/automático',
-                                      'Desfase de replicación visible',
-                                    ],
-                                  ),
-                                ],
-                              ),
+                            const SizedBox(height: 20),
+                            const Phase2DbCard(
+                              title: 'PostgreSQL Réplica',
+                              subtitle: 'Réplica streaming activa · hot standby',
+                              description:
+                                  'Réplica asíncrona de streaming desde el nodo primario. '
+                                  'Reduce latencia de lecturas y permite failover automático '
+                                  'ante caída del primario.',
+                              features: [
+                                'Réplica streaming asíncrona',
+                                'Solo lectura (hot standby)',
+                                'Failover manual/automático',
+                                'Desfase de replicación visible',
+                              ],
+                              enabled: true,
                             ),
+                            const SizedBox(height: 20),
+                            SupabaseCard(model: model, enabled: false),
+                            const SizedBox(height: 20),
+                            const SchemaCard(),
                           ],
-                        )
-                    else if (_isPhase2)
-                      Column(
+                        ),
+                    ] else if (isWide)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SchemaCard(),
-                          const SizedBox(height: 20),
-                          const Phase2DbCard(
-                            title: 'PostgreSQL Primario',
-                            subtitle: 'Base de datos principal · activo',
-                            description:
-                                'Instancia auto-hospedada en Ubuntu 24.04. '
-                                'Control total sobre configuración, índices y vacuuming. '
-                                'Actúa como nodo primario para la réplica streaming.',
-                            features: [
-                              'Acceso local en red privada',
-                              'Configuración avanzada (pg_hba, postgresql.conf)',
-                              'WAL archiving habilitado',
-                              'Monitoreo con pg_stat_activity',
-                            ],
-                            enabled: true,
+                          Expanded(
+                            flex: 5,
+                            child: SupabaseCard(model: model),
                           ),
-                          const SizedBox(height: 20),
-                          const Phase2DbCard(
-                            title: 'PostgreSQL Réplica',
-                            subtitle: 'Réplica streaming activa · hot standby',
-                            description:
-                                'Réplica asíncrona de streaming desde el nodo primario. '
-                                'Reduce latencia de lecturas y permite failover automático '
-                                'ante caída del primario.',
-                            features: [
-                              'Réplica streaming asíncrona',
-                              'Solo lectura (hot standby)',
-                              'Failover manual/automático',
-                              'Desfase de replicación visible',
-                            ],
-                            enabled: true,
+                          const SizedBox(width: 20),
+                          const Expanded(
+                            flex: 3,
+                            child: Column(
+                              children: [
+                                SchemaCard(),
+                                SizedBox(height: 20),
+                                Phase2DbCard(
+                                  title: 'PostgreSQL Primario',
+                                  subtitle: 'Reemplazará a Supabase en Fase 2',
+                                  description:
+                                      'Instancia auto-hospedada en Ubuntu 24.04. '
+                                      'Control total sobre configuración, índices y vacuuming. '
+                                      'Actúa como nodo primario para la réplica streaming.',
+                                  features: [
+                                    'Acceso local en red privada',
+                                    'Configuración avanzada (pg_hba, postgresql.conf)',
+                                    'WAL archiving habilitado',
+                                    'Monitoreo con pg_stat_activity',
+                                  ],
+                                ),
+                                SizedBox(height: 20),
+                                Phase2DbCard(
+                                  title: 'PostgreSQL Réplica',
+                                  subtitle: 'Alta disponibilidad — streaming WAL',
+                                  description:
+                                      'Réplica asíncrona de streaming desde el nodo primario. '
+                                      'Reduce latencia de lecturas y permite failover automático '
+                                      'ante caída del primario.',
+                                  features: [
+                                    'Réplica streaming asíncrona',
+                                    'Solo lectura (hot standby)',
+                                    'Failover manual/automático',
+                                    'Desfase de replicación visible',
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 20),
-                          const DbNodesCard(),
-                          const SizedBox(height: 20),
-                          SupabaseCard(model: model, enabled: false),
                         ],
                       )
                     else
@@ -273,9 +267,7 @@ class DatabasesTabView extends StatelessWidget {
                           const SizedBox(height: 20),
                           const Phase2DbCard(
                             title: 'PostgreSQL Réplica',
-                            subtitle: _isPhase2
-                                ? 'Réplica streaming activa · hot standby'
-                                : 'Alta disponibilidad — streaming WAL',
+                            subtitle: 'Alta disponibilidad — streaming WAL',
                             description:
                                 'Réplica asíncrona de streaming desde el nodo primario. '
                                 'Reduce latencia de lecturas y permite failover automático '
@@ -286,7 +278,6 @@ class DatabasesTabView extends StatelessWidget {
                               'Failover manual/automático',
                               'Desfase de replicación visible',
                             ],
-                            enabled: _isPhase2,
                           ),
                         ],
                       ),

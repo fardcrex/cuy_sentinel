@@ -17,7 +17,8 @@
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(flutter analyze *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(dart analyze *)"
     ]
   }
 }
